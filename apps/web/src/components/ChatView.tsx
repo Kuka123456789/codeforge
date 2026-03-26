@@ -70,6 +70,7 @@ import {
   proposedPlanTitle,
   resolvePlanFollowUpSubmission,
 } from "../proposedPlan";
+import { generateAutoTitle } from "../generateAutoTitle";
 import { truncateTitle } from "../truncateTitle";
 import {
   DEFAULT_INTERACTION_MODE,
@@ -594,6 +595,43 @@ export default function ChatView({ threadId }: ChatViewProps) {
     activeLatestTurn?.completedAt,
     latestTurnSettled,
     markThreadVisited,
+  ]);
+
+  // ── Auto-retitle: regenerate thread title from user prompts after each turn ──
+  const lastAutoTitledTurnIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!activeThread?.id) return;
+    if (!latestTurnSettled) return;
+    if (!activeLatestTurn?.completedAt) return;
+    if (activeThread.titleSource === "manual") return;
+
+    // Don't re-title the same turn twice.
+    const turnId = activeLatestTurn.turnId;
+    if (lastAutoTitledTurnIdRef.current === turnId) return;
+    lastAutoTitledTurnIdRef.current = turnId;
+
+    const userMessages = activeThread.messages.filter((m) => m.role === "user");
+    const newTitle = generateAutoTitle(userMessages);
+    if (!newTitle || newTitle === activeThread.title) return;
+
+    const api = readNativeApi();
+    if (!api) return;
+
+    void api.orchestration.dispatchCommand({
+      type: "thread.meta.update",
+      commandId: newCommandId(),
+      threadId: activeThread.id,
+      title: newTitle,
+      titleSource: "auto",
+    });
+  }, [
+    activeThread?.id,
+    activeThread?.title,
+    activeThread?.titleSource,
+    activeThread?.messages,
+    activeLatestTurn?.completedAt,
+    activeLatestTurn?.turnId,
+    latestTurnSettled,
   ]);
 
   const sessionProvider = activeThread?.session?.provider ?? null;
@@ -2630,6 +2668,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
           commandId: newCommandId(),
           threadId: threadIdForSend,
           title,
+          titleSource: "auto",
         });
       }
 
@@ -2704,16 +2743,29 @@ export default function ChatView({ threadId }: ChatViewProps) {
     }
   };
 
-  const onInterrupt = async () => {
+  const onInterrupt = useCallback(async () => {
     const api = readNativeApi();
-    if (!api || !activeThread) return;
+    if (!api || !activeThreadId) return;
     await api.orchestration.dispatchCommand({
       type: "thread.turn.interrupt",
       commandId: newCommandId(),
-      threadId: activeThread.id,
+      threadId: activeThreadId,
       createdAt: new Date().toISOString(),
     });
-  };
+  }, [activeThreadId]);
+
+  useEffect(() => {
+    if (phase !== "running" || expandedImage) return;
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      void onInterrupt();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [phase, expandedImage, onInterrupt]);
 
   const onRespondToApproval = useCallback(
     async (requestId: ApprovalRequestId, decision: ProviderApprovalDecision) => {
@@ -3544,6 +3596,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
               commandId: newCommandId(),
               threadId,
               title: newTitle,
+              titleSource: "manual",
             });
           }}
         />
