@@ -1,12 +1,4 @@
-/**
- * ThreadSearchIndex - Service interface for FTS5-backed thread search.
- *
- * Manages the thread_search_fts virtual table for full-text search
- * across thread titles and user message content.
- *
- * @module ThreadSearchIndex
- */
-import { ThreadId } from "@t3tools/contracts";
+import { ThreadId, type ThreadSearchResultItem } from "@t3tools/contracts";
 import { Schema, ServiceMap } from "effect";
 import type { Effect } from "effect";
 
@@ -30,14 +22,6 @@ export const ThreadSearchQueryInput = Schema.Struct({
   limit: Schema.Number,
 });
 export type ThreadSearchQueryInput = typeof ThreadSearchQueryInput.Type;
-
-export const ThreadSearchResultRow = Schema.Struct({
-  threadId: ThreadId,
-  rank: Schema.Number,
-  titleSnippet: Schema.NullOr(Schema.String),
-  messageSnippet: Schema.NullOr(Schema.String),
-});
-export type ThreadSearchResultRow = typeof ThreadSearchResultRow.Type;
 
 /**
  * ThreadSearchIndexShape - Service API for FTS5-backed thread search.
@@ -67,7 +51,7 @@ export interface ThreadSearchIndexShape {
    */
   readonly search: (
     input: ThreadSearchQueryInput,
-  ) => Effect.Effect<ReadonlyArray<ThreadSearchResultRow>, ProjectionRepositoryError>;
+  ) => Effect.Effect<ReadonlyArray<ThreadSearchResultItem>, ProjectionRepositoryError>;
 }
 
 /**

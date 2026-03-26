@@ -25,6 +25,7 @@ import type {
   ProjectWriteFileInput,
   ProjectWriteFileResult,
 } from "./project";
+import type { ThreadSearchInput, ThreadSearchResult } from "./threadSearch";
 import type {
   ServerConfig,
   ServerProviderUpdatedPayload,
@@ -134,6 +135,9 @@ export interface NativeApi {
   projects: {
     searchEntries: (input: ProjectSearchEntriesInput) => Promise<ProjectSearchEntriesResult>;
     writeFile: (input: ProjectWriteFileInput) => Promise<ProjectWriteFileResult>;
+  };
+  threads: {
+    search: (input: ThreadSearchInput) => Promise<ThreadSearchResult>;
   };
   shell: {
     openInEditor: (cwd: string, editor: EditorId) => Promise<void>;

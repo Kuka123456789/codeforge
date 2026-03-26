@@ -57,6 +57,7 @@ import { OrchestrationReactor } from "./orchestration/Services/OrchestrationReac
 import { ProviderService } from "./provider/Services/ProviderService";
 import { ProviderRegistry } from "./provider/Services/ProviderRegistry";
 import { CheckpointDiffQuery } from "./checkpointing/Services/CheckpointDiffQuery";
+import { ThreadSearchIndex } from "./persistence/Services/ThreadSearchIndex";
 import { clamp } from "effect/Number";
 import { Open, resolveAvailableEditors } from "./open";
 import { ServerConfig } from "./config";
@@ -609,6 +610,7 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
   const orchestrationEngine = yield* OrchestrationEngineService;
   const projectionReadModelQuery = yield* ProjectionSnapshotQuery;
   const checkpointDiffQuery = yield* CheckpointDiffQuery;
+  const threadSearchIndex = yield* ThreadSearchIndex;
   const orchestrationReactor = yield* OrchestrationReactor;
   const { openInEditor } = yield* Open;
 
@@ -935,6 +937,12 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
       case WS_METHODS.serverUpdateSettings: {
         const body = stripRequestTag(request.body);
         return yield* serverSettingsManager.updateSettings(body.patch);
+      }
+
+      case WS_METHODS.threadsSearch: {
+        const body = stripRequestTag(request.body);
+        const results = yield* threadSearchIndex.search(body);
+        return { results };
       }
 
       default: {

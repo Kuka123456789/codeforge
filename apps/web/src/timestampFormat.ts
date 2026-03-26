@@ -66,3 +66,20 @@ export function formatRelativeTime(isoDate: string): { value: string; suffix: st
   const days = Math.floor(hours / 24);
   return { value: `${days}d`, suffix: "ago" };
 }
+
+/**
+ * Format a relative time as a plain string (e.g. "5m ago", "3d ago", "2mo ago").
+ * Use this when you don't need separate styling for the value and suffix.
+ */
+export function formatRelativeTimeString(isoDate: string): string {
+  const diffMs = Date.now() - new Date(isoDate).getTime();
+  if (diffMs < 0) return "just now";
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return `${Math.floor(days / 30)}mo ago`;
+}

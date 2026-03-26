@@ -91,6 +91,7 @@ function createMinimalSnapshot(): OrchestrationReadModel {
         id: THREAD_ID,
         projectId: PROJECT_ID,
         title: "Test thread",
+        titleSource: "auto",
         modelSelection: {
           provider: "codex",
           model: "gpt-5",
@@ -103,6 +104,7 @@ function createMinimalSnapshot(): OrchestrationReadModel {
         createdAt: NOW_ISO,
         updatedAt: NOW_ISO,
         deletedAt: null,
+        archivedAt: null,
         messages: [
           {
             id: "msg-1" as MessageId,

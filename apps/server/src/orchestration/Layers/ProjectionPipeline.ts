@@ -2,6 +2,7 @@ import {
   ApprovalRequestId,
   type ChatAttachment,
   type OrchestrationEvent,
+  type ThreadId,
 } from "@t3tools/contracts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { Effect, FileSystem, Layer, Option, Path, Stream } from "effect";
@@ -28,6 +29,7 @@ import {
   ProjectionTurnRepository,
 } from "../../persistence/Services/ProjectionTurns.ts";
 import { ProjectionThreadRepository } from "../../persistence/Services/ProjectionThreads.ts";
+import { ThreadSearchIndex } from "../../persistence/Services/ThreadSearchIndex.ts";
 import { ProjectionPendingApprovalRepositoryLive } from "../../persistence/Layers/ProjectionPendingApprovals.ts";
 import { ProjectionProjectRepositoryLive } from "../../persistence/Layers/ProjectionProjects.ts";
 import { ProjectionStateRepositoryLive } from "../../persistence/Layers/ProjectionState.ts";
@@ -37,6 +39,7 @@ import { ProjectionThreadProposedPlanRepositoryLive } from "../../persistence/La
 import { ProjectionThreadSessionRepositoryLive } from "../../persistence/Layers/ProjectionThreadSessions.ts";
 import { ProjectionTurnRepositoryLive } from "../../persistence/Layers/ProjectionTurns.ts";
 import { ProjectionThreadRepositoryLive } from "../../persistence/Layers/ProjectionThreads.ts";
+import { ThreadSearchIndexLive } from "../../persistence/Layers/ThreadSearchIndex.ts";
 import { ServerConfig } from "../../config.ts";
 import {
   OrchestrationProjectionPipeline,
@@ -59,6 +62,7 @@ export const ORCHESTRATION_PROJECTOR_NAMES = {
   threadTurns: "projection.thread-turns",
   checkpoints: "projection.checkpoints",
   pendingApprovals: "projection.pending-approvals",
+  threadSearch: "projection.thread-search",
 } as const;
 
 type ProjectorName =
@@ -349,6 +353,7 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
   const projectionThreadSessionRepository = yield* ProjectionThreadSessionRepository;
   const projectionTurnRepository = yield* ProjectionTurnRepository;
   const projectionPendingApprovalRepository = yield* ProjectionPendingApprovalRepository;
+  const threadSearchIndex = yield* ThreadSearchIndex;
 
   const fileSystem = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1124,6 +1129,88 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
       }
     });
 
+  /**
+   * Rebuild the FTS search index for a thread from its current projected messages.
+   * Used after message-sent (streaming complete) and thread.reverted events.
+   */
+  const rebuildThreadSearchIndex = (threadId: ThreadId, title: string) =>
+    Effect.gen(function* () {
+      const messages = yield* projectionThreadMessageRepository.listByThreadId({ threadId });
+      const userMessages = messages.filter((m) => m.role === "user");
+      const firstUserMessage = userMessages.length > 0 ? userMessages[0]!.text : "";
+      const allUserMessages = userMessages.map((m) => m.text).join("\n");
+      yield* threadSearchIndex.upsert({
+        threadId,
+        title,
+        firstUserMessage,
+        userMessages: allUserMessages,
+      });
+    });
+
+  const applyThreadSearchProjection: ProjectorDefinition["apply"] = (
+    event,
+    _attachmentSideEffects,
+  ) =>
+    Effect.gen(function* () {
+      switch (event.type) {
+        case "thread.created":
+          yield* threadSearchIndex.upsert({
+            threadId: event.payload.threadId,
+            title: event.payload.title,
+            firstUserMessage: "",
+            userMessages: "",
+          });
+          return;
+
+        case "thread.meta-updated": {
+          if (event.payload.title === undefined) {
+            return;
+          }
+          yield* rebuildThreadSearchIndex(event.payload.threadId, event.payload.title);
+          return;
+        }
+
+        case "thread.deleted":
+          yield* threadSearchIndex.deleteByThreadId({
+            threadId: event.payload.threadId,
+          });
+          return;
+
+        case "thread.message-sent": {
+          // Only re-index when streaming completes (not on every chunk)
+          if (event.payload.streaming) {
+            return;
+          }
+          // Only index user messages
+          if (event.payload.role !== "user") {
+            return;
+          }
+          const thread = yield* projectionThreadRepository.getById({
+            threadId: event.payload.threadId,
+          });
+          if (Option.isNone(thread)) {
+            return;
+          }
+          yield* rebuildThreadSearchIndex(event.payload.threadId, thread.value.title);
+          return;
+        }
+
+        case "thread.reverted": {
+          const thread = yield* projectionThreadRepository.getById({
+            threadId: event.payload.threadId,
+          });
+          if (Option.isNone(thread)) {
+            return;
+          }
+          yield* rebuildThreadSearchIndex(event.payload.threadId, thread.value.title);
+          return;
+        }
+
+        default:
+          return;
+      }
+    });
+
   const projectors: ReadonlyArray<ProjectorDefinition> = [
     {
       name: ORCHESTRATION_PROJECTOR_NAMES.projects,
@@ -1160,6 +1247,10 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
     {
       name: ORCHESTRATION_PROJECTOR_NAMES.threads,
       apply: applyThreadsProjection,
+    },
+    {
+      name: ORCHESTRATION_PROJECTOR_NAMES.threadSearch,
+      apply: applyThreadSearchProjection,
     },
   ];
 
@@ -1261,5 +1352,6 @@ export const OrchestrationProjectionPipelineLive = Layer.effect(
   Layer.provideMerge(ProjectionThreadSessionRepositoryLive),
   Layer.provideMerge(ProjectionTurnRepositoryLive),
   Layer.provideMerge(ProjectionPendingApprovalRepositoryLive),
+  Layer.provideMerge(ThreadSearchIndexLive),
   Layer.provideMerge(ProjectionStateRepositoryLive),
 );

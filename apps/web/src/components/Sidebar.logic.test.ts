@@ -368,6 +368,7 @@ function makeThread(overrides: Partial<Thread> = {}): Thread {
     codexThreadId: null,
     projectId: ProjectId.makeUnsafe("project-1"),
     title: "Thread",
+    titleSource: "auto",
     modelSelection: {
       provider: "codex",
       model: "gpt-5.4",
@@ -384,6 +385,7 @@ function makeThread(overrides: Partial<Thread> = {}): Thread {
     latestTurn: null,
     branch: null,
     worktreePath: null,
+    archivedAt: null,
     turnDiffSummaries: [],
     activities: [],
     ...overrides,
