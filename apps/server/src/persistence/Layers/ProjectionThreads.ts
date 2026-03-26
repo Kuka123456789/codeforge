@@ -31,6 +31,7 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           thread_id,
           project_id,
           title,
+          title_source,
           model_selection_json,
           runtime_mode,
           interaction_mode,
@@ -39,12 +40,14 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           latest_turn_id,
           created_at,
           updated_at,
-          deleted_at
+          deleted_at,
+          archived_at
         )
         VALUES (
           ${row.threadId},
           ${row.projectId},
           ${row.title},
+          ${row.titleSource},
           ${JSON.stringify(row.modelSelection)},
           ${row.runtimeMode},
           ${row.interactionMode},
@@ -53,12 +56,14 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           ${row.latestTurnId},
           ${row.createdAt},
           ${row.updatedAt},
-          ${row.deletedAt}
+          ${row.deletedAt},
+          ${row.archivedAt}
         )
         ON CONFLICT (thread_id)
         DO UPDATE SET
           project_id = excluded.project_id,
           title = excluded.title,
+          title_source = excluded.title_source,
           model_selection_json = excluded.model_selection_json,
           runtime_mode = excluded.runtime_mode,
           interaction_mode = excluded.interaction_mode,
@@ -67,7 +72,8 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           latest_turn_id = excluded.latest_turn_id,
           created_at = excluded.created_at,
           updated_at = excluded.updated_at,
-          deleted_at = excluded.deleted_at
+          deleted_at = excluded.deleted_at,
+          archived_at = excluded.archived_at
       `,
   });
 
@@ -80,6 +86,7 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           thread_id AS "threadId",
           project_id AS "projectId",
           title,
+          title_source AS "titleSource",
           model_selection_json AS "modelSelection",
           runtime_mode AS "runtimeMode",
           interaction_mode AS "interactionMode",
@@ -88,7 +95,8 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           latest_turn_id AS "latestTurnId",
           created_at AS "createdAt",
           updated_at AS "updatedAt",
-          deleted_at AS "deletedAt"
+          deleted_at AS "deletedAt",
+          archived_at AS "archivedAt"
         FROM projection_threads
         WHERE thread_id = ${threadId}
       `,
@@ -103,6 +111,7 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           thread_id AS "threadId",
           project_id AS "projectId",
           title,
+          title_source AS "titleSource",
           model_selection_json AS "modelSelection",
           runtime_mode AS "runtimeMode",
           interaction_mode AS "interactionMode",
@@ -111,7 +120,8 @@ const makeProjectionThreadRepository = Effect.gen(function* () {
           latest_turn_id AS "latestTurnId",
           created_at AS "createdAt",
           updated_at AS "updatedAt",
-          deleted_at AS "deletedAt"
+          deleted_at AS "deletedAt",
+          archived_at AS "archivedAt"
         FROM projection_threads
         WHERE project_id = ${projectId}
         ORDER BY created_at ASC, thread_id ASC

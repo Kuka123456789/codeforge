@@ -150,7 +150,7 @@ describe("ProviderRuntimeEvent", () => {
       payload: {
         usage: {
           usedTokens: 31251,
-          maxTokens: 200000,
+          maxTokens: 1_000_000,
           toolUses: 25,
           durationMs: 43567,
         },
@@ -161,7 +161,7 @@ describe("ProviderRuntimeEvent", () => {
     if (parsed.type !== "thread.token-usage.updated") {
       throw new Error("expected thread.token-usage.updated");
     }
-    expect(parsed.payload.usage.maxTokens).toBe(200000);
+    expect(parsed.payload.usage.maxTokens).toBe(1_000_000);
     expect(parsed.payload.usage.usedTokens).toBe(31251);
   });
 });

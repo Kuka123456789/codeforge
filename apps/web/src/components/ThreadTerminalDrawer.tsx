@@ -3,6 +3,7 @@ import { Plus, SquareSplitHorizontal, TerminalSquare, Trash2, XIcon } from "luci
 import { type ThreadId } from "@t3tools/contracts";
 import { Terminal, type ITheme } from "@xterm/xterm";
 import {
+  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
   useCallback,
@@ -13,6 +14,7 @@ import {
 } from "react";
 import { Popover, PopoverPopup, PopoverTrigger } from "~/components/ui/popover";
 import { type TerminalContextSelection } from "~/lib/terminalContext";
+import { useTerminalLabels, useTerminalNameStore } from "~/terminalNameStore";
 import { openInPreferredEditor } from "../editorPreferences";
 import {
   extractTerminalLinks,
@@ -693,6 +695,117 @@ function TerminalActionButton({ label, className, onClick, children }: TerminalA
   );
 }
 
+interface EditableTerminalNameProps {
+  terminalId: string;
+  label: string;
+  isActive: boolean;
+  onActivate: (terminalId: string) => void;
+  onRename: (terminalId: string, name: string) => void;
+}
+
+function EditableTerminalName({
+  terminalId,
+  label,
+  isActive,
+  onActivate,
+  onRename,
+}: EditableTerminalNameProps) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(label);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const startEditing = useCallback(() => {
+    setEditValue(label);
+    setEditing(true);
+  }, [label]);
+
+  useEffect(() => {
+    if (editing) {
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      });
+    }
+  }, [editing]);
+
+  const commitRename = useCallback(() => {
+    setEditing(false);
+    const trimmed = editValue.trim();
+    if (trimmed.length > 0 && trimmed !== label) {
+      onRename(terminalId, trimmed);
+    }
+  }, [editValue, label, onRename, terminalId]);
+
+  const cancelRename = useCallback(() => {
+    setEditing(false);
+    setEditValue(label);
+  }, [label]);
+
+  const handleKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLInputElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        commitRename();
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        cancelRename();
+      }
+    },
+    [commitRename, cancelRename],
+  );
+
+  const handleDoubleClick = useCallback(() => {
+    if (!isActive) {
+      onActivate(terminalId);
+    }
+    startEditing();
+  }, [isActive, onActivate, terminalId, startEditing]);
+
+  const handleClick = useCallback(() => {
+    if (!isActive) {
+      onActivate(terminalId);
+    }
+  }, [isActive, onActivate, terminalId]);
+
+  const handleContextMenu = useCallback(
+    (event: React.MouseEvent) => {
+      event.preventDefault();
+      if (!isActive) {
+        onActivate(terminalId);
+      }
+      startEditing();
+    },
+    [isActive, onActivate, terminalId, startEditing],
+  );
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="text"
+        className="min-w-0 flex-1 rounded border border-border bg-background px-0.5 py-0 text-[11px] text-foreground outline-none focus:ring-1 focus:ring-ring"
+        value={editValue}
+        onChange={(event) => setEditValue(event.target.value)}
+        onBlur={commitRename}
+        onKeyDown={handleKeyDown}
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="flex min-w-0 flex-1 items-center gap-1 text-left"
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
+    >
+      <TerminalSquare className="size-3 shrink-0" />
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
 export default function ThreadTerminalDrawer({
   threadId,
   cwd,
@@ -818,12 +931,13 @@ export default function ThreadTerminalDrawer({
     resolvedTerminalGroups.length > 1 ||
     resolvedTerminalGroups.some((terminalGroup) => terminalGroup.terminalIds.length > 1);
   const hasReachedSplitLimit = visibleTerminalIds.length >= MAX_TERMINALS_PER_GROUP;
-  const terminalLabelById = useMemo(
-    () =>
-      new Map(
-        normalizedTerminalIds.map((terminalId, index) => [terminalId, `Terminal ${index + 1}`]),
-      ),
-    [normalizedTerminalIds],
+  const terminalLabelById = useTerminalLabels(threadId, normalizedTerminalIds);
+  const renameTerminal = useTerminalNameStore((s) => s.renameTerminal);
+  const handleRenameTerminal = useCallback(
+    (terminalId: string, name: string) => {
+      renameTerminal(threadId, terminalId, name);
+    },
+    [renameTerminal, threadId],
   );
   const splitTerminalActionLabel = hasReachedSplitLimit
     ? `Split Terminal (max ${MAX_TERMINALS_PER_GROUP} per group)`
@@ -1120,16 +1234,13 @@ export default function ThreadTerminalDrawer({
                               {showGroupHeaders && (
                                 <span className="text-[10px] text-muted-foreground/80">└</span>
                               )}
-                              <button
-                                type="button"
-                                className="flex min-w-0 flex-1 items-center gap-1 text-left"
-                                onClick={() => onActiveTerminalChange(terminalId)}
-                              >
-                                <TerminalSquare className="size-3 shrink-0" />
-                                <span className="truncate">
-                                  {terminalLabelById.get(terminalId) ?? "Terminal"}
-                                </span>
-                              </button>
+                              <EditableTerminalName
+                                terminalId={terminalId}
+                                label={terminalLabelById.get(terminalId) ?? "Terminal"}
+                                isActive={isActive}
+                                onActivate={onActiveTerminalChange}
+                                onRename={handleRenameTerminal}
+                              />
                               {normalizedTerminalIds.length > 1 && (
                                 <Popover>
                                   <PopoverTrigger

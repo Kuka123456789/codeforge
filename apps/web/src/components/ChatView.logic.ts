@@ -25,6 +25,7 @@ export function buildLocalDraftThread(
     codexThreadId: null,
     projectId: draftThread.projectId,
     title: "New thread",
+    titleSource: "auto",
     modelSelection: fallbackModelSelection,
     runtimeMode: draftThread.runtimeMode,
     interactionMode: draftThread.interactionMode,
@@ -39,6 +40,7 @@ export function buildLocalDraftThread(
     turnDiffSummaries: [],
     activities: [],
     proposedPlans: [],
+    archivedAt: null,
   };
 }
 

@@ -7,12 +7,14 @@
  * @module ProjectionThreadRepository
  */
 import {
+  DEFAULT_TITLE_SOURCE,
   IsoDateTime,
   ModelSelection,
   ProjectId,
   ProviderInteractionMode,
   RuntimeMode,
   ThreadId,
+  TitleSource,
   TurnId,
 } from "@t3tools/contracts";
 import { Option, Schema, ServiceMap } from "effect";
@@ -24,6 +26,7 @@ export const ProjectionThread = Schema.Struct({
   threadId: ThreadId,
   projectId: ProjectId,
   title: Schema.String,
+  titleSource: TitleSource.pipe(Schema.withDecodingDefault(() => DEFAULT_TITLE_SOURCE)),
   modelSelection: ModelSelection,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode,
@@ -33,6 +36,7 @@ export const ProjectionThread = Schema.Struct({
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
   deletedAt: Schema.NullOr(IsoDateTime),
+  archivedAt: Schema.NullOr(IsoDateTime),
 });
 export type ProjectionThread = typeof ProjectionThread.Type;
 

@@ -93,6 +93,7 @@ export interface Thread {
   codexThreadId: string | null;
   projectId: ProjectId;
   title: string;
+  titleSource: "auto" | "manual";
   modelSelection: ModelSelection;
   runtimeMode: RuntimeMode;
   interactionMode: ProviderInteractionMode;
@@ -106,6 +107,7 @@ export interface Thread {
   lastVisitedAt?: string | undefined;
   branch: string | null;
   worktreePath: string | null;
+  archivedAt: string | null;
   turnDiffSummaries: TurnDiffSummary[];
   activities: OrchestrationThreadActivity[];
 }

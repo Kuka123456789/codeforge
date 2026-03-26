@@ -44,11 +44,32 @@ describe("contextWindow", () => {
     expect(snapshot).toBeNull();
   });
 
+  it("derives snapshot for 1M context window", () => {
+    const snapshot = deriveLatestContextWindowSnapshot([
+      makeActivity("activity-1", "context-window.updated", {
+        usedTokens: 60_000,
+        maxTokens: 1_000_000,
+        compactsAutomatically: true,
+      }),
+    ]);
+
+    expect(snapshot).not.toBeNull();
+    expect(snapshot?.usedTokens).toBe(60_000);
+    expect(snapshot?.maxTokens).toBe(1_000_000);
+    expect(snapshot?.usedPercentage).toBe(6);
+    expect(snapshot?.remainingTokens).toBe(940_000);
+    expect(snapshot?.remainingPercentage).toBe(94);
+    expect(snapshot?.compactsAutomatically).toBe(true);
+  });
+
   it("formats compact token counts", () => {
     expect(formatContextWindowTokens(999)).toBe("999");
     expect(formatContextWindowTokens(1400)).toBe("1.4k");
     expect(formatContextWindowTokens(14_000)).toBe("14k");
     expect(formatContextWindowTokens(258_000)).toBe("258k");
+    expect(formatContextWindowTokens(1_000_000)).toBe("1m");
+    expect(formatContextWindowTokens(1_200_000)).toBe("1.2m");
+    expect(formatContextWindowTokens(2_500_000)).toBe("2.5m");
   });
 
   it("includes total processed tokens when available", () => {

@@ -246,6 +246,7 @@ function createSnapshotForTargetUser(options: {
         id: THREAD_ID,
         projectId: PROJECT_ID,
         title: "Browser test thread",
+        titleSource: "auto",
         modelSelection: {
           provider: "codex",
           model: "gpt-5",
@@ -258,6 +259,7 @@ function createSnapshotForTargetUser(options: {
         createdAt: NOW_ISO,
         updatedAt: NOW_ISO,
         deletedAt: null,
+        archivedAt: null,
         messages,
         activities: [],
         proposedPlans: [],
@@ -303,6 +305,7 @@ function addThreadToSnapshot(
         id: threadId,
         projectId: PROJECT_ID,
         title: "New thread",
+        titleSource: "auto",
         modelSelection: {
           provider: "codex",
           model: "gpt-5",
@@ -315,6 +318,7 @@ function addThreadToSnapshot(
         createdAt: NOW_ISO,
         updatedAt: NOW_ISO,
         deletedAt: null,
+        archivedAt: null,
         messages: [],
         activities: [],
         proposedPlans: [],

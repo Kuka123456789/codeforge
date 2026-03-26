@@ -258,7 +258,7 @@ function getLatestUserMessageTimestamp(thread: SidebarThreadSortInput): number {
 
 function getThreadSortTimestamp(
   thread: SidebarThreadSortInput,
-  sortOrder: SidebarThreadSortOrder | Exclude<SidebarProjectSortOrder, "manual">,
+  sortOrder: Exclude<SidebarThreadSortOrder, "manual"> | Exclude<SidebarProjectSortOrder, "manual">,
 ): number {
   if (sortOrder === "created_at") {
     return toSortableTimestamp(thread.createdAt) ?? Number.NEGATIVE_INFINITY;
@@ -269,6 +269,9 @@ function getThreadSortTimestamp(
 export function sortThreadsForSidebar<
   T extends Pick<Thread, "id" | "createdAt" | "updatedAt" | "messages">,
 >(threads: readonly T[], sortOrder: SidebarThreadSortOrder): T[] {
+  if (sortOrder === "manual") {
+    return [...threads];
+  }
   return threads.toSorted((left, right) => {
     const rightTimestamp = getThreadSortTimestamp(right, sortOrder);
     const leftTimestamp = getThreadSortTimestamp(left, sortOrder);
@@ -277,6 +280,10 @@ export function sortThreadsForSidebar<
     if (byTimestamp !== 0) return byTimestamp;
     return right.id.localeCompare(left.id);
   });
+}
+
+export function isArchived(thread: Pick<Thread, "archivedAt">): boolean {
+  return thread.archivedAt !== null;
 }
 
 export function getFallbackThreadIdAfterDelete<
@@ -300,6 +307,35 @@ export function getFallbackThreadIdAfterDelete<
           thread.projectId === deletedThread.projectId &&
           thread.id !== deletedThreadId &&
           !deletedThreadIds?.has(thread.id),
+      ),
+      sortOrder,
+    )[0]?.id ?? null
+  );
+}
+
+export function getFallbackThreadIdAfterArchive<
+  T extends Pick<
+    Thread,
+    "id" | "projectId" | "createdAt" | "updatedAt" | "messages" | "archivedAt"
+  >,
+>(input: {
+  threads: readonly T[];
+  archivedThreadId: T["id"];
+  sortOrder: SidebarThreadSortOrder;
+}): T["id"] | null {
+  const { archivedThreadId, sortOrder, threads } = input;
+  const archivedThread = threads.find((thread) => thread.id === archivedThreadId);
+  if (!archivedThread) {
+    return null;
+  }
+
+  return (
+    sortThreadsForSidebar(
+      threads.filter(
+        (thread) =>
+          thread.projectId === archivedThread.projectId &&
+          thread.id !== archivedThreadId &&
+          thread.archivedAt === null,
       ),
       sortOrder,
     )[0]?.id ?? null

@@ -420,6 +420,7 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
             threadId: event.payload.threadId,
             projectId: event.payload.projectId,
             title: event.payload.title,
+            titleSource: event.payload.titleSource,
             modelSelection: event.payload.modelSelection,
             runtimeMode: event.payload.runtimeMode,
             interactionMode: event.payload.interactionMode,
@@ -429,6 +430,7 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
             createdAt: event.payload.createdAt,
             updatedAt: event.payload.updatedAt,
             deletedAt: null,
+            archivedAt: null,
           });
           return;
 
@@ -442,6 +444,9 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
           yield* projectionThreadRepository.upsert({
             ...existingRow.value,
             ...(event.payload.title !== undefined ? { title: event.payload.title } : {}),
+            ...(event.payload.titleSource !== undefined
+              ? { titleSource: event.payload.titleSource }
+              : {}),
             ...(event.payload.modelSelection !== undefined
               ? { modelSelection: event.payload.modelSelection }
               : {}),
@@ -496,6 +501,36 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
             ...existingRow.value,
             deletedAt: event.payload.deletedAt,
             updatedAt: event.payload.deletedAt,
+          });
+          return;
+        }
+
+        case "thread.archived": {
+          const existingRow = yield* projectionThreadRepository.getById({
+            threadId: event.payload.threadId,
+          });
+          if (Option.isNone(existingRow)) {
+            return;
+          }
+          yield* projectionThreadRepository.upsert({
+            ...existingRow.value,
+            archivedAt: event.payload.archivedAt,
+            updatedAt: event.payload.archivedAt,
+          });
+          return;
+        }
+
+        case "thread.unarchived": {
+          const existingRow = yield* projectionThreadRepository.getById({
+            threadId: event.payload.threadId,
+          });
+          if (Option.isNone(existingRow)) {
+            return;
+          }
+          yield* projectionThreadRepository.upsert({
+            ...existingRow.value,
+            archivedAt: null,
+            updatedAt: event.occurredAt,
           });
           return;
         }

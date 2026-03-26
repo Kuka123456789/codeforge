@@ -1,5 +1,6 @@
-import { memo, useState, useCallback } from "react";
+import { memo, useState, useCallback, useRef, useEffect } from "react";
 import { type TimestampFormat } from "@t3tools/contracts/settings";
+import * as Schema from "effect/Schema";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -27,6 +28,73 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "./ui/menu";
 import { readNativeApi } from "~/nativeApi";
 import { toastManager } from "./ui/toast";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
+import { getLocalStorageItem, setLocalStorageItem } from "~/hooks/useLocalStorage";
+
+const PLAN_SIDEBAR_MIN_WIDTH = 280;
+const PLAN_SIDEBAR_MAX_WIDTH = 700;
+const PLAN_SIDEBAR_DEFAULT_WIDTH = 340;
+const PLAN_SIDEBAR_WIDTH_STORAGE_KEY = "t3code:plan-sidebar-width";
+
+function clampWidth(w: number): number {
+  return Math.round(Math.min(PLAN_SIDEBAR_MAX_WIDTH, Math.max(PLAN_SIDEBAR_MIN_WIDTH, w)));
+}
+
+function usePlanSidebarWidth() {
+  const [width, setWidth] = useState(() => {
+    const stored = getLocalStorageItem(PLAN_SIDEBAR_WIDTH_STORAGE_KEY, Schema.Finite);
+    if (stored !== null && stored >= PLAN_SIDEBAR_MIN_WIDTH && stored <= PLAN_SIDEBAR_MAX_WIDTH) {
+      return stored;
+    }
+    return PLAN_SIDEBAR_DEFAULT_WIDTH;
+  });
+  const persistWidth = useCallback((w: number) => {
+    setLocalStorageItem(PLAN_SIDEBAR_WIDTH_STORAGE_KEY, w, Schema.Finite);
+  }, []);
+  return { width, setWidth, persistWidth };
+}
+
+function useResizeHandle(
+  onWidthChange: (width: number) => void,
+  onResizeEnd: (width: number) => void,
+) {
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>, currentWidth: number) => {
+      e.preventDefault();
+      isDragging.current = true;
+      startX.current = e.clientX;
+      startWidth.current = currentWidth;
+      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    },
+    [],
+  );
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDragging.current) return;
+      // Dragging left increases width (panel is on the right)
+      const delta = startX.current - e.clientX;
+      onWidthChange(clampWidth(startWidth.current + delta));
+    },
+    [onWidthChange],
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isDragging.current) return;
+      isDragging.current = false;
+      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+      const delta = startX.current - e.clientX;
+      onResizeEnd(clampWidth(startWidth.current + delta));
+    },
+    [onResizeEnd],
+  );
+
+  return { handlePointerDown, handlePointerMove, handlePointerUp };
+}
 
 function stepStatusIcon(status: string): React.ReactNode {
   if (status === "completed") {
@@ -67,9 +135,23 @@ const PlanSidebar = memo(function PlanSidebar({
   timestampFormat,
   onClose,
 }: PlanSidebarProps) {
-  const [proposedPlanExpanded, setProposedPlanExpanded] = useState(false);
+  const [proposedPlanExpanded, setProposedPlanExpanded] = useState(true);
   const [isSavingToWorkspace, setIsSavingToWorkspace] = useState(false);
   const { copyToClipboard, isCopied } = useCopyToClipboard();
+  const { width, setWidth, persistWidth } = usePlanSidebarWidth();
+  const resizeHandle = useResizeHandle(setWidth, persistWidth);
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Suppress text selection while resizing
+  useEffect(() => {
+    if (!isResizing) return;
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+    return () => {
+      document.body.style.userSelect = "";
+      document.body.style.cursor = "";
+    };
+  }, [isResizing]);
 
   const planMarkdown = activeProposedPlan?.planMarkdown ?? null;
   const displayedPlanMarkdown = planMarkdown ? stripDisplayedPlanMarkdown(planMarkdown) : null;
@@ -118,7 +200,26 @@ const PlanSidebar = memo(function PlanSidebar({
   }, [planMarkdown, workspaceRoot]);
 
   return (
-    <div className="flex h-full w-[340px] shrink-0 flex-col border-l border-border/70 bg-card/50">
+    <div
+      className="relative flex h-full shrink-0 flex-col border-l border-border/70 bg-card/50"
+      style={{ width }}
+    >
+      {/* Resize handle */}
+      <div
+        className={cn(
+          "absolute inset-y-0 -left-1 z-10 w-2 cursor-col-resize transition-colors",
+          isResizing ? "bg-blue-500/30" : "hover:bg-blue-500/20",
+        )}
+        onPointerDown={(e) => {
+          setIsResizing(true);
+          resizeHandle.handlePointerDown(e, width);
+        }}
+        onPointerMove={resizeHandle.handlePointerMove}
+        onPointerUp={(e) => {
+          setIsResizing(false);
+          resizeHandle.handlePointerUp(e);
+        }}
+      />
       {/* Header */}
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-3">
         <div className="flex items-center gap-2">

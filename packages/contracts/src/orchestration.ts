@@ -269,10 +269,15 @@ export const OrchestrationLatestTurn = Schema.Struct({
 });
 export type OrchestrationLatestTurn = typeof OrchestrationLatestTurn.Type;
 
+export const TitleSource = Schema.Literals(["auto", "manual"]);
+export type TitleSource = typeof TitleSource.Type;
+export const DEFAULT_TITLE_SOURCE: TitleSource = "auto";
+
 export const OrchestrationThread = Schema.Struct({
   id: ThreadId,
   projectId: ProjectId,
   title: TrimmedNonEmptyString,
+  titleSource: TitleSource.pipe(Schema.withDecodingDefault(() => DEFAULT_TITLE_SOURCE)),
   modelSelection: ModelSelection,
   runtimeMode: RuntimeMode,
   interactionMode: ProviderInteractionMode.pipe(
@@ -284,6 +289,7 @@ export const OrchestrationThread = Schema.Struct({
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
   deletedAt: Schema.NullOr(IsoDateTime),
+  archivedAt: Schema.NullOr(IsoDateTime),
   messages: Schema.Array(OrchestrationMessage),
   proposedPlans: Schema.Array(OrchestrationProposedPlan).pipe(Schema.withDecodingDefault(() => [])),
   activities: Schema.Array(OrchestrationThreadActivity),
@@ -348,11 +354,24 @@ const ThreadDeleteCommand = Schema.Struct({
   threadId: ThreadId,
 });
 
+const ThreadArchiveCommand = Schema.Struct({
+  type: Schema.Literal("thread.archive"),
+  commandId: CommandId,
+  threadId: ThreadId,
+});
+
+const ThreadUnarchiveCommand = Schema.Struct({
+  type: Schema.Literal("thread.unarchive"),
+  commandId: CommandId,
+  threadId: ThreadId,
+});
+
 const ThreadMetaUpdateCommand = Schema.Struct({
   type: Schema.Literal("thread.meta.update"),
   commandId: CommandId,
   threadId: ThreadId,
   title: Schema.optional(TrimmedNonEmptyString),
+  titleSource: Schema.optional(TitleSource),
   modelSelection: Schema.optional(ModelSelection),
   branch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   worktreePath: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
@@ -457,6 +476,8 @@ const DispatchableClientOrchestrationCommand = Schema.Union([
   ProjectDeleteCommand,
   ThreadCreateCommand,
   ThreadDeleteCommand,
+  ThreadArchiveCommand,
+  ThreadUnarchiveCommand,
   ThreadMetaUpdateCommand,
   ThreadRuntimeModeSetCommand,
   ThreadInteractionModeSetCommand,
@@ -476,6 +497,8 @@ export const ClientOrchestrationCommand = Schema.Union([
   ProjectDeleteCommand,
   ThreadCreateCommand,
   ThreadDeleteCommand,
+  ThreadArchiveCommand,
+  ThreadUnarchiveCommand,
   ThreadMetaUpdateCommand,
   ThreadRuntimeModeSetCommand,
   ThreadInteractionModeSetCommand,
@@ -576,6 +599,8 @@ export const OrchestrationEventType = Schema.Literals([
   "project.deleted",
   "thread.created",
   "thread.deleted",
+  "thread.archived",
+  "thread.unarchived",
   "thread.meta-updated",
   "thread.runtime-mode-set",
   "thread.interaction-mode-set",
@@ -626,6 +651,7 @@ export const ThreadCreatedPayload = Schema.Struct({
   threadId: ThreadId,
   projectId: ProjectId,
   title: TrimmedNonEmptyString,
+  titleSource: TitleSource.pipe(Schema.withDecodingDefault(() => DEFAULT_TITLE_SOURCE)),
   modelSelection: ModelSelection,
   runtimeMode: RuntimeMode.pipe(Schema.withDecodingDefault(() => DEFAULT_RUNTIME_MODE)),
   interactionMode: ProviderInteractionMode.pipe(
@@ -642,9 +668,19 @@ export const ThreadDeletedPayload = Schema.Struct({
   deletedAt: IsoDateTime,
 });
 
+export const ThreadArchivedPayload = Schema.Struct({
+  threadId: ThreadId,
+  archivedAt: IsoDateTime,
+});
+
+export const ThreadUnarchivedPayload = Schema.Struct({
+  threadId: ThreadId,
+});
+
 export const ThreadMetaUpdatedPayload = Schema.Struct({
   threadId: ThreadId,
   title: Schema.optional(TrimmedNonEmptyString),
+  titleSource: Schema.optional(TitleSource),
   modelSelection: Schema.optional(ModelSelection),
   branch: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
   worktreePath: Schema.optional(Schema.NullOr(TrimmedNonEmptyString)),
@@ -798,6 +834,16 @@ export const OrchestrationEvent = Schema.Union([
     ...EventBaseFields,
     type: Schema.Literal("thread.deleted"),
     payload: ThreadDeletedPayload,
+  }),
+  Schema.Struct({
+    ...EventBaseFields,
+    type: Schema.Literal("thread.archived"),
+    payload: ThreadArchivedPayload,
+  }),
+  Schema.Struct({
+    ...EventBaseFields,
+    type: Schema.Literal("thread.unarchived"),
+    payload: ThreadUnarchivedPayload,
   }),
   Schema.Struct({
     ...EventBaseFields,
