@@ -53,9 +53,9 @@ These must be done before the landing page goes live or any promotion happens.
 
 These are the real features CodeForge adds over upstream T3 Code:
 
-1. **Claude support** — T3 Code is Codex-only. CodeForge supports Claude (Opus, Sonnet, Haiku) with full reasoning effort levels and ultrathink.
-2. **Multi-provider** — Switch between Claude and Codex freely. Each provider remembers its model selection.
-3. **Customizable keybindings** — Full keybinding system via `~/.t3/keybindings.json`.
-4. **Multi-terminal** — Split terminals, multiple terminal sessions (Mod+D, Mod+N, Mod+W).
-5. **UX polish** — Escape to stop generation, resizable sidebar, edit & resend messages, context window usage display, word wrap toggle for diffs, scroll-to-bottom pill, sorted threads by recency.
-6. **Desktop app** — Electron-based with auto-updates.
+1. **Chat archiving** — Archive old conversations to keep your workspace clean. T3 Code doesn't have this.
+2. **Better chat renaming** — Inline clickable rename in the chat header. Faster and more intuitive.
+3. **Better git staging UX** — Selective file staging with a polished interface for choosing what goes into commits.
+4. **Better UI overall** — Resizable sidebar, escape to stop generation, edit & resend messages, context window usage display, word wrap toggle for diffs, scroll-to-bottom pill, sorted threads by recency, collapsed sidebar previews.
+
+Note: T3 Code now also has multi-provider support, multi-terminal, and likely customizable keybindings. Don't claim these as differentiators.
