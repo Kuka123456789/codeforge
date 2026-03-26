@@ -134,6 +134,7 @@ import {
 } from "../composerDraftStore";
 import {
   appendTerminalContextsToPrompt,
+  deriveDisplayedUserMessageState,
   formatTerminalContextLabel,
   insertInlineTerminalContextPlaceholder,
   removeInlineTerminalContextPlaceholder,
@@ -146,6 +147,7 @@ import { selectThreadTerminalState, useTerminalStateStore } from "../terminalSta
 import { ComposerPromptEditor, type ComposerPromptEditorHandle } from "./ComposerPromptEditor";
 import { PullRequestThreadDialog } from "./PullRequestThreadDialog";
 import { MessagesTimeline } from "./chat/MessagesTimeline";
+import { PinnedUserPromptBanner } from "./chat/PinnedUserPromptBanner";
 import { ChatHeader } from "./chat/ChatHeader";
 import { ContextWindowMeter } from "./chat/ContextWindowMeter";
 import { buildExpandedImagePreview, ExpandedImagePreview } from "./chat/ExpandedImagePreview";
@@ -317,6 +319,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
   );
   const promptRef = useRef(prompt);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [showPinnedPrompt, setShowPinnedPrompt] = useState(false);
+  const [scrollToRowIndex, setScrollToRowIndex] = useState<number | null>(null);
   const [isDragOverComposer, setIsDragOverComposer] = useState(false);
   const [expandedImage, setExpandedImage] = useState<ExpandedImagePreview | null>(null);
   const [optimisticUserMessages, setOptimisticUserMessages] = useState<ChatMessage[]>([]);
@@ -905,6 +909,23 @@ export default function ChatView({ threadId }: ChatViewProps) {
       deriveTimelineEntries(timelineMessages, activeThread?.proposedPlans ?? [], workLogEntries),
     [activeThread?.proposedPlans, timelineMessages, workLogEntries],
   );
+  const lastUserTimelineEntry = useMemo(() => {
+    for (let i = timelineEntries.length - 1; i >= 0; i--) {
+      const entry = timelineEntries[i];
+      if (entry?.kind === "message" && entry.message.role === "user") return { entry, index: i };
+    }
+    return null;
+  }, [timelineEntries]);
+  const lastUserMessageIdRef = useRef<string | null>(null);
+  lastUserMessageIdRef.current = lastUserTimelineEntry?.entry.message.id ?? null;
+  const pinnedPromptText = useMemo(
+    () =>
+      lastUserTimelineEntry
+        ? deriveDisplayedUserMessageState(lastUserTimelineEntry.entry.message.text).visibleText
+        : "",
+    [lastUserTimelineEntry],
+  );
+
   const { turnDiffSummaries, inferredCheckpointTurnCountByTurnId } =
     useTurnDiffSummaries(activeThread);
   const turnDiffSummaryByAssistantMessageId = useMemo(() => {
@@ -1762,7 +1783,30 @@ export default function ChatView({ threadId }: ChatViewProps) {
     }
 
     setShowScrollToBottom(!shouldAutoScrollRef.current);
+
+    // Check if the last user message has scrolled above the viewport.
+    const messageId = lastUserMessageIdRef.current;
+    if (messageId) {
+      const el = scrollContainer.querySelector(`[data-message-id="${messageId}"]`);
+      if (!el) {
+        // Element is virtualized away (above viewport) — show pinned banner.
+        setShowPinnedPrompt(true);
+      } else {
+        const containerRect = scrollContainer.getBoundingClientRect();
+        setShowPinnedPrompt(el.getBoundingClientRect().bottom < containerRect.top);
+      }
+    } else {
+      setShowPinnedPrompt(false);
+    }
+
     lastKnownScrollTopRef.current = currentScrollTop;
+  }, []);
+  const handleScrollToLastUserMessage = useCallback(() => {
+    if (lastUserTimelineEntry === null) return;
+    setScrollToRowIndex(lastUserTimelineEntry.index);
+  }, [lastUserTimelineEntry]);
+  const handleScrollToRowComplete = useCallback(() => {
+    setScrollToRowIndex(null);
   }, []);
   const onMessagesWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (event.deltaY < 0) {
@@ -3612,8 +3656,18 @@ export default function ChatView({ threadId }: ChatViewProps) {
                 resolvedTheme={resolvedTheme}
                 timestampFormat={timestampFormat}
                 workspaceRoot={activeProject?.cwd ?? undefined}
+                scrollToRowIndex={scrollToRowIndex}
+                onScrollToRowComplete={handleScrollToRowComplete}
               />
             </div>
+
+            {/* Pinned last user prompt — shown when user's last message is above the viewport */}
+            {showPinnedPrompt && lastUserTimelineEntry && (
+              <PinnedUserPromptBanner
+                text={pinnedPromptText}
+                onClick={handleScrollToLastUserMessage}
+              />
+            )}
 
             {/* scroll to bottom pill — shown when user has scrolled away from the bottom */}
             {showScrollToBottom && (

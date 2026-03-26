@@ -1239,7 +1239,7 @@ function registerIpcHandlers(): void {
 }
 
 function getIconOption(): { icon: string } | Record<string, never> {
-  if (process.platform === "darwin") return {}; // macOS uses .icns from app bundle
+  if (process.platform === "darwin" && !isDevelopment) return {}; // macOS uses .icns from app bundle in production
   const ext = process.platform === "win32" ? "ico" : "png";
   const iconPath = resolveIconPath(ext);
   return iconPath ? { icon: iconPath } : {};

@@ -81,6 +81,8 @@ interface MessagesTimelineProps {
   resolvedTheme: "light" | "dark";
   timestampFormat: TimestampFormat;
   workspaceRoot: string | undefined;
+  scrollToRowIndex: number | null;
+  onScrollToRowComplete: () => void;
 }
 
 export const MessagesTimeline = memo(function MessagesTimeline({
@@ -105,6 +107,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   resolvedTheme,
   timestampFormat,
   workspaceRoot,
+  scrollToRowIndex,
+  onScrollToRowComplete,
 }: MessagesTimelineProps) {
   const timelineRootRef = useRef<HTMLDivElement | null>(null);
   const [timelineWidthPx, setTimelineWidthPx] = useState<number | null>(null);
@@ -290,6 +294,12 @@ export const MessagesTimeline = memo(function MessagesTimeline({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (scrollToRowIndex === null) return;
+    rowVirtualizer.scrollToIndex(scrollToRowIndex, { align: "start", behavior: "smooth" });
+    onScrollToRowComplete();
+  }, [scrollToRowIndex, rowVirtualizer, onScrollToRowComplete]);
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const nonVirtualizedRows = rows.slice(virtualizedRowCount);
