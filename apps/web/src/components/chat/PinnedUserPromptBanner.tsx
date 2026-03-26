@@ -52,14 +52,14 @@ export const PinnedUserPromptBanner = memo(function PinnedUserPromptBanner({
         transition: "opacity 200ms ease-out, transform 200ms ease-out",
       }}
     >
-      <div className="pointer-events-auto flex w-full max-w-3xl items-center gap-1.5 rounded-b-xl border border-t-0 border-primary/20 bg-primary/10 py-2 pr-1.5 pl-3.5 shadow-md backdrop-blur-sm dark:border-primary/25 dark:bg-primary/15">
+      <div className="pointer-events-auto flex w-full max-w-3xl items-start gap-1.5 rounded-b-xl border border-t-0 border-primary/20 bg-primary/10 py-2 pr-1.5 pl-3.5 shadow-md backdrop-blur-sm dark:border-primary/25 dark:bg-primary/15">
         <button
           type="button"
           onClick={onScrollToMessage}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:opacity-80"
+          className="flex min-w-0 flex-1 items-start gap-2 text-left transition-colors hover:opacity-80"
         >
-          <ChevronUpIcon className="size-3.5 shrink-0 text-primary" />
-          <span className="truncate text-sm text-foreground">
+          <ChevronUpIcon className="mt-0.5 size-3.5 shrink-0 text-primary" />
+          <span className="line-clamp-4 text-sm text-foreground">
             <span className="font-semibold text-primary">You asked:</span> {text}
           </span>
         </button>
@@ -67,7 +67,7 @@ export const PinnedUserPromptBanner = memo(function PinnedUserPromptBanner({
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss pinned prompt"
-          className="flex size-6 shrink-0 items-center justify-center rounded-md text-primary/50 transition-colors hover:bg-primary/10 hover:text-primary"
+          className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md text-primary/50 transition-colors hover:bg-primary/10 hover:text-primary"
         >
           <XIcon className="size-3.5" />
         </button>

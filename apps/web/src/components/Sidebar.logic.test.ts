@@ -4,7 +4,7 @@ import {
   getFallbackThreadIdAfterDelete,
   getVisibleThreadsForProject,
   getProjectSortTimestamp,
-  hasUnseenCompletion,
+  hasCompletion,
   resolveProjectStatusIndicator,
   resolveSidebarNewThreadEnvMode,
   resolveThreadRowClassName,
@@ -24,7 +24,7 @@ import {
 function makeLatestTurn(overrides?: {
   completedAt?: string | null;
   startedAt?: string | null;
-}): Parameters<typeof hasUnseenCompletion>[0]["latestTurn"] {
+}): Parameters<typeof hasCompletion>[0]["latestTurn"] {
   return {
     turnId: "turn-1" as never,
     state: "completed",
@@ -35,17 +35,27 @@ function makeLatestTurn(overrides?: {
   };
 }
 
-describe("hasUnseenCompletion", () => {
-  it("returns true when a thread completed after its last visit", () => {
+describe("hasCompletion", () => {
+  it("returns true when a thread has a completed turn", () => {
     expect(
-      hasUnseenCompletion({
+      hasCompletion({
         interactionMode: "default",
         latestTurn: makeLatestTurn(),
-        lastVisitedAt: "2026-03-09T10:04:00.000Z",
         proposedPlans: [],
         session: null,
       }),
     ).toBe(true);
+  });
+
+  it("returns false when there is no completed turn", () => {
+    expect(
+      hasCompletion({
+        interactionMode: "default",
+        latestTurn: makeLatestTurn({ completedAt: null }),
+        proposedPlans: [],
+        session: null,
+      }),
+    ).toBe(false);
   });
 });
 
@@ -100,7 +110,6 @@ describe("resolveThreadStatusPill", () => {
   const baseThread = {
     interactionMode: "plan" as const,
     latestTurn: null,
-    lastVisitedAt: undefined,
     proposedPlans: [],
     session: {
       provider: "codex" as const,
@@ -199,14 +208,13 @@ describe("resolveThreadStatusPill", () => {
     ).toMatchObject({ label: "Completed", pulse: false });
   });
 
-  it("shows completed when there is an unseen completion and no active blocker", () => {
+  it("shows completed when the latest turn is done and no active blocker is present", () => {
     expect(
       resolveThreadStatusPill({
         thread: {
           ...baseThread,
           interactionMode: "default",
           latestTurn: makeLatestTurn(),
-          lastVisitedAt: "2026-03-09T10:04:00.000Z",
           session: {
             ...baseThread.session,
             status: "ready",
