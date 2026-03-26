@@ -27,7 +27,6 @@ function makeThread(overrides: Partial<Thread> = {}): Thread {
     latestTurn: null,
     branch: null,
     worktreePath: null,
-    archivedAt: null,
     ...overrides,
   };
 }

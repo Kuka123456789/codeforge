@@ -33,7 +33,6 @@ function makeThread(overrides: Partial<Thread> = {}): Thread {
     latestTurn: null,
     branch: null,
     worktreePath: null,
-    archivedAt: null,
     ...overrides,
   };
 }
@@ -63,7 +62,6 @@ function makeReadModelThread(overrides: Partial<OrchestrationReadModel["threads"
     id: ThreadId.makeUnsafe("thread-1"),
     projectId: ProjectId.makeUnsafe("project-1"),
     title: "Thread",
-    titleSource: "auto",
     modelSelection: {
       provider: "codex",
       model: "gpt-5.3-codex",
@@ -76,7 +74,6 @@ function makeReadModelThread(overrides: Partial<OrchestrationReadModel["threads"
     createdAt: "2026-02-27T00:00:00.000Z",
     updatedAt: "2026-02-27T00:00:00.000Z",
     deletedAt: null,
-    archivedAt: null,
     messages: [],
     activities: [],
     proposedPlans: [],

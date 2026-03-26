@@ -282,10 +282,6 @@ export function sortThreadsForSidebar<
   });
 }
 
-export function isArchived(thread: Pick<Thread, "archivedAt">): boolean {
-  return thread.archivedAt !== null;
-}
-
 export function getFallbackThreadIdAfterDelete<
   T extends Pick<Thread, "id" | "projectId" | "createdAt" | "updatedAt" | "messages">,
 >(input: {
@@ -307,35 +303,6 @@ export function getFallbackThreadIdAfterDelete<
           thread.projectId === deletedThread.projectId &&
           thread.id !== deletedThreadId &&
           !deletedThreadIds?.has(thread.id),
-      ),
-      sortOrder,
-    )[0]?.id ?? null
-  );
-}
-
-export function getFallbackThreadIdAfterArchive<
-  T extends Pick<
-    Thread,
-    "id" | "projectId" | "createdAt" | "updatedAt" | "messages" | "archivedAt"
-  >,
->(input: {
-  threads: readonly T[];
-  archivedThreadId: T["id"];
-  sortOrder: SidebarThreadSortOrder;
-}): T["id"] | null {
-  const { archivedThreadId, sortOrder, threads } = input;
-  const archivedThread = threads.find((thread) => thread.id === archivedThreadId);
-  if (!archivedThread) {
-    return null;
-  }
-
-  return (
-    sortThreadsForSidebar(
-      threads.filter(
-        (thread) =>
-          thread.projectId === archivedThread.projectId &&
-          thread.id !== archivedThreadId &&
-          thread.archivedAt === null,
       ),
       sortOrder,
     )[0]?.id ?? null

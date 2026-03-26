@@ -1,5 +1,4 @@
 import {
-  ArchiveIcon,
   ArrowLeftIcon,
   ArrowUpDownIcon,
   ChevronRightIcon,
@@ -47,7 +46,6 @@ import { isElectron } from "../env";
 import { APP_STAGE_LABEL, APP_VERSION } from "../branding";
 import { isLinuxPlatform, isMacPlatform, newCommandId, newProjectId } from "../lib/utils";
 import { useStore } from "../store";
-import type { Project, Thread } from "../types";
 import { shortcutLabelForCommand } from "../keybindings";
 import { derivePendingApprovals, derivePendingUserInputs } from "../session-logic";
 import { gitRemoveWorktreeMutationOptions, gitStatusQueryOptions } from "../lib/gitReactQuery";
@@ -92,10 +90,8 @@ import { useThreadSelectionStore } from "../threadSelectionStore";
 import { formatWorktreePathForDisplay, getOrphanedWorktreePathForThread } from "../worktreeCleanup";
 import { isNonEmpty as isNonEmptyString } from "effect/String";
 import {
-  getFallbackThreadIdAfterArchive,
   getFallbackThreadIdAfterDelete,
   getVisibleThreadsForProject,
-  isArchived,
   resolveProjectStatusIndicator,
   resolveSidebarNewThreadEnvMode,
   resolveThreadRowClassName,
@@ -369,13 +365,10 @@ function SortableThreadItem({
   threadId: ThreadId;
   children: React.ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
-    useSortable({ id: threadId });
+  const { setNodeRef, transform, transition, isDragging, isOver } = useSortable({ id: threadId });
   return (
     <li
       ref={setNodeRef}
-      {...attributes}
-      {...listeners}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,
@@ -389,113 +382,6 @@ function SortableThreadItem({
     >
       {children}
     </li>
-  );
-}
-
-function ArchivedThreadsSection({
-  threads,
-  projects,
-  routeThreadId,
-  onUnarchive,
-  onDelete,
-  onNavigate,
-  appSettings,
-}: {
-  threads: readonly Thread[];
-  projects: readonly Project[];
-  routeThreadId: ThreadId | undefined;
-  onUnarchive: (threadId: ThreadId) => Promise<void>;
-  onDelete: (threadId: ThreadId) => Promise<void>;
-  onNavigate: (threadId: ThreadId) => void;
-  appSettings: { confirmThreadDelete: boolean };
-}) {
-  const [expanded, setExpanded] = useState(
-    () => localStorage.getItem("t3code:sidebar-archived-expanded") === "true",
-  );
-
-  const archivedThreads = useMemo(() => threads.filter((thread) => isArchived(thread)), [threads]);
-
-  const toggleExpanded = useCallback(() => {
-    setExpanded((prev) => {
-      const next = !prev;
-      localStorage.setItem("t3code:sidebar-archived-expanded", String(next));
-      return next;
-    });
-  }, []);
-
-  if (archivedThreads.length === 0) {
-    return null;
-  }
-
-  const projectNameById = new Map(projects.map((p) => [p.id, p.name]));
-
-  return (
-    <SidebarGroup className="px-2 py-2">
-      <Collapsible open={expanded}>
-        <button
-          type="button"
-          className="mb-1 flex w-full items-center gap-1.5 px-2 text-left"
-          onClick={toggleExpanded}
-        >
-          <ChevronRightIcon
-            className={`size-3 shrink-0 text-muted-foreground/60 transition-transform duration-150 ${
-              expanded ? "rotate-90" : ""
-            }`}
-          />
-          <ArchiveIcon className="size-3 shrink-0 text-muted-foreground/60" />
-          <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60">
-            Archived ({archivedThreads.length})
-          </span>
-        </button>
-        <CollapsibleContent>
-          <SidebarMenu>
-            {archivedThreads.map((thread) => (
-              <SidebarMenuItem key={thread.id}>
-                <SidebarMenuButton
-                  size="sm"
-                  isActive={routeThreadId === thread.id}
-                  className="h-7 w-full cursor-pointer justify-start gap-2 px-2 text-left text-muted-foreground/70 hover:bg-accent hover:text-foreground"
-                  onClick={() => onNavigate(thread.id)}
-                  onContextMenu={async (event) => {
-                    event.preventDefault();
-                    const api = readNativeApi();
-                    if (!api) return;
-                    const clicked = await api.contextMenu.show(
-                      [
-                        { id: "unarchive", label: "Restore" },
-                        { id: "delete", label: "Delete permanently", destructive: true },
-                      ],
-                      { x: event.clientX, y: event.clientY },
-                    );
-                    if (clicked === "unarchive") {
-                      await onUnarchive(thread.id);
-                      return;
-                    }
-                    if (clicked === "delete") {
-                      if (appSettings.confirmThreadDelete) {
-                        const confirmed = await api.dialogs.confirm(
-                          [
-                            `Delete thread "${thread.title}"?`,
-                            "This permanently clears conversation history for this thread.",
-                          ].join("\n"),
-                        );
-                        if (!confirmed) return;
-                      }
-                      await onDelete(thread.id);
-                    }
-                  }}
-                >
-                  <span className="min-w-0 flex-1 truncate text-xs opacity-70">{thread.title}</span>
-                  <span className="shrink-0 text-[10px] text-muted-foreground/40">
-                    {projectNameById.get(thread.projectId) ?? ""}
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </CollapsibleContent>
-      </Collapsible>
-    </SidebarGroup>
   );
 }
 
@@ -526,7 +412,7 @@ export default function Sidebar() {
   const { handleNewThread } = useHandleNewThread();
   const routeThreadId = useParams({
     strict: false,
-    select: (params) => (params.threadId ? ThreadId.makeUnsafe(params.threadId) : undefined),
+    select: (params) => (params.threadId ? ThreadId.makeUnsafe(params.threadId) : null),
   });
   const { data: keybindings = EMPTY_KEYBINDINGS } = useQuery({
     ...serverConfigQueryOptions(),
@@ -636,7 +522,7 @@ export default function Sidebar() {
   const focusMostRecentThreadForProject = useCallback(
     (projectId: ProjectId) => {
       const latestThread = sortThreadsForSidebar(
-        threads.filter((thread) => thread.projectId === projectId && !isArchived(thread)),
+        threads.filter((thread) => thread.projectId === projectId),
         appSettings.sidebarThreadSortOrder,
       )[0];
       if (!latestThread) return;
@@ -786,7 +672,6 @@ export default function Sidebar() {
           commandId: newCommandId(),
           threadId,
           title: trimmed,
-          titleSource: "manual",
         });
       } catch (error) {
         toastManager.add({
@@ -922,50 +807,6 @@ export default function Sidebar() {
     ],
   );
 
-  const archiveThread = useCallback(
-    async (threadId: ThreadId): Promise<void> => {
-      const api = readNativeApi();
-      if (!api) return;
-
-      const shouldNavigateToFallback = routeThreadId === threadId;
-      const fallbackThreadId = getFallbackThreadIdAfterArchive({
-        threads,
-        archivedThreadId: threadId,
-        sortOrder: appSettings.sidebarThreadSortOrder,
-      });
-
-      await api.orchestration.dispatchCommand({
-        type: "thread.archive",
-        commandId: newCommandId(),
-        threadId,
-      });
-
-      if (shouldNavigateToFallback) {
-        if (fallbackThreadId) {
-          void navigate({
-            to: "/$threadId",
-            params: { threadId: fallbackThreadId },
-            replace: true,
-          });
-        } else {
-          void navigate({ to: "/", replace: true });
-        }
-      }
-    },
-    [appSettings.sidebarThreadSortOrder, navigate, routeThreadId, threads],
-  );
-
-  const unarchiveThread = useCallback(async (threadId: ThreadId): Promise<void> => {
-    const api = readNativeApi();
-    if (!api) return;
-
-    await api.orchestration.dispatchCommand({
-      type: "thread.unarchive",
-      commandId: newCommandId(),
-      threadId,
-    });
-  }, []);
-
   const { copyToClipboard: copyThreadIdToClipboard } = useCopyToClipboard<{ threadId: ThreadId }>({
     onCopy: (ctx) => {
       toastManager.add({
@@ -1012,7 +853,6 @@ export default function Sidebar() {
           { id: "mark-unread", label: "Mark unread" },
           { id: "copy-path", label: "Copy Path" },
           { id: "copy-thread-id", label: "Copy Thread ID" },
-          { id: "archive", label: "Archive" },
           { id: "delete", label: "Delete", destructive: true },
         ],
         position,
@@ -1045,10 +885,6 @@ export default function Sidebar() {
         copyThreadIdToClipboard(threadId, { threadId });
         return;
       }
-      if (clicked === "archive") {
-        await archiveThread(threadId);
-        return;
-      }
       if (clicked !== "delete") return;
       if (appSettings.confirmThreadDelete) {
         const confirmed = await api.dialogs.confirm(
@@ -1065,7 +901,6 @@ export default function Sidebar() {
     },
     [
       appSettings.confirmThreadDelete,
-      archiveThread,
       copyPathToClipboard,
       copyThreadIdToClipboard,
       deleteThread,
@@ -1086,7 +921,6 @@ export default function Sidebar() {
       const clicked = await api.contextMenu.show(
         [
           { id: "mark-unread", label: `Mark unread (${count})` },
-          { id: "archive", label: `Archive (${count})` },
           { id: "delete", label: `Delete (${count})`, destructive: true },
         ],
         position,
@@ -1097,14 +931,6 @@ export default function Sidebar() {
           markThreadUnread(id);
         }
         clearSelection();
-        return;
-      }
-
-      if (clicked === "archive") {
-        for (const id of ids) {
-          await archiveThread(id);
-        }
-        removeFromSelection(ids);
         return;
       }
 
@@ -1128,7 +954,6 @@ export default function Sidebar() {
     },
     [
       appSettings.confirmThreadDelete,
-      archiveThread,
       clearSelection,
       deleteThread,
       markThreadUnread,
@@ -1327,7 +1152,7 @@ export default function Sidebar() {
     dragHandleProps: SortableProjectHandleProps | null,
   ) {
     const projectThreads = sortThreadsForSidebar(
-      threads.filter((thread) => thread.projectId === project.id && !isArchived(thread)),
+      threads.filter((thread) => thread.projectId === project.id),
       appSettings.sidebarThreadSortOrder,
     );
     const projectStatus = resolveProjectStatusIndicator(
@@ -1385,7 +1210,7 @@ export default function Sidebar() {
           className={`${resolveThreadRowClassName({
             isActive,
             isSelected,
-          })} ${isManualThreadSorting ? "active:cursor-grabbing" : ""}`}
+          })} ${isManualThreadSorting ? "cursor-grab active:cursor-grabbing" : ""}`}
           onClick={(event) => {
             handleThreadClick(event, thread.id, orderedProjectThreadIds);
           }}
@@ -2078,21 +1903,6 @@ export default function Sidebar() {
             </div>
           )}
         </SidebarGroup>
-
-        <ArchivedThreadsSection
-          threads={threads}
-          projects={projects}
-          routeThreadId={routeThreadId ?? undefined}
-          onUnarchive={unarchiveThread}
-          onDelete={deleteThread}
-          onNavigate={(threadId) => {
-            void navigate({
-              to: "/$threadId",
-              params: { threadId },
-            });
-          }}
-          appSettings={appSettings}
-        />
       </SidebarContent>
 
       <SidebarSeparator />

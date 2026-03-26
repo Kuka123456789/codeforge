@@ -257,7 +257,6 @@ projectionSnapshotLayer("ProjectionSnapshotQuery", (it) => {
           id: ThreadId.makeUnsafe("thread-1"),
           projectId: asProjectId("project-1"),
           title: "Thread 1",
-          titleSource: "auto",
           modelSelection: {
             provider: "codex",
             model: "gpt-5-codex",
@@ -281,7 +280,6 @@ projectionSnapshotLayer("ProjectionSnapshotQuery", (it) => {
           createdAt: "2026-02-24T00:00:02.000Z",
           updatedAt: "2026-02-24T00:00:03.000Z",
           deletedAt: null,
-          archivedAt: null,
           messages: [
             {
               id: asMessageId("message-1"),

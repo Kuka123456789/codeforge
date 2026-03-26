@@ -76,7 +76,6 @@ projectionRepositoriesLayer("Projection repositories", (it) => {
         threadId: ThreadId.makeUnsafe("thread-null-options"),
         projectId: ProjectId.makeUnsafe("project-null-options"),
         title: "Null options thread",
-        titleSource: "auto",
         modelSelection: {
           provider: "claudeAgent",
           model: "claude-opus-4-6",
@@ -89,7 +88,6 @@ projectionRepositoriesLayer("Projection repositories", (it) => {
         createdAt: "2026-03-24T00:00:00.000Z",
         updatedAt: "2026-03-24T00:00:00.000Z",
         deletedAt: null,
-        archivedAt: null,
       });
 
       const rows = yield* sql<{

@@ -136,7 +136,6 @@ describe("decider project scripts", () => {
           threadId: ThreadId.makeUnsafe("thread-1"),
           projectId: asProjectId("project-1"),
           title: "Thread",
-          titleSource: "auto",
           modelSelection: {
             provider: "codex",
             model: "gpt-5-codex",
@@ -246,7 +245,6 @@ describe("decider project scripts", () => {
           threadId: ThreadId.makeUnsafe("thread-1"),
           projectId: asProjectId("project-1"),
           title: "Thread",
-          titleSource: "auto",
           modelSelection: {
             provider: "codex",
             model: "gpt-5-codex",
@@ -329,7 +327,6 @@ describe("decider project scripts", () => {
           threadId: ThreadId.makeUnsafe("thread-1"),
           projectId: asProjectId("project-1"),
           title: "Thread",
-          titleSource: "auto",
           modelSelection: {
             provider: "codex",
             model: "gpt-5-codex",

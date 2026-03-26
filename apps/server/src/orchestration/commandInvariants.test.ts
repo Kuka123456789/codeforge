@@ -56,7 +56,6 @@ const readModel: OrchestrationReadModel = {
       id: ThreadId.makeUnsafe("thread-1"),
       projectId: ProjectId.makeUnsafe("project-a"),
       title: "Thread A",
-      titleSource: "auto",
       modelSelection: {
         provider: "codex",
         model: "gpt-5-codex",
@@ -74,13 +73,11 @@ const readModel: OrchestrationReadModel = {
       proposedPlans: [],
       checkpoints: [],
       deletedAt: null,
-      archivedAt: null,
     },
     {
       id: ThreadId.makeUnsafe("thread-2"),
       projectId: ProjectId.makeUnsafe("project-b"),
       title: "Thread B",
-      titleSource: "auto",
       modelSelection: {
         provider: "codex",
         model: "gpt-5-codex",
@@ -98,7 +95,6 @@ const readModel: OrchestrationReadModel = {
       proposedPlans: [],
       checkpoints: [],
       deletedAt: null,
-      archivedAt: null,
     },
   ],
 };

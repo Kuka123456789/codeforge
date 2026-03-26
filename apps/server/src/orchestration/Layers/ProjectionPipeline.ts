@@ -505,36 +505,6 @@ const makeOrchestrationProjectionPipeline = Effect.gen(function* () {
           return;
         }
 
-        case "thread.archived": {
-          const existingRow = yield* projectionThreadRepository.getById({
-            threadId: event.payload.threadId,
-          });
-          if (Option.isNone(existingRow)) {
-            return;
-          }
-          yield* projectionThreadRepository.upsert({
-            ...existingRow.value,
-            archivedAt: event.payload.archivedAt,
-            updatedAt: event.payload.archivedAt,
-          });
-          return;
-        }
-
-        case "thread.unarchived": {
-          const existingRow = yield* projectionThreadRepository.getById({
-            threadId: event.payload.threadId,
-          });
-          if (Option.isNone(existingRow)) {
-            return;
-          }
-          yield* projectionThreadRepository.upsert({
-            ...existingRow.value,
-            archivedAt: null,
-            updatedAt: event.occurredAt,
-          });
-          return;
-        }
-
         case "thread.message-sent":
         case "thread.proposed-plan-upserted":
         case "thread.activity-appended": {

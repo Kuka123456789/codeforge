@@ -299,7 +299,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   const onToggleAllDirectories = useCallback((turnId: TurnId) => {
     setAllDirectoriesExpandedByTurnId((current) => ({
       ...current,
-      [turnId]: !(current[turnId] ?? false),
+      [turnId]: !(current[turnId] ?? true),
     }));
   }, []);
 
@@ -462,7 +462,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                   const summaryStat = summarizeTurnDiffStats(checkpointFiles);
                   const changedFileCountLabel = String(checkpointFiles.length);
                   const allDirectoriesExpanded =
-                    allDirectoriesExpandedByTurnId[turnSummary.turnId] ?? false;
+                    allDirectoriesExpandedByTurnId[turnSummary.turnId] ?? true;
                   return (
                     <div className="mt-2 rounded-lg border border-border/80 bg-card/45 p-2.5">
                       <div className="mb-1.5 flex items-center justify-between gap-2">
