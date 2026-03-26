@@ -320,6 +320,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const promptRef = useRef(prompt);
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [showPinnedPrompt, setShowPinnedPrompt] = useState(false);
+  const [pinnedPromptDismissed, setPinnedPromptDismissed] = useState(false);
   const [scrollToRowIndex, setScrollToRowIndex] = useState<number | null>(null);
   const [isDragOverComposer, setIsDragOverComposer] = useState(false);
   const [expandedImage, setExpandedImage] = useState<ExpandedImagePreview | null>(null);
@@ -917,7 +918,13 @@ export default function ChatView({ threadId }: ChatViewProps) {
     return null;
   }, [timelineEntries]);
   const lastUserMessageIdRef = useRef<string | null>(null);
-  lastUserMessageIdRef.current = lastUserTimelineEntry?.entry.message.id ?? null;
+  const prevLastUserMessageId = lastUserMessageIdRef.current;
+  const nextLastUserMessageId = lastUserTimelineEntry?.entry.message.id ?? null;
+  lastUserMessageIdRef.current = nextLastUserMessageId;
+  // Reset dismiss state when a new user message appears.
+  if (nextLastUserMessageId !== prevLastUserMessageId) {
+    setPinnedPromptDismissed(false);
+  }
   const pinnedPromptText = useMemo(
     () =>
       lastUserTimelineEntry
@@ -1807,6 +1814,9 @@ export default function ChatView({ threadId }: ChatViewProps) {
   }, [lastUserTimelineEntry]);
   const handleScrollToRowComplete = useCallback(() => {
     setScrollToRowIndex(null);
+  }, []);
+  const handleDismissPinnedPrompt = useCallback(() => {
+    setPinnedPromptDismissed(true);
   }, []);
   const onMessagesWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (event.deltaY < 0) {
@@ -3662,10 +3672,12 @@ export default function ChatView({ threadId }: ChatViewProps) {
             </div>
 
             {/* Pinned last user prompt — shown when user's last message is above the viewport */}
-            {showPinnedPrompt && lastUserTimelineEntry && (
+            {lastUserTimelineEntry && (
               <PinnedUserPromptBanner
+                visible={showPinnedPrompt && !pinnedPromptDismissed}
                 text={pinnedPromptText}
-                onClick={handleScrollToLastUserMessage}
+                onScrollToMessage={handleScrollToLastUserMessage}
+                onDismiss={handleDismissPinnedPrompt}
               />
             )}
 

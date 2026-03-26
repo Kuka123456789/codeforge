@@ -103,15 +103,13 @@ export function ContextWindowMeter(props: { usage: ContextWindowSnapshot }) {
               <span
                 className={cn(
                   "relative flex items-center justify-center rounded-full bg-background font-medium",
-                  urgency === "normal" && "h-[15px] w-[15px] text-[8px]",
-                  urgency === "warning" && "h-[18px] w-[18px] text-[9px]",
-                  urgency === "critical" && "h-[21px] w-[21px] text-[10px] font-semibold",
+                  urgency === "normal" && "h-[15px] w-[15px] text-[9px]",
+                  urgency === "warning" && "h-[18px] w-[18px] text-[10px]",
+                  urgency === "critical" && "h-[21px] w-[21px] text-[11px] font-semibold",
                   urgencyTextClasses[urgency],
                 )}
               >
-                {usage.usedPercentage !== null
-                  ? Math.round(usage.usedPercentage)
-                  : formatContextWindowTokens(usage.usedTokens)}
+                {formatContextWindowTokens(usage.usedTokens)}
               </span>
             </span>
           </button>
