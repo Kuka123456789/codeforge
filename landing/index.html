@@ -440,7 +440,7 @@
       }
 
       .compare-table th:first-child {
-        width: 42%;
+        width: 34%;
       }
 
       .compare-table th.hl {
@@ -843,10 +843,10 @@
     <section class="features-section" id="features">
       <div class="section-header">
         <p class="section-label">Features</p>
-        <h2>Everything you need to run coding agents at work</h2>
+        <h2>Everything you need to run coding agents your way</h2>
         <p>
-          No cloud dependency. No per-seat pricing. A clean interface between your team and the
-          models they choose.
+          No cloud dependency. No per-seat pricing. A clean interface between you and the
+          models you choose.
         </p>
       </div>
       <div class="features-grid">
@@ -940,10 +940,9 @@
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
           </div>
-          <h3>Built for Teams</h3>
+          <h3>Desktop + Browser</h3>
           <p>
-            Centralized access, shared sessions, and usage tracking. Roll out coding agents to your
-            engineering org from one place.
+            Use the native desktop app or open CodeForge in any browser. Same experience, your choice of interface. Works from anywhere.
           </p>
         </div>
         <div class="feature">
@@ -963,8 +962,8 @@
           </div>
           <h3>Lightweight</h3>
           <p>
-            Node.js backend, static React frontend. Runs on a $5 VPS. Deploy with Docker in under
-            two minutes.
+            Node.js backend, static React frontend. Minimal footprint. Install with a single
+            command and start coding in seconds.
           </p>
         </div>
         <div class="feature">
@@ -1004,21 +1003,19 @@
         <div class="step">
           <div class="step-num">01</div>
           <div class="step-body">
-            <h3>Deploy the server</h3>
+            <h3>Install CodeForge</h3>
             <p>
-              Run CodeForge on any machine — a cloud VM, your homelab, or behind your corporate VPN.
-              One container, no external dependencies.
+              Download the desktop app or run a single command. Works on macOS, Linux, and Windows. No containers, no complex setup.
             </p>
-            <code>docker run -p 3000:3000 codeforge/codeforge</code>
+            <code>npx t3</code>
           </div>
         </div>
         <div class="step">
           <div class="step-num">02</div>
           <div class="step-body">
-            <h3>Add your API keys</h3>
+            <h3>Connect your providers</h3>
             <p>
-              Plug in your OpenAI, Anthropic, or other provider credentials. Keys stay on your
-              server — requests are proxied, never forwarded through us.
+              Log in to your existing OpenAI or Anthropic account through the CLI. CodeForge uses your local credentials — keys never leave your machine.
             </p>
           </div>
         </div>
@@ -1046,26 +1043,37 @@
           <tr>
             <th></th>
             <th class="hl">CodeForge</th>
+            <th>T3 Code</th>
             <th>Cursor</th>
             <th>Copilot</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Self-hosted</td>
+            <td>Claude + Codex support</td>
             <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">Codex only</span></td>
+            <td><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
+          </tr>
+          <tr>
+            <td>Browser-based UI</td>
+            <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
             <td><span class="no">No</span></td>
           </tr>
           <tr>
-            <td>Browser-based</td>
+            <td>Desktop app</td>
             <td class="hl"><span class="yes">Yes</span></td>
-            <td><span class="no">No</span></td>
+            <td><span class="yes">Yes</span></td>
+            <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
           </tr>
           <tr>
             <td>Multi-provider</td>
             <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
             <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
           </tr>
@@ -1073,23 +1081,34 @@
             <td>Own API keys</td>
             <td class="hl"><span class="yes">Yes</span></td>
             <td><span class="yes">Yes</span></td>
+            <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
           </tr>
           <tr>
             <td>Open source</td>
             <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+          </tr>
+          <tr>
+            <td>Customizable keybindings</td>
+            <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="yes">Yes</span></td>
+            <td><span class="yes">Yes</span></td>
+          </tr>
+          <tr>
+            <td>Multi-terminal support</td>
+            <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
           </tr>
           <tr>
             <td>No per-seat license</td>
             <td class="hl"><span class="yes">Yes</span></td>
-            <td><span class="no">No</span></td>
-            <td><span class="no">No</span></td>
-          </tr>
-          <tr>
-            <td>Code stays on-prem</td>
-            <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
             <td><span class="no">No</span></td>
           </tr>
@@ -1108,7 +1127,7 @@
           <div class="usecase-label">Enterprise</div>
           <h3>Security-conscious engineering teams</h3>
           <p>
-            Your source code never leaves your network. Deploy behind a VPN with SSO. Satisfy
+            Your source code never leaves your machine. Run entirely locally or behind your VPN. Satisfy
             InfoSec reviews that block cloud-based coding tools.
           </p>
         </div>
@@ -1136,7 +1155,7 @@
       <div class="oss-card">
         <h2>Open source, always</h2>
         <p>
-          CodeForge is MIT licensed. Inspect every line. Audit the data flow. Contribute features.
+          Inspect every line. Audit the data flow. Contribute features.
           The code is the product.
         </p>
         <a href="https://github.com/YOUR_USERNAME/codeforge" class="btn btn-ghost">
@@ -1149,7 +1168,7 @@
         </a>
         <div class="oss-stats">
           <div class="oss-stat">
-            <div class="oss-stat-value">MIT</div>
+            <div class="oss-stat-value">OSS</div>
             <div class="oss-stat-label">License</div>
           </div>
           <div class="oss-stat">
@@ -1189,8 +1208,7 @@
         </div>
         <div class="faq-a">
           <p>
-            CodeForge currently supports OpenAI Codex and is adding support for Claude and other
-            providers. You bring your own API keys and switch between providers freely.
+            CodeForge supports both OpenAI Codex and Claude today, with more providers on the roadmap. You use your own API credentials and can switch between providers freely.
           </p>
         </div>
       </div>
@@ -1213,8 +1231,7 @@
         </div>
         <div class="faq-a">
           <p>
-            Docker is the easiest path — one container that runs the Node.js server and serves the
-            web UI. You can also run it directly with Node.js on bare metal or any VM.
+            The fastest way is <code>npx t3</code> — it starts the server and opens the UI in your browser. You can also download the desktop app for macOS, Linux, or Windows.
           </p>
         </div>
       </div>
@@ -1262,8 +1279,7 @@
         </div>
         <div class="faq-a">
           <p>
-            CodeForge is open source and MIT licensed. Free to use, modify, and self-host. A managed
-            hosted version with team features is on the roadmap.
+            CodeForge is open source and free to use. The source code is fully available. A managed hosted version with team features is on the roadmap.
           </p>
         </div>
       </div>
