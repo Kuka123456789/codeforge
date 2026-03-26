@@ -362,10 +362,13 @@ function SortableThreadItem({
   threadId: ThreadId;
   children: React.ReactNode;
 }) {
-  const { setNodeRef, transform, transition, isDragging, isOver } = useSortable({ id: threadId });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } =
+    useSortable({ id: threadId });
   return (
     <li
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
         transform: CSS.Translate.toString(transform),
         transition,
@@ -1353,7 +1356,7 @@ export default function Sidebar() {
           className={`${resolveThreadRowClassName({
             isActive,
             isSelected,
-          })} ${isManualThreadSorting ? "cursor-grab active:cursor-grabbing" : ""}`}
+          })} ${isManualThreadSorting ? "active:cursor-grabbing" : ""}`}
           onClick={(event) => {
             handleThreadClick(event, thread.id, orderedProjectThreadIds);
           }}
