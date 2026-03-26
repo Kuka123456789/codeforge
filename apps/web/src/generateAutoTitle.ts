@@ -1,47 +1,180 @@
-import { truncateTitle } from "./truncateTitle";
-
 /**
  * Maximum number of recent user prompts to consider when generating an auto-title.
  */
 const MAX_PROMPTS_FOR_TITLE = 5;
 
 /**
- * Generates an automatic thread title from the most recent user messages.
+ * Maximum number of words in the generated title.
+ */
+const MAX_TITLE_WORDS = 4;
+
+/**
+ * Common filler/stop words that add little meaning to a title.
+ */
+const STOP_WORDS = new Set([
+  "a",
+  "an",
+  "the",
+  "is",
+  "it",
+  "to",
+  "in",
+  "of",
+  "for",
+  "on",
+  "and",
+  "or",
+  "but",
+  "with",
+  "that",
+  "this",
+  "be",
+  "are",
+  "was",
+  "were",
+  "been",
+  "has",
+  "have",
+  "had",
+  "do",
+  "does",
+  "did",
+  "can",
+  "could",
+  "would",
+  "should",
+  "will",
+  "shall",
+  "may",
+  "might",
+  "i",
+  "me",
+  "my",
+  "we",
+  "you",
+  "your",
+  "he",
+  "she",
+  "his",
+  "her",
+  "its",
+  "our",
+  "their",
+  "them",
+  "some",
+  "any",
+  "all",
+  "each",
+  "every",
+  "no",
+  "not",
+  "so",
+  "if",
+  "as",
+  "at",
+  "by",
+  "from",
+  "up",
+  "out",
+  "into",
+  "then",
+  "than",
+  "too",
+  "very",
+  "just",
+  "also",
+  "how",
+  "what",
+  "when",
+  "where",
+  "which",
+  "who",
+  "whom",
+  "why",
+  "about",
+  "please",
+  "thanks",
+  "thank",
+  "hi",
+  "hello",
+  "hey",
+  "sure",
+  "ok",
+  "okay",
+  "yes",
+  "yeah",
+  "now",
+  "here",
+  "there",
+  "let",
+  "make",
+  "need",
+  "want",
+  "like",
+  "get",
+  "got",
+  "go",
+  "going",
+  "know",
+  "think",
+  "see",
+  "look",
+  "try",
+]);
+
+/**
+ * Generates a short automatic thread title (up to {@link MAX_TITLE_WORDS} words)
+ * from the most recent user messages.
  *
  * Strategy:
- * 1. Collect up to {@link MAX_PROMPTS_FOR_TITLE} user messages (most recent first).
- * 2. Extract the first meaningful line from each message.
- * 3. Join them with " | " and truncate to the standard title length.
+ * 1. Collect the first meaningful line from each user message (up to 5).
+ * 2. Extract significant words (skip stop words / filler).
+ * 3. Keep the first {@link MAX_TITLE_WORDS} significant words, capitalised.
  *
- * Falls back to the first message snippet if only one prompt exists,
- * matching the existing first-message-as-title behavior.
+ * When fewer than 2 significant words can be extracted, falls back to the
+ * first few words of the first message verbatim.
  */
 export function generateAutoTitle(
   userMessages: ReadonlyArray<{ readonly text: string }>,
 ): string | null {
-  const snippets: string[] = [];
+  const lines: string[] = [];
 
   for (const message of userMessages) {
     const line = extractFirstLine(message.text);
     if (line) {
-      snippets.push(line);
+      lines.push(line);
     }
-    if (snippets.length >= MAX_PROMPTS_FOR_TITLE) {
+    if (lines.length >= MAX_PROMPTS_FOR_TITLE) {
       break;
     }
   }
 
-  if (snippets.length === 0) {
+  if (lines.length === 0) {
     return null;
   }
 
-  if (snippets.length === 1) {
-    return truncateTitle(snippets[0]!);
+  // Collect significant words across all collected lines.
+  const significantWords: string[] = [];
+  for (const line of lines) {
+    for (const word of tokenize(line)) {
+      if (STOP_WORDS.has(word.toLowerCase())) continue;
+      significantWords.push(capitalise(word));
+      if (significantWords.length >= MAX_TITLE_WORDS) break;
+    }
+    if (significantWords.length >= MAX_TITLE_WORDS) break;
   }
 
-  // Combine the latest prompts into a condensed title.
-  // Use " | " as a separator to visually distinguish topics.
-  return truncateTitle(snippets.join(" | "));
+  // If we found enough significant words, join them.
+  if (significantWords.length >= 2) {
+    return significantWords.join(" ");
+  }
+
+  // Fallback: take the first MAX_TITLE_WORDS words verbatim from the first line.
+  const fallbackWords = tokenize(lines[0]!).slice(0, MAX_TITLE_WORDS);
+  if (fallbackWords.length === 0) {
+    return null;
+  }
+  return fallbackWords.map(capitalise).join(" ");
 }
 
 /**
@@ -57,4 +190,22 @@ function extractFirstLine(text: string): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Splits text into word tokens, stripping punctuation edges.
+ */
+function tokenize(text: string): string[] {
+  return text
+    .split(/\s+/)
+    .map((w) => w.replace(/^[^a-zA-Z0-9]+|[^a-zA-Z0-9]+$/g, ""))
+    .filter((w) => w.length > 0);
+}
+
+/**
+ * Capitalise the first letter of a word.
+ */
+function capitalise(word: string): string {
+  if (word.length === 0) return word;
+  return word[0]!.toUpperCase() + word.slice(1);
 }

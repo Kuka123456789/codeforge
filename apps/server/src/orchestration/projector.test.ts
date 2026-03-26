@@ -76,6 +76,7 @@ describe("orchestration projector", () => {
         id: "thread-1",
         projectId: "project-1",
         title: "demo",
+        titleSource: "auto",
         modelSelection: {
           provider: "codex",
           model: "gpt-5-codex",
