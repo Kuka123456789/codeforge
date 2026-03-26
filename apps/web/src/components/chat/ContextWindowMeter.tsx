@@ -69,9 +69,9 @@ export function ContextWindowMeter(props: { usage: ContextWindowSnapshot }) {
           >
             <span
               className={cn(
-                "relative flex h-6 w-6 items-center justify-center",
-                urgency === "warning" && "h-7 w-7",
-                urgency === "critical" && "h-8 w-8",
+                "relative flex h-8 w-8 items-center justify-center",
+                urgency === "warning" && "h-9 w-9",
+                urgency === "critical" && "h-10 w-10",
               )}
             >
               <svg
@@ -103,9 +103,9 @@ export function ContextWindowMeter(props: { usage: ContextWindowSnapshot }) {
               <span
                 className={cn(
                   "relative flex items-center justify-center rounded-full bg-background font-medium",
-                  urgency === "normal" && "h-[15px] w-[15px] text-[9px]",
-                  urgency === "warning" && "h-[18px] w-[18px] text-[10px]",
-                  urgency === "critical" && "h-[21px] w-[21px] text-[11px] font-semibold",
+                  urgency === "normal" && "h-[21px] w-[21px] text-[11px]",
+                  urgency === "warning" && "h-[24px] w-[24px] text-[12px]",
+                  urgency === "critical" && "h-[27px] w-[27px] text-[13px] font-semibold",
                   urgencyTextClasses[urgency],
                 )}
               >
