@@ -5,94 +5,125 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CodeForge — Self-hosted web UI for coding agents</title>
   <meta name="description" content="Run AI coding agents from your browser. Self-hosted, provider-agnostic, built for teams." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0a0a0b;
-      --surface: #141416;
-      --border: #23232a;
+      --bg: #08080a;
+      --surface: #111114;
+      --surface-raised: #18181c;
+      --border: #1e1e24;
+      --border-subtle: #16161a;
       --text: #e4e4e7;
-      --text-muted: #8b8b94;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
       --accent: #6366f1;
       --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.15);
+      --green: #22c55e;
+      --red: #71717a;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
     }
 
-    /* Nav */
+    /* ── Nav ── */
     nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1100px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 1.5rem 2rem;
+      padding: 1.25rem 2rem;
     }
 
     .logo {
-      font-size: 1.25rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
+      font-size: 1.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
       color: var(--text);
       text-decoration: none;
     }
 
     .logo span { color: var(--accent); }
 
-    nav a.gh-link {
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-links a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.875rem;
+      font-size: 0.85rem;
+      font-weight: 500;
       transition: color 0.2s;
     }
 
-    nav a.gh-link:hover { color: var(--text); }
+    .nav-links a:hover { color: var(--text); }
 
-    /* Hero */
+    /* ── Hero ── */
     .hero {
-      max-width: 800px;
-      margin: 6rem auto 4rem;
+      max-width: 820px;
+      margin: 7rem auto 4rem;
       padding: 0 2rem;
       text-align: center;
     }
 
     .badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      background: rgba(99, 102, 241, 0.12);
-      border: 1px solid rgba(99, 102, 241, 0.25);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.85rem;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99, 102, 241, 0.2);
       border-radius: 100px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
+      font-weight: 600;
       color: var(--accent-hover);
+      margin-bottom: 2rem;
+      letter-spacing: 0.01em;
+    }
+
+    .badge svg { opacity: 0.8; }
+
+    h1 {
+      font-size: clamp(2.5rem, 5.5vw, 3.75rem);
+      font-weight: 800;
+      letter-spacing: -0.035em;
+      line-height: 1.1;
       margin-bottom: 1.5rem;
     }
 
-    h1 {
-      font-size: clamp(2.25rem, 5vw, 3.5rem);
-      font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
-      margin-bottom: 1.25rem;
+    h1 .gradient {
+      background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 50%, var(--accent-hover) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .hero p {
-      font-size: 1.2rem;
-      color: var(--text-muted);
-      max-width: 560px;
+    .hero p.subtitle {
+      font-size: 1.15rem;
+      color: var(--text-secondary);
+      max-width: 540px;
       margin: 0 auto 2.5rem;
+      line-height: 1.7;
     }
 
-    /* CTA */
+    /* ── Buttons ── */
     .cta-group {
       display: flex;
-      gap: 1rem;
+      gap: 0.75rem;
       justify-content: center;
       flex-wrap: wrap;
     }
@@ -101,125 +132,427 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
+      padding: 0.7rem 1.4rem;
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.2s;
       cursor: pointer;
       border: none;
+      font-family: inherit;
     }
 
     .btn-primary {
       background: var(--accent);
       color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
     }
 
-    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 0 30px rgba(99, 102, 241, 0.25);
+    }
 
     .btn-secondary {
       background: var(--surface);
-      color: var(--text);
+      color: var(--text-secondary);
       border: 1px solid var(--border);
     }
 
-    .btn-secondary:hover { border-color: var(--text-muted); }
+    .btn-secondary:hover {
+      border-color: #2e2e38;
+      color: var(--text);
+    }
 
-    /* Screenshot placeholder */
+    /* ── Screenshot ── */
     .screenshot {
-      max-width: 1000px;
-      margin: 4rem auto;
+      max-width: 1060px;
+      margin: 4rem auto 0;
       padding: 0 2rem;
     }
 
-    .screenshot-placeholder {
+    .screenshot-frame {
+      position: relative;
       width: 100%;
       aspect-ratio: 16/9;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-muted);
-      font-size: 0.95rem;
     }
 
-    /* Features */
-    .features {
-      max-width: 1100px;
-      margin: 4rem auto;
+    .screenshot-frame::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, var(--accent-glow), transparent 70%);
+      pointer-events: none;
+    }
+
+    .screenshot-inner {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      z-index: 1;
+    }
+
+    .screenshot-dots {
+      position: absolute;
+      top: 1rem;
+      left: 1.25rem;
+      display: flex;
+      gap: 0.45rem;
+    }
+
+    .screenshot-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+
+    /* ── Section shared ── */
+    .section-header {
+      max-width: 640px;
+      margin: 0 auto 3rem;
+      text-align: center;
+    }
+
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .section-header h2 {
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    /* ── Features ── */
+    .features-section {
+      max-width: 1200px;
+      margin: 8rem auto;
       padding: 0 2rem;
+    }
+
+    .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
     }
 
     .feature {
+      background: var(--surface);
+      padding: 2.25rem;
+    }
+
+    .feature-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(99, 102, 241, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      color: var(--accent-hover);
+    }
+
+    .feature h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .feature p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    /* ── How it works ── */
+    .how-section {
+      max-width: 900px;
+      margin: 8rem auto;
+      padding: 0 2rem;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      position: relative;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 1.5rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .step:last-child { border-bottom: none; }
+
+    .step-number {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-hover);
+      flex-shrink: 0;
+    }
+
+    .step-content h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
+    }
+
+    .step-content p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .step-content code {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    /* ── Comparison ── */
+    .compare-section {
+      max-width: 880px;
+      margin: 8rem auto;
+      padding: 0 2rem;
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      font-size: 0.875rem;
+    }
+
+    .compare-table thead {
+      background: var(--surface);
+    }
+
+    .compare-table th {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .compare-table th:first-child { width: 40%; }
+
+    .compare-table th.highlight {
+      color: var(--accent-hover);
+      background: var(--accent-glow);
+    }
+
+    .compare-table td {
+      padding: 0.85rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .compare-table tr:last-child td { border-bottom: none; }
+
+    .compare-table td:first-child {
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .compare-table td.highlight {
+      background: rgba(99, 102, 241, 0.04);
+    }
+
+    .check { color: var(--green); }
+    .dash { color: var(--red); }
+
+    /* ── Use Cases ── */
+    .usecases-section {
+      max-width: 1200px;
+      margin: 8rem auto;
+      padding: 0 2rem;
+    }
+
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .usecase {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
       padding: 2rem;
     }
 
-    .feature-icon {
-      font-size: 1.5rem;
-      margin-bottom: 0.75rem;
+    .usecase-tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: var(--accent-glow);
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--accent-hover);
+      margin-bottom: 1rem;
+      letter-spacing: 0.02em;
     }
 
-    .feature h3 {
-      font-size: 1.05rem;
+    .usecase h3 {
+      font-size: 1rem;
       font-weight: 700;
       margin-bottom: 0.5rem;
+      letter-spacing: -0.01em;
     }
 
-    .feature p {
+    .usecase p {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.65;
+      font-size: 0.85rem;
+      line-height: 1.7;
     }
 
-    /* Signup */
-    .signup {
-      max-width: 520px;
-      margin: 5rem auto;
+    /* ── FAQ ── */
+    .faq-section {
+      max-width: 700px;
+      margin: 8rem auto;
+      padding: 0 2rem;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+
+    .faq-item:first-of-type { border-top: 1px solid var(--border); }
+
+    .faq-q {
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text);
+      user-select: none;
+    }
+
+    .faq-q svg {
+      flex-shrink: 0;
+      transition: transform 0.2s;
+      color: var(--text-muted);
+    }
+
+    .faq-item.open .faq-q svg { transform: rotate(45deg); }
+
+    .faq-a {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .faq-item.open .faq-a {
+      max-height: 200px;
+      padding-top: 0.75rem;
+    }
+
+    .faq-a p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.75;
+    }
+
+    /* ── CTA / Signup ── */
+    .signup-section {
+      max-width: 600px;
+      margin: 8rem auto 4rem;
       padding: 0 2rem;
       text-align: center;
     }
 
-    .signup h2 {
-      font-size: 1.75rem;
+    .signup-section h2 {
+      font-size: clamp(1.75rem, 3vw, 2.25rem);
       font-weight: 800;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
       margin-bottom: 0.5rem;
     }
 
-    .signup p {
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-      font-size: 0.95rem;
+    .signup-section > p {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      font-size: 1rem;
     }
 
     .signup-form {
       display: flex;
       gap: 0.5rem;
+      max-width: 440px;
+      margin: 0 auto;
     }
 
     .signup-form input {
       flex: 1;
-      padding: 0.75rem 1rem;
+      padding: 0.7rem 1rem;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 8px;
       color: var(--text);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      font-family: inherit;
       outline: none;
       transition: border-color 0.2s;
     }
 
     .signup-form input:focus { border-color: var(--accent); }
-
     .signup-form input::placeholder { color: var(--text-muted); }
 
     .signup-success {
@@ -227,112 +560,368 @@
       color: var(--accent-hover);
       font-weight: 600;
       margin-top: 1rem;
+      font-size: 0.95rem;
     }
 
-    /* Footer */
-    footer {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 3rem 2rem;
-      border-top: 1px solid var(--border);
-      text-align: center;
+    .signup-note {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
       color: var(--text-muted);
-      font-size: 0.85rem;
     }
 
-    @media (max-width: 600px) {
+    /* ── Footer ── */
+    footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 2rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text-secondary); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .compare-table { font-size: 0.8rem; }
+      .compare-table th,
+      .compare-table td { padding: 0.7rem 0.85rem; }
+
+      .step { grid-template-columns: 44px 1fr; gap: 1rem; }
+
+      footer {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 500px) {
       .signup-form { flex-direction: column; }
       .cta-group { flex-direction: column; align-items: center; }
+      .nav-links { gap: 1rem; }
     }
   </style>
 </head>
 <body>
+
+  <!-- Nav -->
   <nav>
     <a href="/" class="logo">Code<span>Forge</span></a>
-    <a href="https://github.com/YOUR_USERNAME/codeforge" class="gh-link">GitHub</a>
+    <div class="nav-links">
+      <a href="#features">Features</a>
+      <a href="#how-it-works">How it works</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/YOUR_USERNAME/codeforge">GitHub</a>
+    </div>
   </nav>
 
+  <!-- Hero -->
   <section class="hero">
-    <div class="badge">Open Source &middot; Self-Hosted</div>
-    <h1>Run coding agents from&nbsp;your&nbsp;browser</h1>
-    <p>A self-hosted web UI that connects to any AI coding agent. Your server, your API keys, your&nbsp;control.</p>
+    <div class="badge">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      Open Source &middot; Self-Hosted
+    </div>
+    <h1>Your coding agents,<br /><span class="gradient">your infrastructure</span></h1>
+    <p class="subtitle">A self-hosted web UI for AI coding agents. Run it on your server, use your own API keys, access it from any browser. No vendor lock-in.</p>
     <div class="cta-group">
       <a href="#signup" class="btn btn-primary">Get Early Access</a>
       <a href="https://github.com/YOUR_USERNAME/codeforge" class="btn btn-secondary">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
-        View on GitHub
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+        Star on GitHub
       </a>
     </div>
   </section>
 
+  <!-- Screenshot -->
   <section class="screenshot">
-    <div class="screenshot-placeholder">
-      <!-- Replace with actual screenshot or demo video -->
-      Screenshot / demo video goes here
+    <div class="screenshot-frame">
+      <div class="screenshot-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="screenshot-inner">Screenshot / demo video goes here</div>
     </div>
   </section>
 
-  <section class="features">
-    <div class="feature">
-      <div class="feature-icon">&#x1f3e0;</div>
-      <h3>Self-Hosted</h3>
-      <p>Runs on your infrastructure. Your code never leaves your network. Perfect for teams with security and compliance requirements.</p>
+  <!-- Features -->
+  <section class="features-section" id="features">
+    <div class="section-header">
+      <p class="section-label">Features</p>
+      <h2>Everything you need to run coding agents at work</h2>
+      <p>No cloud dependency. No per-seat pricing. Just a clean interface between your team and the models they choose.</p>
     </div>
-    <div class="feature">
-      <div class="feature-icon">&#x1f500;</div>
-      <h3>Provider Agnostic</h3>
-      <p>Use OpenAI Codex, Claude, or any supported model. Switch providers freely — bring your own API keys, no vendor lock-in.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#x1f310;</div>
-      <h3>Browser-Based</h3>
-      <p>No IDE extensions or desktop apps to install. Open a URL and start coding. Works from any device with a browser.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#x1f465;</div>
-      <h3>Built for Teams</h3>
-      <p>Shared sessions, usage visibility, and centralized management. Give your whole team access to coding agents without per-seat IDE licenses.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#x26a1;</div>
-      <h3>Lightweight</h3>
-      <p>Minimal footprint. A Node.js server and a static React frontend. Deploys in minutes with Docker or bare metal.</p>
-    </div>
-    <div class="feature">
-      <div class="feature-icon">&#x1f513;</div>
-      <h3>Open Source</h3>
-      <p>MIT licensed. Fork it, extend it, contribute back. Full transparency on how your data flows.</p>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+        </div>
+        <h3>Self-Hosted</h3>
+        <p>Deploy on your own infrastructure. Source code stays on your network. Meet compliance requirements without compromise.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
+        </div>
+        <h3>Provider Agnostic</h3>
+        <p>Swap between OpenAI Codex, Claude, or other providers without changing your workflow. Bring your own API keys.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h3>Browser-Based</h3>
+        <p>No IDE plugins or desktop apps. Open a URL and start working. Runs on any device with a modern browser.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <h3>Built for Teams</h3>
+        <p>Centralized access, shared sessions, and usage tracking. Roll out coding agents to your engineering org from one place.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>Lightweight</h3>
+        <p>Node.js backend, static React frontend. Runs on a $5 VPS. Deploy with Docker in under two minutes.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </div>
+        <h3>Open Source</h3>
+        <p>MIT licensed. Full transparency on how your data flows. Fork it, extend it, audit it, contribute back.</p>
+      </div>
     </div>
   </section>
 
-  <section class="signup" id="signup">
+  <!-- How it works -->
+  <section class="how-section" id="how-it-works">
+    <div class="section-header">
+      <p class="section-label">How it works</p>
+      <h2>Up and running in three steps</h2>
+      <p>CodeForge sits between your team and the AI provider APIs. You control the infrastructure.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">01</div>
+        <div class="step-content">
+          <h3>Deploy the server</h3>
+          <p>Run CodeForge on any machine — a cloud VM, your homelab, or behind your corporate VPN. One container, no external dependencies.</p>
+          <code>docker run -p 3000:3000 codeforge/codeforge</code>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">02</div>
+        <div class="step-content">
+          <h3>Add your API keys</h3>
+          <p>Plug in your existing OpenAI, Anthropic, or other provider credentials. CodeForge proxies requests through your server — keys never leave your infrastructure.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-number">03</div>
+        <div class="step-content">
+          <h3>Open your browser and code</h3>
+          <p>Navigate to your server's URL. Start a session, pick a model, and begin pair-programming with an AI agent. Share the URL with your team to give them access too.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section class="compare-section">
+    <div class="section-header">
+      <p class="section-label">Comparison</p>
+      <h2>How CodeForge stacks up</h2>
+    </div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="highlight">CodeForge</th>
+          <th>Cursor</th>
+          <th>Copilot</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Self-hosted</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+        <tr>
+          <td>Browser-based</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+        <tr>
+          <td>Multi-provider</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+        <tr>
+          <td>Own API keys</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+        <tr>
+          <td>Open source</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+        <tr>
+          <td>No per-seat license</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+        <tr>
+          <td>Code stays on-prem</td>
+          <td class="highlight"><span class="check">Yes</span></td>
+          <td><span class="dash">No</span></td>
+          <td><span class="dash">No</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Use Cases -->
+  <section class="usecases-section">
+    <div class="section-header">
+      <p class="section-label">Use cases</p>
+      <h2>Built for teams that can't compromise on control</h2>
+    </div>
+    <div class="usecases-grid">
+      <div class="usecase">
+        <div class="usecase-tag">Enterprise</div>
+        <h3>Security-conscious engineering teams</h3>
+        <p>Your source code never leaves your network. Deploy behind a VPN with SSO integration. Satisfy InfoSec reviews that block cloud-based coding tools.</p>
+      </div>
+      <div class="usecase">
+        <div class="usecase-tag">Startups</div>
+        <h3>Cost-conscious teams scaling fast</h3>
+        <p>Skip per-seat IDE licenses. Pay only for the API tokens you use. Give every engineer access to coding agents without blowing your tooling budget.</p>
+      </div>
+      <div class="usecase">
+        <div class="usecase-tag">Agencies</div>
+        <h3>Consultants working across clients</h3>
+        <p>Spin up isolated instances per engagement. Keep client code separated. Tear down when the project ends. No data lingers in a vendor's cloud.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq-section" id="faq">
+    <div class="section-header">
+      <p class="section-label">FAQ</p>
+      <h2>Common questions</h2>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        What AI providers does CodeForge support?
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a"><p>CodeForge currently supports OpenAI Codex and is adding support for Claude and other providers. You bring your own API keys and switch between providers freely.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        How do I deploy it?
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a"><p>Docker is the easiest way — a single container that runs the Node.js server and serves the web UI. You can also run it directly with Node.js on bare metal or any VM.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Does my code leave my server?
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a"><p>CodeForge runs entirely on your infrastructure. Code context is sent to the AI provider API you choose (e.g., OpenAI) for processing, but never passes through CodeForge's servers — because there are none. You host everything.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        Is it free?
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a"><p>CodeForge is open source and MIT licensed. Free to use, modify, and self-host. A managed hosted version with team features is on the roadmap.</p></div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        What's the difference between this and just using the API directly?
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+      <div class="faq-a"><p>CodeForge gives you session management, conversation history, file context handling, and a polished UI on top of the raw APIs. Think of it as the interface layer your team needs to actually use coding agents productively.</p></div>
+    </div>
+  </section>
+
+  <!-- Signup -->
+  <section class="signup-section" id="signup">
     <h2>Get early access</h2>
-    <p>Join the waitlist. We'll let you know when CodeForge is ready for teams.</p>
+    <p>Join the waitlist. We'll notify you when CodeForge is ready for teams.</p>
     <form class="signup-form" id="signup-form">
       <input type="email" name="email" placeholder="you@company.com" required />
       <button type="submit" class="btn btn-primary">Join Waitlist</button>
     </form>
     <p class="signup-success" id="signup-success">You're on the list. We'll be in touch.</p>
+    <p class="signup-note">No spam. We'll only email you about CodeForge launches and major updates.</p>
   </section>
 
+  <!-- Footer -->
   <footer>
-    CodeForge &middot; Open-source coding agent UI
+    <span>CodeForge &copy; 2026</span>
+    <div class="footer-links">
+      <a href="https://github.com/YOUR_USERNAME/codeforge">GitHub</a>
+      <a href="mailto:hello@codeforge.dev">Contact</a>
+    </div>
   </footer>
 
   <script>
-    // Replace this with your actual form handler (e.g., Formspree, Google Forms, or your own endpoint)
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+      a.addEventListener('click', function(e) {
+        var target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Signup form
     document.getElementById('signup-form').addEventListener('submit', function(e) {
       e.preventDefault();
-      const email = this.email.value;
+      var email = this.email.value;
 
-      // TODO: Replace with actual endpoint
+      // TODO: Replace with actual endpoint (Formspree, your own API, etc.)
       // fetch('https://your-endpoint.com/signup', {
       //   method: 'POST',
       //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email })
+      //   body: JSON.stringify({ email: email })
       // })
 
-      // For now, just show success
       this.style.display = 'none';
       document.getElementById('signup-success').style.display = 'block';
       console.log('Signup:', email);
