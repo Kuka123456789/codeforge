@@ -13,7 +13,8 @@ These must be done before the landing page goes live or any promotion happens.
 
 ### Product TODOs (pre-launch blockers)
 - [ ] **Decide on license** — Currently MIT in the repo, but you flagged this needs work. Options: MIT (most permissive, good for adoption), AGPL (prevents SaaS competitors from using your code without contributing back), BSL/SSPL (source-available but not OSS). The landing page currently says "open source" generically — update once decided.
-- [ ] **Verify `npx t3` works for fresh installs** — The landing page tells people to run `npx t3`. Test this from a clean environment. Does it work? Does it require Codex/Claude CLI pre-installed? Document any prerequisites.
+- [ ] **Publish an npm package under CodeForge's name** — Currently the npm package is `t3` (upstream T3 Code). CodeForge needs its own package so users can run something like `npx codeforge`. Until then, the install story is "download the desktop app" or "clone + bun dev".
+- [ ] **Verify fresh install works** — Test `git clone && bun install && bun dev` from a clean machine. Does it require Codex/Claude CLI pre-installed? Document any prerequisites clearly.
 - [ ] **Write a README** — The repo needs a clear README with: what CodeForge is, how to install, how to connect providers, screenshots. This is what people see first on GitHub.
 
 ### Product TODOs (important but not blocking launch)
