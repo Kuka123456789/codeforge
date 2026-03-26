@@ -172,7 +172,10 @@ input {
 .drag-region input,
 .drag-region textarea,
 .drag-region select,
-.drag-region a {
+.drag-region a,
+.drag-region [role="button"],
+.drag-region [onclick],
+.drag-region .cursor-pointer {
   -webkit-app-region: no-drag;
 }
 
