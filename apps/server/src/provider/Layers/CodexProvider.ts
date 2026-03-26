@@ -343,7 +343,7 @@ export const checkCodexProviderStatus = Effect.fn("checkCodexProviderStatus")(
           version: null,
           status: "warning",
           authStatus: "unknown",
-          message: "Codex is disabled in T3 Code settings.",
+          message: "Codex is disabled in CodeForge settings.",
         },
       });
     }

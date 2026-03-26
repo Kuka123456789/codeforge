@@ -4,7 +4,7 @@ import {
   type ResolvedKeybindingsConfig,
   type ThreadId,
 } from "@t3tools/contracts";
-import { memo } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import GitActionsControl from "../GitActionsControl";
 import { DiffIcon, TerminalSquareIcon } from "lucide-react";
 import { Badge } from "../ui/badge";
@@ -36,6 +36,7 @@ interface ChatHeaderProps {
   onDeleteProjectScript: (scriptId: string) => Promise<void>;
   onToggleTerminal: () => void;
   onToggleDiff: () => void;
+  onRenameThread?: (threadId: ThreadId, newTitle: string) => Promise<void>;
 }
 
 export const ChatHeader = memo(function ChatHeader({
@@ -60,17 +61,63 @@ export const ChatHeader = memo(function ChatHeader({
   onDeleteProjectScript,
   onToggleTerminal,
   onToggleDiff,
+  onRenameThread,
 }: ChatHeaderProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(activeThreadTitle);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setEditValue(activeThreadTitle);
+  }, [activeThreadTitle]);
+
+  useEffect(() => {
+    if (isEditing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
+  const commitRename = useCallback(async () => {
+    const trimmed = editValue.trim();
+    setIsEditing(false);
+    if (trimmed.length === 0 || trimmed === activeThreadTitle) {
+      setEditValue(activeThreadTitle);
+      return;
+    }
+    if (onRenameThread) {
+      await onRenameThread(activeThreadId, trimmed);
+    }
+  }, [editValue, activeThreadTitle, activeThreadId, onRenameThread]);
+
   return (
     <div className="flex min-w-0 flex-1 items-center gap-2">
       <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden sm:gap-3">
         <SidebarTrigger className="size-7 shrink-0 md:hidden" />
-        <h2
-          className="min-w-0 shrink truncate text-sm font-medium text-foreground"
-          title={activeThreadTitle}
-        >
-          {activeThreadTitle}
-        </h2>
+        {isEditing ? (
+          <input
+            ref={inputRef}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={() => void commitRename()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void commitRename();
+              if (e.key === "Escape") {
+                setEditValue(activeThreadTitle);
+                setIsEditing(false);
+              }
+            }}
+            className="w-full min-w-0 flex-1 border-b border-foreground/30 bg-transparent text-sm font-medium text-foreground outline-none focus:border-foreground"
+          />
+        ) : (
+          <h2
+            className="min-w-0 shrink cursor-pointer truncate text-sm font-medium text-foreground hover:text-foreground/80"
+            title="Click to rename"
+            onClick={() => setIsEditing(true)}
+          >
+            {activeThreadTitle}
+          </h2>
+        )}
         {activeProjectName && (
           <Badge variant="outline" className="min-w-0 shrink truncate">
             {activeProjectName}

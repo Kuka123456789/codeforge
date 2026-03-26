@@ -179,6 +179,7 @@ import {
   SendPhase,
 } from "./ChatView.logic";
 import { useLocalStorage } from "~/hooks/useLocalStorage";
+import { useSendStatusStore } from "../sendStatusStore";
 
 const ATTACHMENT_PREVIEW_HANDOFF_TTL_MS = 5000;
 const IMAGE_SIZE_LIMIT_LABEL = `${Math.round(PROVIDER_SEND_TURN_MAX_IMAGE_BYTES / (1024 * 1024))}MB`;
@@ -326,6 +327,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
     Record<ThreadId, string | null>
   >({});
   const [sendPhase, setSendPhase] = useState<SendPhase>("idle");
+  const markSending = useSendStatusStore((s) => s.markSending);
+  const clearSending = useSendStatusStore((s) => s.clearSending);
   const [sendStartedAt, setSendStartedAt] = useState<string | null>(null);
   const [isConnecting, _setIsConnecting] = useState(false);
   const [isRevertingCheckpoint, setIsRevertingCheckpoint] = useState(false);
@@ -2453,6 +2456,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
     }
 
     sendInFlightRef.current = true;
+    if (activeThread) markSending(activeThread.id);
     beginSendPhase(baseBranchForWorktree ? "preparing-worktree" : "sending-turn");
 
     const composerImagesSnapshot = [...composerImages];
@@ -2694,6 +2698,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
       );
     });
     sendInFlightRef.current = false;
+    clearSending(threadIdForSend);
     if (!turnStartSucceeded) {
       resetSendPhase();
     }
@@ -3456,12 +3461,18 @@ export default function ChatView({ threadId }: ChatViewProps) {
     },
     [navigate, threadId],
   );
-  const onRevertUserMessage = (messageId: MessageId) => {
+  const onRevertUserMessage = (messageId: MessageId, messageText?: string) => {
     const targetTurnCount = revertTurnCountByUserMessageId.get(messageId);
     if (typeof targetTurnCount !== "number") {
       return;
     }
-    void onRevertToTurnCount(targetTurnCount);
+    void onRevertToTurnCount(targetTurnCount).then(() => {
+      if (messageText) {
+        promptRef.current = messageText;
+        setPrompt(messageText);
+        setComposerCursor(collapseExpandedComposerCursor(messageText, messageText.length));
+      }
+    });
   };
 
   // Empty state: no active thread
@@ -3525,6 +3536,16 @@ export default function ChatView({ threadId }: ChatViewProps) {
           onDeleteProjectScript={deleteProjectScript}
           onToggleTerminal={toggleTerminalVisibility}
           onToggleDiff={onToggleDiff}
+          onRenameThread={async (threadId, newTitle) => {
+            const api = readNativeApi();
+            if (!api) return;
+            await api.orchestration.dispatchCommand({
+              type: "thread.meta.update",
+              commandId: newCommandId(),
+              threadId,
+              title: newTitle,
+            });
+          }}
         />
       </header>
 
