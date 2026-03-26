@@ -6,6 +6,7 @@ import {
   GitPullRequestIcon,
   PlusIcon,
   RocketIcon,
+  SearchIcon,
   SettingsIcon,
   SquarePenIcon,
   TerminalIcon,
@@ -102,6 +103,7 @@ import {
 } from "./Sidebar.logic";
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { useSendStatusStore } from "../sendStatusStore";
+import { ThreadSearchDialog } from "./ThreadSearchDialog";
 import { useSettings, useUpdateSettings } from "~/hooks/useSettings";
 
 const EMPTY_KEYBINDINGS: ResolvedKeybindingsConfig = [];
@@ -192,12 +194,20 @@ function prStatusIndicator(pr: ThreadPr): PrStatusIndicator | null {
 
 function CodeForgeWordmark() {
   return (
-    <span
-      aria-label="CodeForge"
-      className="shrink-0 text-sm font-bold tracking-tight text-foreground"
-    >
-      CodeForge
-    </span>
+    <div className="flex shrink-0 items-center gap-1.5">
+      <img
+        src="/icon.png"
+        alt=""
+        className="h-5 w-5 rounded-[4px]"
+        draggable={false}
+      />
+      <span
+        aria-label="CodeForge"
+        className="text-sm font-bold tracking-tight text-foreground"
+      >
+        CodeForge
+      </span>
+    </div>
   );
 }
 
@@ -442,6 +452,20 @@ export default function Sidebar() {
   const clearSelection = useThreadSelectionStore((s) => s.clearSelection);
   const removeFromSelection = useThreadSelectionStore((s) => s.removeFromSelection);
   const setSelectionAnchor = useThreadSelectionStore((s) => s.setAnchor);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // Cmd+K / Ctrl+K to open thread search
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey) && !e.shiftKey && !e.altKey) {
+        e.preventDefault();
+        setSearchOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   const isLinuxDesktop = isElectron && isLinuxPlatform(navigator.platform);
   const shouldBrowseForProjectImmediately = isElectron && !isLinuxDesktop;
   const shouldShowProjectPathEntry = addingProject && !shouldBrowseForProjectImmediately;
@@ -1765,6 +1789,23 @@ export default function Sidebar() {
               Projects
             </span>
             <div className="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <button
+                      type="button"
+                      aria-label="Search threads"
+                      className="inline-flex size-5 cursor-pointer items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-accent hover:text-foreground"
+                      onClick={() => setSearchOpen(true)}
+                    />
+                  }
+                >
+                  <SearchIcon className="size-3.5" />
+                </TooltipTrigger>
+                <TooltipPopup side="right">
+                  Search threads ({isMacPlatform(navigator.platform) ? "\u2318" : "Ctrl"}+K)
+                </TooltipPopup>
+              </Tooltip>
               <ProjectSortMenu
                 projectSortOrder={appSettings.sidebarProjectSortOrder}
                 threadSortOrder={appSettings.sidebarThreadSortOrder}
@@ -1931,6 +1972,8 @@ export default function Sidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      <ThreadSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </>
   );
 }
