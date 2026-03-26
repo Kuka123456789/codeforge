@@ -2704,16 +2704,29 @@ export default function ChatView({ threadId }: ChatViewProps) {
     }
   };
 
-  const onInterrupt = async () => {
+  const onInterrupt = useCallback(async () => {
     const api = readNativeApi();
-    if (!api || !activeThread) return;
+    if (!api || !activeThreadId) return;
     await api.orchestration.dispatchCommand({
       type: "thread.turn.interrupt",
       commandId: newCommandId(),
-      threadId: activeThread.id,
+      threadId: activeThreadId,
       createdAt: new Date().toISOString(),
     });
-  };
+  }, [activeThreadId]);
+
+  useEffect(() => {
+    if (phase !== "running" || expandedImage) return;
+
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      void onInterrupt();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [phase, expandedImage, onInterrupt]);
 
   const onRespondToApproval = useCallback(
     async (requestId: ApprovalRequestId, decision: ProviderApprovalDecision) => {
