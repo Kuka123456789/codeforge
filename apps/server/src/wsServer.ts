@@ -208,6 +208,7 @@ export type ServerCoreRuntimeServices =
   | OrchestrationEngineService
   | ProjectionSnapshotQuery
   | CheckpointDiffQuery
+  | ThreadSearchIndex
   | OrchestrationReactor
   | ProviderService
   | ProviderRegistry;
