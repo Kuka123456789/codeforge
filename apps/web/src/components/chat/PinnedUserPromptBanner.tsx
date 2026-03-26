@@ -28,14 +28,12 @@ export const PinnedUserPromptBanner = memo(function PinnedUserPromptBanner({
 
   useEffect(() => {
     if (visible) {
-      // Mount immediately, then trigger the CSS transition on the next frame.
       setMounted(true);
       const frame = requestAnimationFrame(() => setAnimateIn(true));
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = null;
       return () => cancelAnimationFrame(frame);
     }
-    // Start exit animation, then unmount after transition completes.
     setAnimateIn(false);
     timerRef.current = setTimeout(() => setMounted(false), 200);
     return () => {
@@ -54,24 +52,24 @@ export const PinnedUserPromptBanner = memo(function PinnedUserPromptBanner({
         transition: "opacity 200ms ease-out, transform 200ms ease-out",
       }}
     >
-      <div className="pointer-events-auto flex w-full max-w-3xl items-center gap-1 rounded-b-xl border border-t-0 border-border/50 bg-card/95 py-1.5 pr-1.5 pl-3.5 shadow-md backdrop-blur-sm">
+      <div className="pointer-events-auto flex w-full max-w-3xl items-center gap-1.5 rounded-b-xl border border-t-0 border-primary/20 bg-primary/10 py-2 pr-1.5 pl-3.5 shadow-md backdrop-blur-sm dark:border-primary/25 dark:bg-primary/15">
         <button
           type="button"
           onClick={onScrollToMessage}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left text-xs text-muted-foreground transition-colors hover:text-foreground"
+          className="flex min-w-0 flex-1 items-center gap-2 text-left transition-colors hover:opacity-80"
         >
-          <ChevronUpIcon className="size-3.5 shrink-0" />
-          <span className="truncate">
-            <span className="font-medium text-foreground/70">You asked:</span> {text}
+          <ChevronUpIcon className="size-3.5 shrink-0 text-primary" />
+          <span className="truncate text-sm text-foreground">
+            <span className="font-semibold text-primary">You asked:</span> {text}
           </span>
         </button>
         <button
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss pinned prompt"
-          className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-primary/50 transition-colors hover:bg-primary/10 hover:text-primary"
         >
-          <XIcon className="size-3" />
+          <XIcon className="size-3.5" />
         </button>
       </div>
     </div>
