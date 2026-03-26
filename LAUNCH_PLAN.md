@@ -5,6 +5,7 @@
 These must be done before the landing page goes live or any promotion happens.
 
 ### Landing Page TODOs
+
 - [ ] **Replace screenshot placeholder** — Take an actual screenshot of CodeForge or record a short demo video (60s max). This is the single highest-impact item.
 - [ ] **Wire up email signup** — The form currently logs to console. Options: Formspree (free tier), Google Forms, or a simple serverless function. Pick one and connect it.
 - [ ] **Replace GitHub URLs** — All links currently point to `YOUR_USERNAME/codeforge`. Update with the real repo URL (or remove GitHub links if keeping the repo private for now).
@@ -12,12 +13,14 @@ These must be done before the landing page goes live or any promotion happens.
 - [ ] **Deploy the landing page** — Host on Vercel, Netlify, or GitHub Pages. Get a custom domain if possible.
 
 ### Product TODOs (pre-launch blockers)
+
 - [ ] **Decide on license** — Currently MIT in the repo, but you flagged this needs work. Options: MIT (most permissive, good for adoption), AGPL (prevents SaaS competitors from using your code without contributing back), BSL/SSPL (source-available but not OSS). The landing page currently says "open source" generically — update once decided.
 - [ ] **Publish an npm package under CodeForge's name** — Currently the npm package is `t3` (upstream T3 Code). CodeForge needs its own package so users can run something like `npx codeforge`. Until then, the install story is "download the desktop app" or "clone + bun dev".
 - [ ] **Verify fresh install works** — Test `git clone && bun install && bun dev` from a clean machine. Does it require Codex/Claude CLI pre-installed? Document any prerequisites clearly.
 - [ ] **Write a README** — The repo needs a clear README with: what CodeForge is, how to install, how to connect providers, screenshots. This is what people see first on GitHub.
 
 ### Product TODOs (important but not blocking launch)
+
 - [ ] **Docker support** — Many self-hosted users expect Docker. Create a Dockerfile and `docker-compose.yml`. This would expand the audience significantly.
 - [ ] **Clarify the T3 Code relationship** — CodeForge is forked from T3 Code. Decide how to communicate this: "Built on T3 Code", "Fork of T3 Code", or don't mention it. Check T3 Code's license to ensure the fork and rebrand are compliant.
 

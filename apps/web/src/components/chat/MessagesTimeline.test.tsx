@@ -89,6 +89,8 @@ describe("MessagesTimeline", () => {
         resolvedTheme="light"
         timestampFormat="locale"
         workspaceRoot={undefined}
+        scrollToRowIndex={null}
+        onScrollToRowComplete={() => {}}
       />,
     );
 
@@ -134,6 +136,8 @@ describe("MessagesTimeline", () => {
         resolvedTheme="light"
         timestampFormat="locale"
         workspaceRoot={undefined}
+        scrollToRowIndex={null}
+        onScrollToRowComplete={() => {}}
       />,
     );
 
