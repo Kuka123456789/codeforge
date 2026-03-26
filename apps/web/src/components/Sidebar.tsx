@@ -44,7 +44,7 @@ import {
   type SidebarProjectSortOrder,
   type SidebarThreadSortOrder,
 } from "@t3tools/contracts/settings";
-import type { Thread } from "../types";
+import type { Project, Thread } from "../types";
 import { isElectron } from "../env";
 import { APP_STAGE_LABEL, APP_VERSION } from "../branding";
 import { isLinuxPlatform, isMacPlatform, newCommandId, newProjectId } from "../lib/utils";
@@ -385,22 +385,79 @@ function SortableThreadItem({
   );
 }
 
+function ArchivedThreadRow({
+  thread,
+  isActive,
+  onUnarchive,
+  onDelete,
+}: {
+  thread: Thread;
+  isActive: boolean;
+  onUnarchive: (threadId: ThreadId) => Promise<void>;
+  onDelete: (threadId: ThreadId) => Promise<void>;
+}) {
+  const navigate = useNavigate();
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        size="sm"
+        isActive={isActive}
+        className="h-7 w-full cursor-pointer justify-start gap-2 px-2 text-left text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
+        onClick={() => {
+          void navigate({
+            to: "/$threadId",
+            params: { threadId: thread.id },
+          });
+        }}
+        onContextMenu={async (event) => {
+          event.preventDefault();
+          const api = readNativeApi();
+          if (!api) return;
+          const clicked = await api.contextMenu.show(
+            [
+              { id: "unarchive", label: "Unarchive" },
+              { id: "delete", label: "Delete", destructive: true },
+            ],
+            { x: event.clientX, y: event.clientY },
+          );
+          if (clicked === "unarchive") {
+            await onUnarchive(thread.id);
+          } else if (clicked === "delete") {
+            await onDelete(thread.id);
+          }
+        }}
+      >
+        <span className="min-w-0 flex-1 truncate">{thread.title}</span>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
 function ArchivedThreadsSection({
   threads,
+  projects,
   onUnarchive,
   onDelete,
   activeThreadId,
 }: {
   threads: Thread[];
+  projects: Project[];
   onUnarchive: (threadId: ThreadId) => Promise<void>;
   onDelete: (threadId: ThreadId) => Promise<void>;
   activeThreadId: ThreadId | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
   const archivedThreads = threads.filter(isArchived);
-  const navigate = useNavigate();
 
   if (archivedThreads.length === 0) return null;
+
+  const projectNameById = new Map(projects.map((p) => [p.id, p.name]));
+  const archivedByProject = new Map<ProjectId, Thread[]>();
+  for (const thread of archivedThreads) {
+    const list = archivedByProject.get(thread.projectId) ?? [];
+    list.push(thread);
+    archivedByProject.set(thread.projectId, list);
+  }
 
   return (
     <SidebarGroup className="px-2 py-0 pb-2">
@@ -416,42 +473,26 @@ function ArchivedThreadsSection({
         />
       </button>
       {expanded && (
-        <SidebarMenu>
-          {archivedThreads.map((thread) => (
-            <SidebarMenuItem key={thread.id}>
-              <SidebarMenuButton
-                size="sm"
-                isActive={activeThreadId === thread.id}
-                className="h-7 w-full cursor-pointer justify-start gap-2 px-2 text-left text-xs text-muted-foreground hover:bg-accent hover:text-foreground"
-                onClick={() => {
-                  void navigate({
-                    to: "/$threadId",
-                    params: { threadId: thread.id },
-                  });
-                }}
-                onContextMenu={async (event) => {
-                  event.preventDefault();
-                  const api = readNativeApi();
-                  if (!api) return;
-                  const clicked = await api.contextMenu.show(
-                    [
-                      { id: "unarchive", label: "Unarchive" },
-                      { id: "delete", label: "Delete", destructive: true },
-                    ],
-                    { x: event.clientX, y: event.clientY },
-                  );
-                  if (clicked === "unarchive") {
-                    await onUnarchive(thread.id);
-                  } else if (clicked === "delete") {
-                    await onDelete(thread.id);
-                  }
-                }}
-              >
-                <span className="min-w-0 flex-1 truncate">{thread.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+        <div className="flex flex-col gap-2">
+          {[...archivedByProject.entries()].map(([projectId, projectThreads]) => (
+            <div key={projectId}>
+              <div className="px-2 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/40">
+                {projectNameById.get(projectId) ?? "Unknown project"}
+              </div>
+              <SidebarMenu>
+                {projectThreads.map((thread) => (
+                  <ArchivedThreadRow
+                    key={thread.id}
+                    thread={thread}
+                    isActive={activeThreadId === thread.id}
+                    onUnarchive={onUnarchive}
+                    onDelete={onDelete}
+                  />
+                ))}
+              </SidebarMenu>
+            </div>
           ))}
-        </SidebarMenu>
+        </div>
       )}
     </SidebarGroup>
   );
@@ -2068,6 +2109,7 @@ export default function Sidebar() {
         </SidebarGroup>
         <ArchivedThreadsSection
           threads={threads}
+          projects={projects}
           onUnarchive={unarchiveThread}
           onDelete={deleteThread}
           activeThreadId={routeThreadId ?? undefined}

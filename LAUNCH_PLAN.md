@@ -21,6 +21,8 @@ These must be done before the landing page goes live or any promotion happens.
 
 ### Product TODOs (important but not blocking launch)
 
+- [ ] **Package the desktop app** — Currently the desktop app only runs in dev mode (`bun run dev:desktop`). Need to package it as a proper `.app` / `.dmg` (macOS), `.AppImage` (Linux), and `.exe` installer (Windows) using electron-builder so users can just download and double-click. This is critical for the "download the desktop app" install story.
+- [ ] **Fix desktop app icon** — The dock icon shows a white square in dev mode because macOS doesn't load custom icons outside of a packaged `.app` bundle. Packaging (above) fixes this. Also verify the `icon.png` has a transparent background (not white behind the circle).
 - [ ] **Docker support** — Many self-hosted users expect Docker. Create a Dockerfile and `docker-compose.yml`. This would expand the audience significantly.
 - [ ] **Clarify the T3 Code relationship** — CodeForge is forked from T3 Code. Decide how to communicate this: "Built on T3 Code", "Fork of T3 Code", or don't mention it. Check T3 Code's license to ensure the fork and rebrand are compliant.
 
