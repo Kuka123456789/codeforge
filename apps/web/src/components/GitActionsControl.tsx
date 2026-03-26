@@ -7,6 +7,7 @@ import type {
 import { useIsMutating, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { CloudUploadIcon, GitCommitIcon, InfoIcon } from "lucide-react";
+import { GitHubIcon } from "./Icons";
 import {
   buildGitActionProgressStages,
   buildMenuItems,
@@ -182,7 +183,7 @@ const COMMIT_DIALOG_DESCRIPTION =
 function GitActionItemIcon({ icon }: { icon: GitActionIconName }) {
   if (icon === "commit") return <GitCommitIcon />;
   if (icon === "push") return <CloudUploadIcon />;
-  return <InfoIcon />;
+  return <GitHubIcon />;
 }
 
 export default function GitActionsControl({ gitCwd, activeThreadId }: GitActionsControlProps) {
@@ -356,6 +357,35 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
       window.clearInterval(interval);
     };
   }, [updateActiveProgressToast]);
+
+  const openExistingPr = useCallback(async () => {
+    const api = readNativeApi();
+    if (!api) {
+      toastManager.add({
+        type: "error",
+        title: "Link opening is unavailable.",
+        data: threadToastData,
+      });
+      return;
+    }
+    const prUrl = gitStatusForActions?.pr?.state === "open" ? gitStatusForActions.pr.url : null;
+    if (!prUrl) {
+      toastManager.add({
+        type: "error",
+        title: "No open PR found.",
+        data: threadToastData,
+      });
+      return;
+    }
+    void api.shell.openExternal(prUrl).catch((err) => {
+      toastManager.add({
+        type: "error",
+        title: "Unable to open PR link",
+        description: err instanceof Error ? err.message : "An error occurred.",
+        data: threadToastData,
+      });
+    });
+  }, [gitStatusForActions, threadToastData]);
 
   const runGitActionWithToast = useEffectEvent(
     async ({
@@ -606,6 +636,10 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
   const openDialogForMenuItem = useCallback(
     (item: GitActionMenuItem) => {
       if (item.disabled) return;
+      if (item.kind === "open_pr") {
+        void openExistingPr();
+        return;
+      }
       if (item.dialogAction === "push") {
         void runGitActionWithToast({ action: "commit_push", forcePushOnlyProgress: true });
         return;
@@ -614,7 +648,7 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
       setIsEditingFiles(false);
       setIsCommitDialogOpen(true);
     },
-    [setIsCommitDialogOpen],
+    [openExistingPr, setIsCommitDialogOpen],
   );
 
   const runDialogAction = useCallback(() => {
@@ -678,7 +712,11 @@ export default function GitActionsControl({ gitCwd, activeThreadId }: GitActions
       ) : (
         <div className="flex shrink-0 items-center gap-1" aria-label="Git actions">
           {gitActionMenuItems
-            .filter((item) => item.id !== "pr")
+            .filter((item) => {
+              // Only show the PR button when there is an open PR
+              if (item.id === "pr") return item.kind === "open_pr";
+              return true;
+            })
             .map((item) => {
               const disabledReason = getMenuActionDisabledReason({
                 item,
