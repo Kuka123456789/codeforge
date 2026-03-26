@@ -51,7 +51,7 @@ describe("hasCompletion", () => {
     expect(
       hasCompletion({
         interactionMode: "default",
-        latestTurn: makeLatestTurn({ completedAt: null }),
+        latestTurn: null,
         proposedPlans: [],
         session: null,
       }),
