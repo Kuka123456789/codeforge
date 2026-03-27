@@ -1773,6 +1773,34 @@ export default function ChatView({ threadId }: ChatViewProps) {
     });
   }, [activePlan?.turnId, sidebarProposedPlan?.turnId]);
 
+  const handleClearCommand = useCallback(async () => {
+    if (!activeProject) return;
+    clearProjectDraftThreadId(activeProject.id);
+    const nextId = newThreadId();
+    setProjectDraftThreadId(activeProject.id, nextId, {
+      createdAt: new Date().toISOString(),
+      runtimeMode: DEFAULT_RUNTIME_MODE,
+      interactionMode: DEFAULT_INTERACTION_MODE,
+      envMode: draftThread?.envMode ?? (activeThread?.worktreePath ? "worktree" : "local"),
+      branch: activeThread?.branch ?? draftThread?.branch ?? null,
+      worktreePath: activeThread?.worktreePath ?? draftThread?.worktreePath ?? null,
+    });
+    await navigate({
+      to: "/$threadId",
+      params: { threadId: nextId },
+    });
+  }, [
+    activeProject,
+    activeThread?.branch,
+    activeThread?.worktreePath,
+    clearProjectDraftThreadId,
+    draftThread?.branch,
+    draftThread?.envMode,
+    draftThread?.worktreePath,
+    navigate,
+    setProjectDraftThreadId,
+  ]);
+
   const persistThreadSettingsForNextTurn = useCallback(
     async (input: {
       threadId: ThreadId;
