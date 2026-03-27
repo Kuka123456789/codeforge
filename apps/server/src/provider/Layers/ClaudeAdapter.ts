@@ -136,6 +136,16 @@ interface ToolInFlight {
   readonly lastEmittedInputFingerprint?: string;
 }
 
+/**
+ * Tracks raw accumulated token counts from the Claude SDK.
+ * The SDK reports cumulative totals across all API calls in a session,
+ * so we need these to compute deltas (= last API call's token usage).
+ */
+interface ClaudeAccumulatedTokenCounts {
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+}
+
 interface ClaudeSessionContext {
   session: ProviderSession;
   readonly promptQueue: Queue.Queue<PromptQueueItem>;
@@ -154,6 +164,8 @@ interface ClaudeSessionContext {
   turnState: ClaudeTurnState | undefined;
   lastKnownContextWindow: number | undefined;
   lastKnownTokenUsage: ThreadTokenUsageSnapshot | undefined;
+  /** Raw accumulated token counts from the SDK for delta computation. */
+  accumulatedTokenCounts: ClaudeAccumulatedTokenCounts | undefined;
   lastAssistantUuid: string | undefined;
   lastThreadStartedId: string | undefined;
   stopped: boolean;
@@ -340,6 +352,72 @@ function normalizeClaudeTokenUsage(
       ? { durationMs: record.duration_ms }
       : {}),
   };
+}
+
+/**
+ * Derives context-window-accurate usage from accumulated Claude SDK token counts.
+ *
+ * The Claude SDK reports cumulative totals across all API calls (e.g. after 35 calls
+ * each sending ~200k of context, `input_tokens` ≈ 7M). This does NOT represent the
+ * current context window size.
+ *
+ * We compute deltas from the previous accumulated values: the delta of the last step
+ * equals the last API call's token usage. Since each API call sends the full conversation,
+ * the last call's input + output ≈ current context window occupancy.
+ *
+ * When `total_tokens` was provided directly (not derived from breakdown fields), we
+ * trust it as the context window estimate and skip delta computation.
+ */
+function deriveClaudeContextWindowSnapshot(
+  rawAccumulated: ThreadTokenUsageSnapshot,
+  previousAccumulated: ClaudeAccumulatedTokenCounts | undefined,
+  contextWindow: number | undefined,
+): {
+  readonly snapshot: ThreadTokenUsageSnapshot;
+  readonly accumulated: ClaudeAccumulatedTokenCounts;
+} {
+  const accInput = rawAccumulated.inputTokens ?? 0;
+  const accOutput = rawAccumulated.outputTokens ?? 0;
+  const accumulated: ClaudeAccumulatedTokenCounts = {
+    inputTokens: accInput,
+    outputTokens: accOutput,
+  };
+
+  // Detect whether usedTokens came from total_tokens (direct) or input+output sum (derived).
+  // When derived from the breakdown sum, the accumulated values need delta correction.
+  const usedWasDerivedFromBreakdown =
+    accInput + accOutput > 0 && rawAccumulated.usedTokens === accInput + accOutput;
+
+  if (!usedWasDerivedFromBreakdown) {
+    // total_tokens was provided directly — trust it as context window estimate.
+    return { snapshot: rawAccumulated, accumulated };
+  }
+
+  // Compute last API call's tokens via delta from previous accumulated values.
+  const lastInput = previousAccumulated
+    ? Math.max(0, accInput - previousAccumulated.inputTokens)
+    : accInput;
+  const lastOutput = previousAccumulated
+    ? Math.max(0, accOutput - previousAccumulated.outputTokens)
+    : accOutput;
+  const lastStepTokens = lastInput + lastOutput;
+  const usedTokens = lastStepTokens > 0 ? lastStepTokens : rawAccumulated.usedTokens;
+  const totalProcessed = accInput + accOutput;
+
+  const snapshot: ThreadTokenUsageSnapshot = {
+    usedTokens,
+    lastUsedTokens: lastStepTokens > 0 ? lastStepTokens : usedTokens,
+    ...(lastInput > 0 ? { inputTokens: lastInput, lastInputTokens: lastInput } : {}),
+    ...(lastOutput > 0 ? { outputTokens: lastOutput, lastOutputTokens: lastOutput } : {}),
+    ...(totalProcessed > usedTokens ? { totalProcessedTokens: totalProcessed } : {}),
+    ...(typeof contextWindow === "number" && Number.isFinite(contextWindow) && contextWindow > 0
+      ? { maxTokens: contextWindow }
+      : {}),
+    ...(rawAccumulated.toolUses != null ? { toolUses: rawAccumulated.toolUses } : {}),
+    ...(rawAccumulated.durationMs != null ? { durationMs: rawAccumulated.durationMs } : {}),
+  };
+
+  return { snapshot, accumulated };
 }
 
 function asCanonicalTurnId(value: TurnId): TurnId {
@@ -1377,6 +1455,19 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
         );
         const lastGoodUsage = context.lastKnownTokenUsage;
         const maxTokens = resultContextWindow ?? context.lastKnownContextWindow;
+
+        // Update accumulated tracking from result usage (most complete snapshot).
+        if (accumulatedSnapshot) {
+          const accInput = accumulatedSnapshot.inputTokens ?? 0;
+          const accOutput = accumulatedSnapshot.outputTokens ?? 0;
+          if (accInput + accOutput > 0) {
+            context.accumulatedTokenCounts = {
+              inputTokens: accInput,
+              outputTokens: accOutput,
+            };
+          }
+        }
+
         const usageSnapshot: ThreadTokenUsageSnapshot | undefined = lastGoodUsage
           ? {
               ...lastGoodUsage,
@@ -1387,7 +1478,13 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
                 ? { totalProcessedTokens: accumulatedSnapshot.usedTokens }
                 : {}),
             }
-          : accumulatedSnapshot;
+          : accumulatedSnapshot
+            ? deriveClaudeContextWindowSnapshot(
+                accumulatedSnapshot,
+                context.accumulatedTokenCounts,
+                maxTokens,
+              ).snapshot
+            : undefined;
 
         const turnState = context.turnState;
         if (!turnState) {
@@ -2059,12 +2156,19 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
             return;
           case "task_progress":
             if (message.usage) {
-              const normalizedUsage = normalizeClaudeTokenUsage(
+              const rawUsage = normalizeClaudeTokenUsage(
                 message.usage,
                 context.lastKnownContextWindow,
               );
-              if (normalizedUsage) {
-                context.lastKnownTokenUsage = normalizedUsage;
+              if (rawUsage) {
+                const { snapshot: contextWindowUsage, accumulated } =
+                  deriveClaudeContextWindowSnapshot(
+                    rawUsage,
+                    context.accumulatedTokenCounts,
+                    context.lastKnownContextWindow,
+                  );
+                context.accumulatedTokenCounts = accumulated;
+                context.lastKnownTokenUsage = contextWindowUsage;
                 const usageStamp = yield* makeEventStamp();
                 yield* offerRuntimeEvent({
                   ...base,
@@ -2072,7 +2176,7 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
                   createdAt: usageStamp.createdAt,
                   type: "thread.token-usage.updated",
                   payload: {
-                    usage: normalizedUsage,
+                    usage: contextWindowUsage,
                   },
                 });
               }
@@ -2091,12 +2195,19 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
             return;
           case "task_notification":
             if (message.usage) {
-              const normalizedUsage = normalizeClaudeTokenUsage(
+              const rawUsage = normalizeClaudeTokenUsage(
                 message.usage,
                 context.lastKnownContextWindow,
               );
-              if (normalizedUsage) {
-                context.lastKnownTokenUsage = normalizedUsage;
+              if (rawUsage) {
+                const { snapshot: contextWindowUsage, accumulated } =
+                  deriveClaudeContextWindowSnapshot(
+                    rawUsage,
+                    context.accumulatedTokenCounts,
+                    context.lastKnownContextWindow,
+                  );
+                context.accumulatedTokenCounts = accumulated;
+                context.lastKnownTokenUsage = contextWindowUsage;
                 const usageStamp = yield* makeEventStamp();
                 yield* offerRuntimeEvent({
                   ...base,
@@ -2104,7 +2215,7 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
                   createdAt: usageStamp.createdAt,
                   type: "thread.token-usage.updated",
                   payload: {
-                    usage: normalizedUsage,
+                    usage: contextWindowUsage,
                   },
                 });
               }
@@ -2813,6 +2924,7 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
           turnState: undefined,
           lastKnownContextWindow: undefined,
           lastKnownTokenUsage: undefined,
+          accumulatedTokenCounts: undefined,
           lastAssistantUuid: resumeState?.resumeSessionAt,
           lastThreadStartedId: undefined,
           stopped: false,

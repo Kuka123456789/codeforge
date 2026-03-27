@@ -1397,7 +1397,7 @@ export default function Sidebar() {
           className={`${resolveThreadRowClassName({
             isActive,
             isSelected,
-          })} ${isManualThreadSorting ? "active:cursor-grabbing" : ""}`}
+          })}`}
           onClick={(event) => {
             handleThreadClick(event, thread.id, orderedProjectThreadIds);
           }}
