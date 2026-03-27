@@ -5,7 +5,7 @@ import {
   derivePendingUserInputProgress,
   type PendingUserInputDraftAnswer,
 } from "../../pendingUserInput";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, ChevronLeftIcon } from "lucide-react";
 import { cn } from "~/lib/utils";
 
 interface PendingUserInputPanelProps {
@@ -15,6 +15,7 @@ interface PendingUserInputPanelProps {
   questionIndex: number;
   onSelectOption: (questionId: string, optionLabel: string) => void;
   onAdvance: () => void;
+  onPrevious: () => void;
 }
 
 export const ComposerPendingUserInputPanel = memo(function ComposerPendingUserInputPanel({
@@ -24,6 +25,7 @@ export const ComposerPendingUserInputPanel = memo(function ComposerPendingUserIn
   questionIndex,
   onSelectOption,
   onAdvance,
+  onPrevious,
 }: PendingUserInputPanelProps) {
   if (pendingUserInputs.length === 0) return null;
   const activePrompt = pendingUserInputs[0];
@@ -38,6 +40,7 @@ export const ComposerPendingUserInputPanel = memo(function ComposerPendingUserIn
       questionIndex={questionIndex}
       onSelectOption={onSelectOption}
       onAdvance={onAdvance}
+      onPrevious={onPrevious}
     />
   );
 });
@@ -49,6 +52,7 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
   questionIndex,
   onSelectOption,
   onAdvance,
+  onPrevious,
 }: {
   prompt: PendingUserInput;
   isResponding: boolean;
@@ -56,6 +60,7 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
   questionIndex: number;
   onSelectOption: (questionId: string, optionLabel: string) => void;
   onAdvance: () => void;
+  onPrevious: () => void;
 }) {
   const progress = derivePendingUserInputProgress(prompt.questions, answers, questionIndex);
   const activeQuestion = progress.activeQuestion;
@@ -123,6 +128,21 @@ const ComposerPendingUserInputCard = memo(function ComposerPendingUserInputCard(
     <div className="px-4 py-3 sm:px-5">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
+          {prompt.questions.length > 1 && questionIndex > 0 ? (
+            <button
+              type="button"
+              onClick={onPrevious}
+              disabled={isResponding}
+              className={cn(
+                "flex h-5 items-center rounded-md bg-muted/60 px-1 text-muted-foreground/60 transition-colors duration-150",
+                "hover:bg-muted hover:text-muted-foreground",
+                isResponding && "opacity-50 cursor-not-allowed",
+              )}
+              aria-label="Previous question"
+            >
+              <ChevronLeftIcon className="size-3" />
+            </button>
+          ) : null}
           {prompt.questions.length > 1 ? (
             <span className="flex h-5 items-center rounded-md bg-muted/60 px-1.5 text-[10px] font-medium tabular-nums text-muted-foreground/60">
               {questionIndex + 1}/{prompt.questions.length}
