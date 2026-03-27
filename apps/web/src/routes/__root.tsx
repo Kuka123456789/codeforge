@@ -158,7 +158,9 @@ function EventRouter() {
     let needsProviderInvalidation = false;
 
     const flushSnapshotSync = async (): Promise<void> => {
+      console.log("[EventRouter] calling getSnapshot...");
       const snapshot = await api.orchestration.getSnapshot();
+      console.log("[EventRouter] snapshot received", { projects: snapshot.projects.length, threads: snapshot.threads.length, seq: snapshot.snapshotSequence });
       if (disposed) return;
       latestSequence = Math.max(latestSequence, snapshot.snapshotSequence);
       syncServerReadModel(snapshot);
