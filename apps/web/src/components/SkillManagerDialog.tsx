@@ -1,7 +1,9 @@
 import type { ProviderSlashCommand, SkillEntry } from "@codeforge/contracts";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PlusIcon, TrashIcon, ZapIcon, TerminalIcon, CpuIcon } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { readNativeApi } from "../nativeApi";
+import { serverQueryKeys } from "~/lib/serverReactQuery";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
 import { Dialog, DialogHeader, DialogPanel, DialogPopup, DialogTitle } from "./ui/dialog";
@@ -44,6 +46,7 @@ export function SkillManagerDialog({
   projectCwd,
   providerCommands,
 }: SkillManagerDialogProps) {
+  const queryClient = useQueryClient();
   const [customSkills, setCustomSkills] = useState<SkillEntry[]>([]);
   const [selected, setSelected] = useState<SelectedSkill | null>(null);
   const [editorContent, setEditorContent] = useState("");
@@ -51,6 +54,19 @@ export function SkillManagerDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [newSkillName, setNewSkillName] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [newSkillSource, setNewSkillSource] = useState<"project" | "user">("project");
+
+  /** Refresh provider slash commands so newly created/deleted skills appear in the command menu. */
+  const refreshProviderCommands = useCallback(async () => {
+    const api = readNativeApi();
+    if (!api) return;
+    try {
+      await api.server.refreshProviders();
+      await queryClient.invalidateQueries({ queryKey: serverQueryKeys.config() });
+    } catch {
+      // Best-effort — skill was already saved/deleted successfully
+    }
+  }, [queryClient]);
 
   const projectSkills = useMemo(
     () => customSkills.filter((s) => s.source === "project"),
@@ -123,10 +139,11 @@ export function SkillManagerDialog({
       setSelected({ ...selected, content: editorContent });
       setEditorDirty(false);
       toastManager.add({ type: "success", title: `Saved /${selected.name}` });
+      await refreshProviderCommands();
     } catch {
       toastManager.add({ type: "error", title: "Failed to save skill" });
     }
-  }, [projectCwd, selected, editorContent]);
+  }, [projectCwd, selected, editorContent, refreshProviderCommands]);
 
   const handleDelete = useCallback(async () => {
     if (!projectCwd || !selected || selected.type !== "custom") return;
@@ -145,10 +162,11 @@ export function SkillManagerDialog({
       setEditorContent("");
       setEditorDirty(false);
       toastManager.add({ type: "success", title: `Deleted /${selected.name}` });
+      await refreshProviderCommands();
     } catch {
       toastManager.add({ type: "error", title: "Failed to delete skill" });
     }
-  }, [projectCwd, selected]);
+  }, [projectCwd, selected, refreshProviderCommands]);
 
   const handleCreate = useCallback(async () => {
     if (!projectCwd || !newSkillName.trim()) return;
@@ -165,10 +183,15 @@ export function SkillManagerDialog({
     if (!api) return;
     const template = `# ${name}\n\nDescribe what this skill does.\n`;
     try {
-      await api.skills.save({ cwd: projectCwd, name, source: "project", content: template });
+      await api.skills.save({
+        cwd: projectCwd,
+        name,
+        source: newSkillSource,
+        content: template,
+      });
       const newSkill: SkillEntry = {
         name,
-        source: "project",
+        source: newSkillSource,
         description: `# ${name}`,
         content: template,
       };
@@ -177,10 +200,11 @@ export function SkillManagerDialog({
       setNewSkillName("");
       setIsCreating(false);
       toastManager.add({ type: "success", title: `Created /${name}` });
+      await refreshProviderCommands();
     } catch {
       toastManager.add({ type: "error", title: "Failed to create skill" });
     }
-  }, [projectCwd, newSkillName, selectCustomSkill]);
+  }, [projectCwd, newSkillName, newSkillSource, selectCustomSkill, refreshProviderCommands]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -251,56 +275,62 @@ export function SkillManagerDialog({
                     onClick={() => selectCustomSkill(skill)}
                   />
                 ))}
-                {isCreating ? (
-                  <div className="flex items-center gap-1 px-2 py-1">
-                    <Input
-                      className="h-6 text-xs"
-                      placeholder="skill-name"
-                      value={newSkillName}
-                      onChange={(e) => setNewSkillName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") void handleCreate();
-                        if (e.key === "Escape") {
-                          setIsCreating(false);
-                          setNewSkillName("");
-                        }
-                      }}
-                      autoFocus
-                    />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
-                    onClick={() => setIsCreating(true)}
-                  >
-                    <PlusIcon className="size-3" />
-                    New skill
-                  </button>
-                )}
+                <NewSkillButton
+                  source="project"
+                  isCreating={isCreating && newSkillSource === "project"}
+                  newSkillName={newSkillName}
+                  onChangeName={setNewSkillName}
+                  onConfirm={() => void handleCreate()}
+                  onCancel={() => {
+                    setIsCreating(false);
+                    setNewSkillName("");
+                  }}
+                  onStart={() => {
+                    setNewSkillSource("project");
+                    setIsCreating(true);
+                  }}
+                />
               </SkillGroup>
 
               {/* User skills */}
-              {userSkills.length > 0 && (
-                <SkillGroup title="User Skills">
-                  {userSkills.map((skill) => (
-                    <SkillRow
-                      key={`user:${skill.name}`}
-                      name={skill.name}
-                      icon={<TerminalIcon className="size-3.5 text-purple-500" />}
-                      active={
-                        selected?.type === "custom" &&
-                        selected.name === skill.name &&
-                        selected.source === "user"
-                      }
-                      onClick={() => selectCustomSkill(skill)}
-                    />
-                  ))}
-                </SkillGroup>
-              )}
+              <SkillGroup title="User Skills">
+                {userSkills.map((skill) => (
+                  <SkillRow
+                    key={`user:${skill.name}`}
+                    name={skill.name}
+                    icon={<TerminalIcon className="size-3.5 text-purple-500" />}
+                    active={
+                      selected?.type === "custom" &&
+                      selected.name === skill.name &&
+                      selected.source === "user"
+                    }
+                    onClick={() => selectCustomSkill(skill)}
+                  />
+                ))}
+                <NewSkillButton
+                  source="user"
+                  isCreating={isCreating && newSkillSource === "user"}
+                  newSkillName={newSkillName}
+                  onChangeName={setNewSkillName}
+                  onConfirm={() => void handleCreate()}
+                  onCancel={() => {
+                    setIsCreating(false);
+                    setNewSkillName("");
+                  }}
+                  onStart={() => {
+                    setNewSkillSource("user");
+                    setIsCreating(true);
+                  }}
+                />
+              </SkillGroup>
 
               {isLoading && (
                 <div className="px-3 py-2 text-xs text-muted-foreground">Loading skills...</div>
+              )}
+              {!isLoading && !projectCwd && (
+                <div className="px-3 py-2 text-xs text-muted-foreground/60">
+                  Add a project to manage project skills.
+                </div>
               )}
             </div>
 
@@ -397,6 +427,52 @@ function SkillRow({
     >
       {icon}
       <span className="truncate">/{name}</span>
+    </button>
+  );
+}
+
+function NewSkillButton({
+  source,
+  isCreating,
+  newSkillName,
+  onChangeName,
+  onConfirm,
+  onCancel,
+  onStart,
+}: {
+  source: "project" | "user";
+  isCreating: boolean;
+  newSkillName: string;
+  onChangeName: (name: string) => void;
+  onConfirm: () => void;
+  onCancel: () => void;
+  onStart: () => void;
+}) {
+  if (isCreating) {
+    return (
+      <div className="flex items-center gap-1 px-2 py-1">
+        <Input
+          className="h-6 text-xs"
+          placeholder="skill-name"
+          value={newSkillName}
+          onChange={(e) => onChangeName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onConfirm();
+            if (e.key === "Escape") onCancel();
+          }}
+          autoFocus
+        />
+      </div>
+    );
+  }
+  return (
+    <button
+      type="button"
+      className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+      onClick={onStart}
+    >
+      <PlusIcon className="size-3" />
+      New {source} skill
     </button>
   );
 }
