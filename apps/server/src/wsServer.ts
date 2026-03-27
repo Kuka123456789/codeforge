@@ -817,14 +817,13 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
           relativePath: body.relativePath,
           path,
         });
-        const contents = yield* fileSystem.readFileString(target.absolutePath).pipe(
-          Effect.catchAll(() => Effect.fail(null)),
-          Effect.result,
-        );
-        if (Result.isErr(contents) || contents.value === null) {
+        const contents = yield* fileSystem
+          .readFileString(target.absolutePath)
+          .pipe(Effect.catch(() => Effect.succeed(null)));
+        if (contents === null) {
           return { relativePath: target.relativePath, contents: "", exists: false };
         }
-        return { relativePath: target.relativePath, contents: contents.value, exists: true };
+        return { relativePath: target.relativePath, contents, exists: true };
       }
 
       case WS_METHODS.projectsDeleteFile: {
@@ -856,14 +855,14 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
 
         const scanSkillsDir = (dir: string, source: "project" | "user") =>
           Effect.gen(function* () {
-            const entries = yield* fileSystem.readDirectory(dir).pipe(
-              Effect.catchAll(() => Effect.succeed([] as ReadonlyArray<string>)),
-            );
+            const entries = yield* fileSystem
+              .readDirectory(dir)
+              .pipe(Effect.catch(() => Effect.succeed([] as Array<string>)));
             for (const entry of entries) {
               const skillMdPath = path.join(dir, entry, "SKILL.md");
-              const content = yield* fileSystem.readFileString(skillMdPath).pipe(
-                Effect.catchAll(() => Effect.succeed(null)),
-              );
+              const content = yield* fileSystem
+                .readFileString(skillMdPath)
+                .pipe(Effect.catch(() => Effect.succeed(null)));
               if (content === null) continue;
               const firstLine = content.split("\n").find((l: string) => l.trim().length > 0) ?? "";
               skills.push({ name: entry, source, description: firstLine, content });
@@ -871,10 +870,9 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
           });
 
         yield* scanSkillsDir(path.join(body.cwd, ".claude", "skills"), "project");
-        yield* scanSkillsDir(
-          path.join(yield* expandHomePath("~/.claude/skills"), ""),
-          "user",
-        ).pipe(Effect.catchAll(() => Effect.void));
+        yield* scanSkillsDir(path.join(yield* expandHomePath("~/.claude/skills"), ""), "user").pipe(
+          Effect.catch(() => Effect.void),
+        );
 
         return { skills };
       }
@@ -887,16 +885,14 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
             : path.join(body.cwd, ".claude", "skills");
         const skillDir = path.join(baseDir, body.name);
         const skillPath = path.join(skillDir, "SKILL.md");
-        yield* fileSystem
-          .makeDirectory(skillDir, { recursive: true })
-          .pipe(
-            Effect.mapError(
-              (cause) =>
-                new RouteRequestError({
-                  message: `Failed to prepare skill directory: ${String(cause)}`,
-                }),
-            ),
-          );
+        yield* fileSystem.makeDirectory(skillDir, { recursive: true }).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RouteRequestError({
+                message: `Failed to prepare skill directory: ${String(cause)}`,
+              }),
+          ),
+        );
         yield* fileSystem.writeFileString(skillPath, body.content).pipe(
           Effect.mapError(
             (cause) =>

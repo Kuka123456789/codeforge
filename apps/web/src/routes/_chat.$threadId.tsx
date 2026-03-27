@@ -10,6 +10,7 @@ import {
   DiffPanelShell,
   type DiffPanelMode,
 } from "../components/DiffPanelShell";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 import { useComposerDraftStore } from "../composerDraftStore";
 import {
   type DiffRouteSearch,
@@ -62,13 +63,25 @@ const DiffLoadingFallback = (props: { mode: DiffPanelMode }) => {
   );
 };
 
+const DiffPanelErrorFallback = (props: { mode: DiffPanelMode }) => {
+  return (
+    <DiffPanelShell mode={props.mode} header={<span />}>
+      <div className="flex flex-1 items-center justify-center px-5 text-center text-xs text-muted-foreground/70">
+        Something went wrong while loading the diff viewer. Try closing and reopening the panel.
+      </div>
+    </DiffPanelShell>
+  );
+};
+
 const LazyDiffPanel = (props: { mode: DiffPanelMode }) => {
   return (
-    <DiffWorkerPoolProvider>
-      <Suspense fallback={<DiffLoadingFallback mode={props.mode} />}>
-        <DiffPanel mode={props.mode} />
-      </Suspense>
-    </DiffWorkerPoolProvider>
+    <ErrorBoundary fallback={<DiffPanelErrorFallback mode={props.mode} />}>
+      <DiffWorkerPoolProvider>
+        <Suspense fallback={<DiffLoadingFallback mode={props.mode} />}>
+          <DiffPanel mode={props.mode} />
+        </Suspense>
+      </DiffWorkerPoolProvider>
+    </ErrorBoundary>
   );
 };
 

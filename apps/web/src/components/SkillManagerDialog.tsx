@@ -4,13 +4,7 @@ import { PlusIcon, TrashIcon, ZapIcon, TerminalIcon, CpuIcon } from "lucide-reac
 import { readNativeApi } from "../nativeApi";
 import { cn } from "~/lib/utils";
 import { Button } from "./ui/button";
-import {
-  Dialog,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-} from "./ui/dialog";
+import { Dialog, DialogHeader, DialogPanel, DialogPopup, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { toastManager } from "./ui/toast";
 import type { ComposerSlashCommand } from "../composer-logic";
@@ -62,10 +56,7 @@ export function SkillManagerDialog({
     () => customSkills.filter((s) => s.source === "project"),
     [customSkills],
   );
-  const userSkills = useMemo(
-    () => customSkills.filter((s) => s.source === "user"),
-    [customSkills],
-  );
+  const userSkills = useMemo(() => customSkills.filter((s) => s.source === "user"), [customSkills]);
 
   // Fetch skills when dialog opens
   useEffect(() => {
@@ -121,7 +112,11 @@ export function SkillManagerDialog({
       setCustomSkills((prev) =>
         prev.map((s) =>
           s.name === selected.name && s.source === selected.source
-            ? { ...s, content: editorContent, description: editorContent.split("\n").find((l) => l.trim().length > 0) ?? "" }
+            ? {
+                ...s,
+                content: editorContent,
+                description: editorContent.split("\n").find((l) => l.trim().length > 0) ?? "",
+              }
             : s,
         ),
       );
@@ -207,7 +202,11 @@ export function SkillManagerDialog({
                     icon={<ZapIcon className="size-3.5 text-amber-500" />}
                     active={selected?.type === "built-in" && selected.name === cmd.name}
                     onClick={() => {
-                      setSelected({ type: "built-in", name: cmd.name, description: cmd.description });
+                      setSelected({
+                        type: "built-in",
+                        name: cmd.name,
+                        description: cmd.description,
+                      });
                       setIsCreating(false);
                     }}
                   />
@@ -325,11 +324,7 @@ export function SkillManagerDialog({
                     spellCheck={false}
                   />
                   <div className="flex items-center justify-end gap-2 border-t px-4 py-2">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => void handleDelete()}
-                    >
+                    <Button variant="destructive" size="sm" onClick={() => void handleDelete()}>
                       <TrashIcon className="mr-1 size-3.5" />
                       Delete
                     </Button>

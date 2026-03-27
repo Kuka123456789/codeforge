@@ -13,6 +13,7 @@ import {
   SquarePenIcon,
   TerminalIcon,
   TriangleAlertIcon,
+  ZapIcon,
 } from "lucide-react";
 import { autoAnimate } from "@formkit/auto-animate";
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
@@ -110,6 +111,7 @@ import {
 import { useCopyToClipboard } from "~/hooks/useCopyToClipboard";
 import { useSendStatusStore } from "../sendStatusStore";
 import { formatRelativeTimeString } from "~/timestampFormat";
+import { SkillManagerDialog } from "./SkillManagerDialog";
 import { ThreadSearchDialog } from "./ThreadSearchDialog";
 import { useSettings, useUpdateSettings } from "~/hooks/useSettings";
 
@@ -627,6 +629,21 @@ export default function Sidebar() {
   const removeFromSelection = useThreadSelectionStore((s) => s.removeFromSelection);
   const setSelectionAnchor = useThreadSelectionStore((s) => s.setAnchor);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [skillManagerOpen, setSkillManagerOpen] = useState(false);
+  const { data: serverConfig } = useQuery(serverConfigQueryOptions());
+  const providerSlashCommands = useMemo(() => {
+    const providers = serverConfig?.providers ?? [];
+    return providers.flatMap((p) => p.slashCommands ?? []);
+  }, [serverConfig]);
+
+  // Derive the active project CWD from the currently viewed thread
+  const activeProjectCwd = useMemo(() => {
+    if (!routeThreadId) return projects[0]?.cwd ?? null;
+    const activeThread = threads.find((t) => t.id === routeThreadId);
+    if (!activeThread) return projects[0]?.cwd ?? null;
+    const project = projects.find((p) => p.id === activeThread.projectId);
+    return project?.cwd ?? null;
+  }, [routeThreadId, threads, projects]);
 
   // Cmd+K / Ctrl+K to open thread search
   useEffect(() => {
@@ -2258,6 +2275,16 @@ export default function Sidebar() {
       <SidebarFooter className="p-2">
         <SidebarMenu>
           <SidebarMenuItem>
+            <SidebarMenuButton
+              size="sm"
+              className="gap-2 px-2 py-1.5 text-muted-foreground/70 hover:bg-accent hover:text-foreground"
+              onClick={() => setSkillManagerOpen(true)}
+            >
+              <ZapIcon className="size-3.5" />
+              <span className="text-xs">Skills</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             {isOnSettings ? (
               <SidebarMenuButton
                 size="sm"
@@ -2282,6 +2309,12 @@ export default function Sidebar() {
       </SidebarFooter>
 
       <ThreadSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <SkillManagerDialog
+        open={skillManagerOpen}
+        onOpenChange={setSkillManagerOpen}
+        projectCwd={activeProjectCwd}
+        providerCommands={providerSlashCommands}
+      />
     </>
   );
 }

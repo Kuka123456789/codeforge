@@ -131,7 +131,7 @@ export function ThreadSearchDialog({ open, onOpenChange }: ThreadSearchDialogPro
                   <CommandItem
                     key={result.threadId}
                     value={result.threadId}
-                    onSelect={() => handleSelect(result.threadId)}
+                    onClick={() => handleSelect(result.threadId)}
                   >
                     <div className="flex min-w-0 flex-1 items-start gap-2.5">
                       <MessageSquareIcon className="mt-0.5 size-4 shrink-0 text-muted-foreground/60" />
