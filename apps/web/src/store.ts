@@ -255,8 +255,10 @@ function attachmentPreviewRoutePath(attachmentId: string): string {
 // ── Pure state transition functions ────────────────────────────────────
 
 export function syncServerReadModel(state: AppState, readModel: OrchestrationReadModel): AppState {
+  const activeProjects = readModel.projects.filter((project) => project.deletedAt === null);
+  console.log("[syncServerReadModel]", { total: readModel.projects.length, afterFilter: activeProjects.length, sample: readModel.projects[0] ? { deletedAt: readModel.projects[0].deletedAt, archivedAt: readModel.projects[0].archivedAt, title: readModel.projects[0].title } : null });
   const projects = mapProjectsFromReadModel(
-    readModel.projects.filter((project) => project.deletedAt === null),
+    activeProjects,
     state.projects,
   );
   const existingThreadById = new Map(state.threads.map((thread) => [thread.id, thread] as const));
