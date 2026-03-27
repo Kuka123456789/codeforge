@@ -22,6 +22,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { render } from "vitest-browser-react";
 
 import { useComposerDraftStore } from "../composerDraftStore";
+import { usePinStore } from "../pinStore";
 import {
   INLINE_TERMINAL_CONTEXT_PLACEHOLDER,
   type TerminalContextDraft,
@@ -852,6 +853,7 @@ describe("ChatView timeline estimator parity (full app)", () => {
       threads: [],
       threadsHydrated: false,
     });
+    usePinStore.setState({ pins: [] });
   });
 
   afterEach(() => {
@@ -1864,6 +1866,384 @@ describe("ChatView timeline estimator parity (full app)", () => {
         },
         { timeout: 8_000, interval: 16 },
       );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it("pins a message via the hover button and shows it in the sidebar", async () => {
+    const mounted = await mountChatView({
+      viewport: DEFAULT_VIEWPORT,
+      snapshot: createSnapshotForTargetUser({
+        targetMessageId: "msg-user-pin-target" as MessageId,
+        targetText: "pin hover test",
+      }),
+    });
+
+    try {
+      // Wait for the thread to render and messages to appear
+      await waitForComposerEditor();
+      await waitForLayout();
+
+      // Find an assistant message and hover over it to reveal the pin button
+      const assistantRow = await waitForElement(
+        () => document.querySelector<HTMLElement>('[data-message-role="assistant"]'),
+        "Unable to find an assistant message row.",
+      );
+
+      // The pin button is inside a group/assistant wrapper — trigger hover by dispatching pointerenter
+      const assistantWrapper = assistantRow.querySelector<HTMLElement>(".group\\/assistant");
+      if (assistantWrapper) {
+        assistantWrapper.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true }));
+      }
+      await waitForLayout();
+
+      // Find the pin button (title="Pin message")
+      const pinButton = await waitForElement(
+        () => assistantRow.querySelector<HTMLButtonElement>('button[title="Pin message"]'),
+        "Unable to find the pin button on the assistant message.",
+      );
+
+      pinButton.click();
+      await waitForLayout();
+
+      // Verify the pins sidebar opened
+      await vi.waitFor(
+        () => {
+          expect(document.body.textContent).toContain("Pins");
+          expect(document.body.textContent).toContain("1 pinned");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+
+      // Verify the pin store has one entry
+      expect(usePinStore.getState().pins).toHaveLength(1);
+      expect(usePinStore.getState().pins[0]!.selectedText).toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it("pins text selection via Cmd+Shift+P keyboard shortcut", async () => {
+    const mounted = await mountChatView({
+      viewport: DEFAULT_VIEWPORT,
+      snapshot: createSnapshotForTargetUser({
+        targetMessageId: "msg-user-pin-shortcut" as MessageId,
+        targetText: "shortcut pin test",
+      }),
+    });
+
+    try {
+      await waitForComposerEditor();
+      await waitForLayout();
+
+      // Find an assistant message element to create a text selection inside it
+      const assistantRow = await waitForElement(
+        () => document.querySelector<HTMLElement>('[data-message-role="assistant"]'),
+        "Unable to find an assistant message row.",
+      );
+      const textNode = assistantRow.querySelector(".chat-markdown");
+      expect(textNode).toBeTruthy();
+
+      // Create a programmatic text selection within the assistant message
+      const range = document.createRange();
+      const firstText = textNode!.childNodes[0];
+      if (firstText) {
+        range.selectNodeContents(firstText);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+      }
+
+      // Dispatch Cmd+Shift+P
+      const useMetaForMod = isMacPlatform(navigator.platform);
+      window.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "P",
+          shiftKey: true,
+          metaKey: useMetaForMod,
+          ctrlKey: !useMetaForMod,
+          bubbles: true,
+          cancelable: true,
+        }),
+      );
+      await waitForLayout();
+
+      // Verify the sidebar opened and a pin with selected text was created
+      await vi.waitFor(
+        () => {
+          expect(document.body.textContent).toContain("Pins");
+          const pins = usePinStore.getState().pins;
+          expect(pins).toHaveLength(1);
+          expect(pins[0]!.selectedText).not.toBeNull();
+          // Selection badge should appear for text selections
+          expect(document.body.textContent).toContain("Selection");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+
+      // Verify selection was cleared after pinning
+      expect(window.getSelection()?.isCollapsed).toBe(true);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it("removes a pin via the unpin button and closes sidebar when empty", async () => {
+    // Pre-populate with a pin
+    usePinStore.setState({
+      pins: [
+        {
+          id: "test-pin-1",
+          threadId: THREAD_ID,
+          messageId: "msg-assistant-0" as MessageId,
+          messageRole: "assistant",
+          selectedText: null,
+          fullMessageText: "assistant filler 0",
+          createdAt: NOW_ISO,
+        },
+      ],
+    });
+
+    const mounted = await mountChatView({
+      viewport: DEFAULT_VIEWPORT,
+      snapshot: createSnapshotForTargetUser({
+        targetMessageId: "msg-user-pin-remove" as MessageId,
+        targetText: "pin remove test",
+      }),
+    });
+
+    try {
+      await waitForComposerEditor();
+      await waitForLayout();
+
+      // Open the pins sidebar via the footer button
+      const pinsToggle = await waitForElement(
+        () =>
+          Array.from(document.querySelectorAll("button")).find(
+            (button) => button.title === "Show pins" || button.title === "Hide pins",
+          ) as HTMLButtonElement | null,
+        "Unable to find pins toggle button.",
+      );
+      pinsToggle.click();
+      await waitForLayout();
+
+      // Verify the sidebar is open with 1 pin
+      await vi.waitFor(
+        () => {
+          expect(document.body.textContent).toContain("Pins");
+          expect(document.body.textContent).toContain("1 pinned");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+
+      // Click the unpin (X) button
+      const unpinButton = await waitForElement(
+        () => document.querySelector<HTMLButtonElement>('button[aria-label="Unpin"]'),
+        "Unable to find unpin button.",
+      );
+      unpinButton.click();
+      await waitForLayout();
+
+      // Verify the pin was removed
+      await vi.waitFor(
+        () => {
+          expect(usePinStore.getState().pins).toHaveLength(0);
+          expect(document.body.textContent).toContain("No pinned messages");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it("expands and collapses a pinned message via Show more / Show less", async () => {
+    // Create a pin with a long message
+    const longText = Array.from(
+      { length: 30 },
+      (_, i) => `- Item ${i + 1}: description of work item that needs to be done`,
+    ).join("\n");
+    usePinStore.setState({
+      pins: [
+        {
+          id: "test-pin-long",
+          threadId: THREAD_ID,
+          messageId: "msg-assistant-0" as MessageId,
+          messageRole: "assistant",
+          selectedText: null,
+          fullMessageText: longText,
+          createdAt: NOW_ISO,
+        },
+      ],
+    });
+
+    const mounted = await mountChatView({
+      viewport: DEFAULT_VIEWPORT,
+      snapshot: createSnapshotForTargetUser({
+        targetMessageId: "msg-user-pin-expand" as MessageId,
+        targetText: "pin expand test",
+      }),
+    });
+
+    try {
+      await waitForComposerEditor();
+      await waitForLayout();
+
+      // Open the pins sidebar
+      const pinsToggle = await waitForElement(
+        () =>
+          Array.from(document.querySelectorAll("button")).find(
+            (button) => button.title === "Show pins" || button.title === "Hide pins",
+          ) as HTMLButtonElement | null,
+        "Unable to find pins toggle button.",
+      );
+      pinsToggle.click();
+      await waitForLayout();
+
+      // Verify sidebar shows the pin
+      await vi.waitFor(
+        () => {
+          expect(document.body.textContent).toContain("Pins");
+          expect(document.body.textContent).toContain("Show more");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+
+      // The last items should NOT be visible when collapsed (overflow hidden + line-clamp)
+      // Click "Show more" to expand
+      const showMoreButton = await waitForElement(
+        () =>
+          Array.from(document.querySelectorAll("button")).find(
+            (button) => button.textContent?.trim() === "Show more",
+          ) as HTMLButtonElement | null,
+        "Unable to find Show more button.",
+      );
+      showMoreButton.click();
+      await waitForLayout();
+
+      // "Show less" should now be visible
+      await vi.waitFor(
+        () => {
+          expect(document.body.textContent).toContain("Show less");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+
+      // Click "Show less" to collapse
+      const showLessButton = await waitForElement(
+        () =>
+          Array.from(document.querySelectorAll("button")).find(
+            (button) => button.textContent?.trim() === "Show less",
+          ) as HTMLButtonElement | null,
+        "Unable to find Show less button.",
+      );
+      showLessButton.click();
+      await waitForLayout();
+
+      // Should show "Show more" again
+      await vi.waitFor(
+        () => {
+          expect(document.body.textContent).toContain("Show more");
+        },
+        { timeout: 8_000, interval: 16 },
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it("resizes the pins sidebar by dragging the left border", async () => {
+    usePinStore.setState({
+      pins: [
+        {
+          id: "test-pin-resize",
+          threadId: THREAD_ID,
+          messageId: "msg-assistant-0" as MessageId,
+          messageRole: "assistant",
+          selectedText: null,
+          fullMessageText: "resize test pin",
+          createdAt: NOW_ISO,
+        },
+      ],
+    });
+
+    const mounted = await mountChatView({
+      viewport: DEFAULT_VIEWPORT,
+      snapshot: createSnapshotForTargetUser({
+        targetMessageId: "msg-user-pin-resize" as MessageId,
+        targetText: "pin resize test",
+      }),
+    });
+
+    try {
+      await waitForComposerEditor();
+      await waitForLayout();
+
+      // Open the sidebar
+      const pinsToggle = await waitForElement(
+        () =>
+          Array.from(document.querySelectorAll("button")).find(
+            (button) => button.title === "Show pins" || button.title === "Hide pins",
+          ) as HTMLButtonElement | null,
+        "Unable to find pins toggle button.",
+      );
+      pinsToggle.click();
+      await waitForLayout();
+
+      // Find the sidebar container and its resize handle
+      const sidebar = await waitForElement(
+        () =>
+          Array.from(document.querySelectorAll("div")).find((div) =>
+            div.classList.contains("cursor-col-resize"),
+          ) as HTMLDivElement | null,
+        "Unable to find resize handle.",
+      );
+
+      // Measure initial sidebar width
+      const sidebarContainer = sidebar.parentElement!;
+      const initialWidth = sidebarContainer.getBoundingClientRect().width;
+      expect(initialWidth).toBeGreaterThanOrEqual(330);
+      expect(initialWidth).toBeLessThanOrEqual(350);
+
+      // Simulate drag: pointer down, move left by 100px, pointer up
+      const startX = sidebar.getBoundingClientRect().left + 1;
+      const startY = sidebar.getBoundingClientRect().top + 50;
+
+      sidebar.dispatchEvent(
+        new PointerEvent("pointerdown", {
+          clientX: startX,
+          clientY: startY,
+          button: 0,
+          pointerId: 1,
+          bubbles: true,
+        }),
+      );
+      await nextFrame();
+
+      sidebar.dispatchEvent(
+        new PointerEvent("pointermove", {
+          clientX: startX - 100,
+          clientY: startY,
+          pointerId: 1,
+          bubbles: true,
+        }),
+      );
+      await nextFrame();
+
+      sidebar.dispatchEvent(
+        new PointerEvent("pointerup", {
+          clientX: startX - 100,
+          clientY: startY,
+          pointerId: 1,
+          bubbles: true,
+        }),
+      );
+      await waitForLayout();
+
+      // Verify width increased by roughly 100px
+      const newWidth = sidebarContainer.getBoundingClientRect().width;
+      expect(newWidth).toBeGreaterThan(initialWidth + 50);
     } finally {
       await mounted.cleanup();
     }

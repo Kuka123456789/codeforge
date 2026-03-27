@@ -135,10 +135,10 @@ projects: {
   writeFile: (input: ProjectWriteFileInput) => Promise<ProjectWriteFileResult>;
   readFile: (input: ProjectReadFileInput) => Promise<ProjectReadFileResult>;
   deleteFile: (input: ProjectDeleteFileInput) => Promise<ProjectDeleteFileResult>;
-};
+}
 skills: {
   list: (input: SkillsListInput) => Promise<SkillsListResult>;
-};
+}
 ```
 
 ### 1e. Export new schemas from `packages/contracts/src/index.ts`
@@ -410,17 +410,17 @@ export const SkillsDeleteInput = Schema.Struct({
 
 ## File Summary
 
-| File | Change |
-|------|--------|
-| `packages/contracts/src/project.ts` | Add `ProjectReadFileInput/Result`, `ProjectDeleteFileInput/Result` |
-| `packages/contracts/src/skills.ts` | New file: `SkillEntry`, `SkillsListInput/Result`, `SkillsSaveInput`, `SkillsDeleteInput` |
-| `packages/contracts/src/ws.ts` | Add 5 WS methods + `tagRequestBody` entries |
-| `packages/contracts/src/ipc.ts` | Extend `NativeApi` with `readFile`, `deleteFile`, `skills.*` |
-| `packages/contracts/src/index.ts` | Export new schemas |
-| `apps/server/src/wsServer.ts` | Add 5 case handlers |
-| `apps/web/src/wsNativeApi.ts` | Wire 5 new transport methods |
-| `apps/web/src/components/SkillManagerDialog.tsx` | New component (~200 lines) |
-| `apps/web/src/components/Sidebar.tsx` | Add Skills button + mount dialog |
+| File                                             | Change                                                                                   |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| `packages/contracts/src/project.ts`              | Add `ProjectReadFileInput/Result`, `ProjectDeleteFileInput/Result`                       |
+| `packages/contracts/src/skills.ts`               | New file: `SkillEntry`, `SkillsListInput/Result`, `SkillsSaveInput`, `SkillsDeleteInput` |
+| `packages/contracts/src/ws.ts`                   | Add 5 WS methods + `tagRequestBody` entries                                              |
+| `packages/contracts/src/ipc.ts`                  | Extend `NativeApi` with `readFile`, `deleteFile`, `skills.*`                             |
+| `packages/contracts/src/index.ts`                | Export new schemas                                                                       |
+| `apps/server/src/wsServer.ts`                    | Add 5 case handlers                                                                      |
+| `apps/web/src/wsNativeApi.ts`                    | Wire 5 new transport methods                                                             |
+| `apps/web/src/components/SkillManagerDialog.tsx` | New component (~200 lines)                                                               |
+| `apps/web/src/components/Sidebar.tsx`            | Add Skills button + mount dialog                                                         |
 
 ## Implementation Order
 
