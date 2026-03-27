@@ -60,7 +60,9 @@ export const ServerProvider = Schema.Struct({
   checkedAt: IsoDateTime,
   message: Schema.optional(TrimmedNonEmptyString),
   models: Schema.Array(ServerProviderModel),
-  slashCommands: Schema.optionalWith(Schema.Array(ProviderSlashCommand), { default: () => [] }),
+  slashCommands: Schema.optional(Schema.Array(ProviderSlashCommand)).pipe(
+    Schema.withDecodingDefault(() => []),
+  ),
 });
 export type ServerProvider = typeof ServerProvider.Type;
 
