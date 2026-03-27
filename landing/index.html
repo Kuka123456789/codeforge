@@ -215,81 +215,401 @@
       }
 
       /* ── Screenshot ── */
-      .screenshot { max-width: 1120px; margin: 4rem auto 0; padding: 0 2rem; }
+      .screenshot {
+        max-width: 1120px;
+        margin: 4rem auto 0;
+        padding: 0 2rem;
+      }
 
       /* ── Demo window ── */
-      .demo-window { border-radius: 14px; border: 1px solid var(--border); background: #0c0c0f; overflow: hidden; }
-      .demo-titlebar { display: flex; align-items: center; padding: 11px 16px; background: #111114; border-bottom: 1px solid var(--border); gap: 12px; }
-      .demo-dots { display: flex; gap: 6px; }
-      .demo-dot { width: 10px; height: 10px; border-radius: 50%; }
-      .demo-titlebar-text { font-size: .73rem; color: var(--text-muted); flex: 1; text-align: center; }
-      .demo-body { display: flex; min-height: 420px; max-height: 420px; font-size: .78rem; line-height: 1.5; }
+      .demo-window {
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: #0c0c0f;
+        overflow: hidden;
+      }
+      .demo-titlebar {
+        display: flex;
+        align-items: center;
+        padding: 11px 16px;
+        background: #111114;
+        border-bottom: 1px solid var(--border);
+        gap: 12px;
+      }
+      .demo-dots {
+        display: flex;
+        gap: 6px;
+      }
+      .demo-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .demo-titlebar-text {
+        font-size: 0.73rem;
+        color: var(--text-muted);
+        flex: 1;
+        text-align: center;
+      }
+      .demo-body {
+        display: flex;
+        min-height: 420px;
+        max-height: 420px;
+        font-size: 0.78rem;
+        line-height: 1.5;
+      }
 
       /* Sidebar */
-      .demo-sidebar { width: 196px; min-width: 196px; background: #0e0e11; border-right: 1px solid var(--border); padding: 12px 0; overflow: hidden; }
-      .demo-sb-section { margin-bottom: 14px; }
-      .demo-sb-label { display: block; padding: 0 14px; font-size: .63rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-bottom: 5px; }
-      .demo-sb-item { display: flex; align-items: center; gap: 7px; padding: 5px 14px; font-size: .72rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .demo-sb-item--active { color: var(--text); background: rgba(255,255,255,.05); }
-      .demo-status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
-      .demo-status-dot--live { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,.5); animation: demo-pulse 2s ease-in-out infinite; }
-      @keyframes demo-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+      .demo-sidebar {
+        width: 196px;
+        min-width: 196px;
+        background: #0e0e11;
+        border-right: 1px solid var(--border);
+        padding: 12px 0;
+        overflow: hidden;
+      }
+      .demo-sb-section {
+        margin-bottom: 14px;
+      }
+      .demo-sb-label {
+        display: block;
+        padding: 0 14px;
+        font-size: 0.63rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 5px;
+      }
+      .demo-sb-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 14px;
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .demo-sb-item--active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .demo-status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--text-muted);
+        flex-shrink: 0;
+      }
+      .demo-status-dot--live {
+        background: #22c55e;
+        box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+        animation: demo-pulse 2s ease-in-out infinite;
+      }
+      @keyframes demo-pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.4;
+        }
+      }
 
       /* Chat */
-      .demo-chat { flex: 1; display: flex; flex-direction: column; padding: 18px 22px 0; overflow: hidden; min-width: 0; }
-      .demo-msg { margin-bottom: 16px; }
-      .demo-msg-who { display: flex; align-items: center; gap: 6px; font-size: .68rem; font-weight: 600; margin-bottom: 5px; color: var(--text-secondary); }
-      .demo-msg-text { color: var(--text-secondary); line-height: 1.65; font-size: .76rem; }
-      .demo-msg-text--think { display: flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: .7rem; font-style: italic; margin-bottom: 7px; }
-      .demo-provider-pip { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg,#d97706,#f59e0b); flex-shrink: 0; }
-      .demo-model-badge { font-size: .58rem; font-weight: 500; color: var(--text-muted); background: rgba(255,255,255,.06); padding: 1px 6px; border-radius: 4px; }
+      .demo-chat {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding: 18px 22px 0;
+        overflow: hidden;
+        min-width: 0;
+      }
+      .demo-msg {
+        margin-bottom: 16px;
+      }
+      .demo-msg-who {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        margin-bottom: 5px;
+        color: var(--text-secondary);
+      }
+      .demo-msg-text {
+        color: var(--text-secondary);
+        line-height: 1.65;
+        font-size: 0.76rem;
+      }
+      .demo-msg-text--think {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        font-size: 0.7rem;
+        font-style: italic;
+        margin-bottom: 7px;
+      }
+      .demo-provider-pip {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d97706, #f59e0b);
+        flex-shrink: 0;
+      }
+      .demo-model-badge {
+        font-size: 0.58rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        background: rgba(255, 255, 255, 0.06);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
 
       /* Code block */
-      .demo-code-wrap { border-radius: 10px; border: 1px solid var(--border); background: #111114; margin: 9px 0; overflow: hidden; }
-      .demo-code-head { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; border-bottom: 1px solid var(--border); font-size: .66rem; color: var(--text-muted); }
-      .demo-code-added { font-size: .58rem; color: #22c55e; background: rgba(34,197,94,.1); padding: 1px 6px; border-radius: 4px; }
-      .demo-code-body { padding: 11px 13px; font-family: "SF Mono","Fira Code","JetBrains Mono",ui-monospace,monospace; font-size: .63rem; line-height: 1.7; color: #d4d4d8; white-space: pre; overflow: hidden; max-height: 190px; }
-      .demo-code-body em { font-style: normal; color: #c084fc; }
-      .demo-code-body s  { font-style: normal; text-decoration: none; color: #86efac; }
-      .demo-code-body var { font-style: normal; color: #60a5fa; }
-      .demo-code-body u  { font-style: normal; text-decoration: none; color: #67e8f9; }
-      .demo-code-body b  { font-weight: normal; color: #fbbf24; }
-      .demo-code-body i  { font-style: normal; color: #a1a1aa; }
-      .demo-code-body .hl-n { color: #fb923c; }
+      .demo-code-wrap {
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #111114;
+        margin: 9px 0;
+        overflow: hidden;
+      }
+      .demo-code-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 7px 12px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.66rem;
+        color: var(--text-muted);
+      }
+      .demo-code-added {
+        font-size: 0.58rem;
+        color: #22c55e;
+        background: rgba(34, 197, 94, 0.1);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+      .demo-code-body {
+        padding: 11px 13px;
+        font-family: "SF Mono", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.63rem;
+        line-height: 1.7;
+        color: #d4d4d8;
+        white-space: pre;
+        overflow: hidden;
+        max-height: 190px;
+      }
+      .demo-code-body em {
+        font-style: normal;
+        color: #c084fc;
+      }
+      .demo-code-body s {
+        font-style: normal;
+        text-decoration: none;
+        color: #86efac;
+      }
+      .demo-code-body var {
+        font-style: normal;
+        color: #60a5fa;
+      }
+      .demo-code-body u {
+        font-style: normal;
+        text-decoration: none;
+        color: #67e8f9;
+      }
+      .demo-code-body b {
+        font-weight: normal;
+        color: #fbbf24;
+      }
+      .demo-code-body i {
+        font-style: normal;
+        color: #a1a1aa;
+      }
+      .demo-code-body .hl-n {
+        color: #fb923c;
+      }
 
       /* Tool result */
-      .demo-tool { display: flex; align-items: center; gap: 6px; font-size: .68rem; color: #22c55e; padding: 6px 10px; background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.12); border-radius: 8px; margin: 7px 0; }
-      .demo-tool strong { color: var(--text-secondary); }
+      .demo-tool {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.68rem;
+        color: #22c55e;
+        padding: 6px 10px;
+        background: rgba(34, 197, 94, 0.06);
+        border: 1px solid rgba(34, 197, 94, 0.12);
+        border-radius: 8px;
+        margin: 7px 0;
+      }
+      .demo-tool strong {
+        color: var(--text-secondary);
+      }
 
       /* Composer */
-      .demo-composer { margin-top: auto; padding: 10px 0 14px; }
-      .demo-composer > span:first-child { display: block; }
-      .demo-composer { border: 1px solid rgba(255,255,255,.1); border-radius: 12px; padding: 11px 13px; background: rgba(255,255,255,.02); margin-top: auto; }
+      .demo-composer {
+        margin-top: auto;
+        padding: 10px 0 14px;
+      }
+      .demo-composer > span:first-child {
+        display: block;
+      }
+      .demo-composer {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 11px 13px;
+        background: rgba(255, 255, 255, 0.02);
+        margin-top: auto;
+      }
 
       /* Diff panel */
-      .demo-diff { width: 210px; min-width: 210px; background: #0e0e11; border-left: 1px solid var(--border); padding: 12px 0; overflow: hidden; }
-      .demo-diff-head { display: flex; align-items: center; justify-content: space-between; padding: 0 12px 9px; border-bottom: 1px solid var(--border); margin-bottom: 7px; font-size: .68rem; }
-      .demo-diff-file { display: flex; align-items: center; gap: 6px; padding: 5px 12px; font-size: .66rem; color: var(--text-secondary); background: rgba(255,255,255,.03); margin-bottom: 7px; }
-      .demo-diff-lines { padding: 0 4px; }
-      .demo-dl { display: flex; align-items: baseline; font-family: "SF Mono","Fira Code",ui-monospace,monospace; font-size: .56rem; line-height: 1.7; padding: 0 8px; white-space: nowrap; overflow: hidden; background: rgba(34,197,94,.06); color: #d4d4d8; }
-      .demo-dl em { font-style: normal; color: #c084fc; }
-      .demo-dl s  { font-style: normal; text-decoration: none; color: #86efac; }
-      .demo-dl u  { font-style: normal; text-decoration: none; color: #67e8f9; }
-      .demo-dl--blank { background: transparent; color: transparent; }
-      .demo-ln { width: 20px; min-width: 20px; text-align: right; color: rgba(255,255,255,.15); margin-right: 8px; user-select: none; }
+      .demo-diff {
+        width: 210px;
+        min-width: 210px;
+        background: #0e0e11;
+        border-left: 1px solid var(--border);
+        padding: 12px 0;
+        overflow: hidden;
+      }
+      .demo-diff-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 12px 9px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 7px;
+        font-size: 0.68rem;
+      }
+      .demo-diff-file {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        font-size: 0.66rem;
+        color: var(--text-secondary);
+        background: rgba(255, 255, 255, 0.03);
+        margin-bottom: 7px;
+      }
+      .demo-diff-lines {
+        padding: 0 4px;
+      }
+      .demo-dl {
+        display: flex;
+        align-items: baseline;
+        font-family: "SF Mono", "Fira Code", ui-monospace, monospace;
+        font-size: 0.56rem;
+        line-height: 1.7;
+        padding: 0 8px;
+        white-space: nowrap;
+        overflow: hidden;
+        background: rgba(34, 197, 94, 0.06);
+        color: #d4d4d8;
+      }
+      .demo-dl em {
+        font-style: normal;
+        color: #c084fc;
+      }
+      .demo-dl s {
+        font-style: normal;
+        text-decoration: none;
+        color: #86efac;
+      }
+      .demo-dl u {
+        font-style: normal;
+        text-decoration: none;
+        color: #67e8f9;
+      }
+      .demo-dl--blank {
+        background: transparent;
+        color: transparent;
+      }
+      .demo-ln {
+        width: 20px;
+        min-width: 20px;
+        text-align: right;
+        color: rgba(255, 255, 255, 0.15);
+        margin-right: 8px;
+        user-select: none;
+      }
 
       /* Staggered entrance animations */
-      .demo-anim { opacity: 0; animation: demo-fade-up .5s ease-out forwards; }
-      .demo-anim-fade { opacity: 0; animation: demo-fade-up .4s ease-out forwards, demo-fade-out .5s ease-in 3.2s forwards; }
-      .demo-anim-slide { opacity: 0; animation: demo-slide-right .6s ease-out forwards; }
-      @keyframes demo-fade-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
-      @keyframes demo-fade-out { from{opacity:1} to{opacity:0;height:0;margin:0;padding:0;overflow:hidden} }
-      @keyframes demo-slide-right { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:translateX(0)} }
-      @keyframes demo-spin { to{transform:rotate(360deg)} }
+      .demo-anim {
+        opacity: 0;
+        animation: demo-fade-up 0.5s ease-out forwards;
+      }
+      .demo-anim-fade {
+        opacity: 0;
+        animation:
+          demo-fade-up 0.4s ease-out forwards,
+          demo-fade-out 0.5s ease-in 3.2s forwards;
+      }
+      .demo-anim-slide {
+        opacity: 0;
+        animation: demo-slide-right 0.6s ease-out forwards;
+      }
+      @keyframes demo-fade-up {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes demo-fade-out {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+          height: 0;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+      }
+      @keyframes demo-slide-right {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      @keyframes demo-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
 
-      @media (max-width: 900px) { .demo-diff { display: none; } }
-      @media (max-width: 640px) { .demo-sidebar { width: 130px; min-width: 130px; } .demo-body { min-height: 320px; max-height: 320px; } }
-      @media (max-width: 480px) { .demo-sidebar { display: none; } }
+      @media (max-width: 900px) {
+        .demo-diff {
+          display: none;
+        }
+      }
+      @media (max-width: 640px) {
+        .demo-sidebar {
+          width: 130px;
+          min-width: 130px;
+        }
+        .demo-body {
+          min-height: 320px;
+          max-height: 320px;
+        }
+      }
+      @media (max-width: 480px) {
+        .demo-sidebar {
+          display: none;
+        }
+      }
 
       /* ── Section helpers ── */
       .section-header {
@@ -844,48 +1164,119 @@
     <section class="screenshot">
       <div class="demo-window">
         <div class="demo-titlebar">
-          <div class="demo-dots"><span class="demo-dot" style="background:#ff5f57"></span><span class="demo-dot" style="background:#febc2e"></span><span class="demo-dot" style="background:#28c840"></span></div>
+          <div class="demo-dots">
+            <span class="demo-dot" style="background: #ff5f57"></span
+            ><span class="demo-dot" style="background: #febc2e"></span
+            ><span class="demo-dot" style="background: #28c840"></span>
+          </div>
           <span class="demo-titlebar-text">CodeForge</span>
-          <div style="width:44px"></div>
+          <div style="width: 44px"></div>
         </div>
         <div class="demo-body">
           <!-- Sidebar -->
           <aside class="demo-sidebar">
             <div class="demo-sb-section">
               <span class="demo-sb-label">Projects</span>
-              <div class="demo-sb-item demo-sb-item--active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-muted)"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg> codeforge</div>
+              <div class="demo-sb-item demo-sb-item--active">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  style="flex-shrink: 0; color: var(--text-muted)"
+                >
+                  <path
+                    d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"
+                  />
+                </svg>
+                codeforge
+              </div>
             </div>
             <div class="demo-sb-section">
               <span class="demo-sb-label">Threads</span>
-              <div class="demo-sb-item demo-sb-item--active"><span class="demo-status-dot demo-status-dot--live"></span>Add auth middleware</div>
-              <div class="demo-sb-item"><span class="demo-status-dot"></span>Fix API rate limiter</div>
-              <div class="demo-sb-item"><span class="demo-status-dot"></span>Refactor DB queries</div>
-              <div class="demo-sb-item" style="opacity:.5"><span class="demo-status-dot"></span>Setup CI pipeline</div>
+              <div class="demo-sb-item demo-sb-item--active">
+                <span class="demo-status-dot demo-status-dot--live"></span>Add auth middleware
+              </div>
+              <div class="demo-sb-item">
+                <span class="demo-status-dot"></span>Fix API rate limiter
+              </div>
+              <div class="demo-sb-item">
+                <span class="demo-status-dot"></span>Refactor DB queries
+              </div>
+              <div class="demo-sb-item" style="opacity: 0.5">
+                <span class="demo-status-dot"></span>Setup CI pipeline
+              </div>
             </div>
           </aside>
 
           <!-- Chat -->
           <div class="demo-chat">
-            <div class="demo-msg demo-anim" style="animation-delay:.8s">
+            <div class="demo-msg demo-anim" style="animation-delay: 0.8s">
               <div class="demo-msg-who">You</div>
-              <div class="demo-msg-text" style="color:var(--text)">Add JWT authentication middleware to the Express server. It should validate tokens on all /api routes and attach the decoded user to req.user.</div>
+              <div class="demo-msg-text" style="color: var(--text)">
+                Add JWT authentication middleware to the Express server. It should validate tokens
+                on all /api routes and attach the decoded user to req.user.
+              </div>
             </div>
 
-            <div class="demo-msg demo-anim" style="animation-delay:1.6s">
-              <div class="demo-msg-who"><span class="demo-provider-pip"></span> Claude <span class="demo-model-badge">Sonnet</span></div>
-              <div class="demo-msg-text demo-msg-text--think demo-anim-fade" style="animation-delay:2s">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation:demo-spin 3s linear infinite"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <div class="demo-msg demo-anim" style="animation-delay: 1.6s">
+              <div class="demo-msg-who">
+                <span class="demo-provider-pip"></span> Claude
+                <span class="demo-model-badge">Sonnet</span>
+              </div>
+              <div
+                class="demo-msg-text demo-msg-text--think demo-anim-fade"
+                style="animation-delay: 2s"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  style="animation: demo-spin 3s linear infinite"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
                 Analyzing project structure and existing middleware...
               </div>
-              <div class="demo-msg-text demo-anim" style="animation-delay:3s">I'll create the auth middleware and wire it into your Express app. Here's the implementation:</div>
+              <div class="demo-msg-text demo-anim" style="animation-delay: 3s">
+                I'll create the auth middleware and wire it into your Express app. Here's the
+                implementation:
+              </div>
 
               <!-- Code block -->
-              <div class="demo-code-wrap demo-anim" style="animation-delay:3.6s">
+              <div class="demo-code-wrap demo-anim" style="animation-delay: 3.6s">
                 <div class="demo-code-head">
-                  <span style="display:flex;align-items:center;gap:5px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg> src/middleware/auth.ts</span>
+                  <span style="display: flex; align-items: center; gap: 5px"
+                    ><svg
+                      width="11"
+                      height="11"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                    </svg>
+                    src/middleware/auth.ts</span
+                  >
                   <span class="demo-code-added">+42 lines</span>
                 </div>
-                <pre class="demo-code-body"><code><em>import</em> <i>&#123;</i> <b>Request</b>, <b>Response</b>, <b>NextFunction</b> <i>&#125;</i> <em>from</em> <s>"express"</s>;
+                <pre
+                  class="demo-code-body"
+                ><code><em>import</em> <i>&#123;</i> <b>Request</b>, <b>Response</b>, <b>NextFunction</b> <i>&#125;</i> <em>from</em> <s>"express"</s>;
 <em>import</em> jwt <em>from</em> <s>"jsonwebtoken"</s>;
 
 <em>interface</em> <u>AuthPayload</u> <i>&#123;</i>
@@ -918,34 +1309,98 @@
               </div>
 
               <!-- Tool result -->
-              <div class="demo-tool demo-anim" style="animation-delay:4.6s">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+              <div class="demo-tool demo-anim" style="animation-delay: 4.6s">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path
+                    d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                  />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
                 <span>Created <strong>src/middleware/auth.ts</strong></span>
               </div>
             </div>
 
             <!-- Composer -->
-            <div class="demo-composer demo-anim" style="animation-delay:.6s">
-              <span style="color:var(--text-muted);opacity:.6;font-size:.74rem">Ask anything, @tag files/folders, or use /model</span>
-              <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-                <span style="display:flex;align-items:center;gap:4px;font-size:.62rem;color:var(--text-muted)"><span class="demo-provider-pip" style="width:6px;height:6px"></span> Claude Sonnet</span>
-                <span style="font-size:.58rem;color:#22c55e;background:rgba(34,197,94,.08);padding:1px 6px;border-radius:4px">Full access</span>
+            <div class="demo-composer demo-anim" style="animation-delay: 0.6s">
+              <span style="color: var(--text-muted); opacity: 0.6; font-size: 0.74rem"
+                >Ask anything, @tag files/folders, or use /model</span
+              >
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px">
+                <span
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    font-size: 0.62rem;
+                    color: var(--text-muted);
+                  "
+                  ><span class="demo-provider-pip" style="width: 6px; height: 6px"></span> Claude
+                  Sonnet</span
+                >
+                <span
+                  style="
+                    font-size: 0.58rem;
+                    color: #22c55e;
+                    background: rgba(34, 197, 94, 0.08);
+                    padding: 1px 6px;
+                    border-radius: 4px;
+                  "
+                  >Full access</span
+                >
               </div>
             </div>
           </div>
 
           <!-- Diff panel -->
-          <div class="demo-diff demo-anim-slide" style="animation-delay:5s">
-            <div class="demo-diff-head"><span style="font-weight:600;color:var(--text)">Changes</span><span style="font-size:.6rem;color:var(--text-muted)">1 file</span></div>
-            <div class="demo-diff-file"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg> <span>auth.ts</span> <span style="margin-left:auto;font-size:.6rem;color:#22c55e">+42</span></div>
+          <div class="demo-diff demo-anim-slide" style="animation-delay: 5s">
+            <div class="demo-diff-head">
+              <span style="font-weight: 600; color: var(--text)">Changes</span
+              ><span style="font-size: 0.6rem; color: var(--text-muted)">1 file</span>
+            </div>
+            <div class="demo-diff-file">
+              <svg
+                width="11"
+                height="11"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+              </svg>
+              <span>auth.ts</span>
+              <span style="margin-left: auto; font-size: 0.6rem; color: #22c55e">+42</span>
+            </div>
             <div class="demo-diff-lines">
-              <div class="demo-dl"><span class="demo-ln">1</span><em>import</em> &#123; Request &#125; <em>from</em> <s>"express"</s>;</div>
-              <div class="demo-dl"><span class="demo-ln">2</span><em>import</em> jwt <em>from</em> <s>"jsonwebtoken"</s>;</div>
+              <div class="demo-dl">
+                <span class="demo-ln">1</span><em>import</em> &#123; Request &#125; <em>from</em>
+                <s>"express"</s>;
+              </div>
+              <div class="demo-dl">
+                <span class="demo-ln">2</span><em>import</em> jwt <em>from</em>
+                <s>"jsonwebtoken"</s>;
+              </div>
               <div class="demo-dl demo-dl--blank"><span class="demo-ln">3</span></div>
-              <div class="demo-dl"><span class="demo-ln">4</span><em>interface</em> <u>AuthPayload</u> &#123;</div>
-              <div class="demo-dl"><span class="demo-ln">5</span>  userId: <u>string</u>;</div>
-              <div class="demo-dl"><span class="demo-ln">6</span>  email: <u>string</u>;</div>
-              <div class="demo-dl"><span class="demo-ln">7</span>  role: <s>"admin"</s> | <s>"user"</s>;</div>
+              <div class="demo-dl">
+                <span class="demo-ln">4</span><em>interface</em> <u>AuthPayload</u> &#123;
+              </div>
+              <div class="demo-dl"><span class="demo-ln">5</span> userId: <u>string</u>;</div>
+              <div class="demo-dl"><span class="demo-ln">6</span> email: <u>string</u>;</div>
+              <div class="demo-dl">
+                <span class="demo-ln">7</span> role: <s>"admin"</s> | <s>"user"</s>;
+              </div>
               <div class="demo-dl"><span class="demo-ln">8</span>&#125;</div>
             </div>
           </div>
