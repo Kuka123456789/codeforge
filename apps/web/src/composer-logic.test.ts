@@ -60,6 +60,42 @@ describe("detectComposerTrigger", () => {
     });
   });
 
+  it("detects provider slash commands like /compact", () => {
+    const text = "/compact";
+    const trigger = detectComposerTrigger(text, text.length);
+
+    expect(trigger).toEqual({
+      kind: "slash-command",
+      query: "compact",
+      rangeStart: 0,
+      rangeEnd: text.length,
+    });
+  });
+
+  it("detects partial provider slash commands like /com", () => {
+    const text = "/com";
+    const trigger = detectComposerTrigger(text, text.length);
+
+    expect(trigger).toEqual({
+      kind: "slash-command",
+      query: "com",
+      rangeStart: 0,
+      rangeEnd: text.length,
+    });
+  });
+
+  it("detects bare slash as slash-command trigger", () => {
+    const text = "/";
+    const trigger = detectComposerTrigger(text, text.length);
+
+    expect(trigger).toEqual({
+      kind: "slash-command",
+      query: "",
+      rangeStart: 0,
+      rangeEnd: text.length,
+    });
+  });
+
   it("detects @path trigger in the middle of existing text", () => {
     // User typed @ between "inspect " and "in this sentence"
     const text = "Please inspect @in this sentence";

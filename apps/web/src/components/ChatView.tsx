@@ -194,6 +194,11 @@ const EMPTY_KEYBINDINGS: ResolvedKeybindingsConfig = [];
 const EMPTY_PROJECT_ENTRIES: ProjectEntry[] = [];
 const EMPTY_AVAILABLE_EDITORS: EditorId[] = [];
 const EMPTY_PROVIDERS: ServerProvider[] = [];
+const EMPTY_PROVIDER_SLASH_COMMANDS: ReadonlyArray<{
+  name: string;
+  description: string;
+  argumentHint: string;
+}> = [];
 const EMPTY_PENDING_USER_INPUT_ANSWERS: Record<string, PendingUserInputDraftAnswer> = {};
 
 function formatOutgoingPrompt(params: {
@@ -1076,6 +1081,10 @@ export default function ChatView({ threadId }: ChatViewProps) {
     }),
   );
   const workspaceEntries = workspaceEntriesQuery.data?.entries ?? EMPTY_PROJECT_ENTRIES;
+  const providerSlashCommands = useMemo(() => {
+    const provider = providerStatuses.find((p) => p.provider === selectedProvider);
+    return provider?.slashCommands ?? EMPTY_PROVIDER_SLASH_COMMANDS;
+  }, [providerStatuses, selectedProvider]);
   const composerMenuItems = useMemo<ComposerCommandItem[]>(() => {
     if (!composerTrigger) return [];
     if (composerTrigger.kind === "path") {
@@ -1090,7 +1099,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
     }
 
     if (composerTrigger.kind === "slash-command") {
-      const slashCommandItems = [
+      const builtInItems: ComposerCommandItem[] = [
         {
           id: "slash:model",
           type: "slash-command",
@@ -1112,14 +1121,25 @@ export default function ChatView({ threadId }: ChatViewProps) {
           label: "/default",
           description: "Switch this thread back to normal chat mode",
         },
-      ] satisfies ReadonlyArray<Extract<ComposerCommandItem, { type: "slash-command" }>>;
+      ];
+      const providerCommandItems: ComposerCommandItem[] = providerSlashCommands.map((cmd) => ({
+        id: `provider-slash:${selectedProvider}:${cmd.name}`,
+        type: "provider-slash-command",
+        commandName: cmd.name,
+        argumentHint: cmd.argumentHint,
+        provider: selectedProvider,
+        label: `/${cmd.name}`,
+        description: cmd.description,
+      }));
+      const allItems = [...builtInItems, ...providerCommandItems];
       const query = composerTrigger.query.trim().toLowerCase();
       if (!query) {
-        return [...slashCommandItems];
+        return allItems;
       }
-      return slashCommandItems.filter(
-        (item) => item.command.includes(query) || item.label.slice(1).includes(query),
-      );
+      return allItems.filter((item) => {
+        const label = item.label.slice(1).toLowerCase();
+        return label.includes(query);
+      });
     }
 
     return searchableModelOptions
@@ -1138,7 +1158,13 @@ export default function ChatView({ threadId }: ChatViewProps) {
         label: name,
         description: `${providerLabel} · ${slug}`,
       }));
-  }, [composerTrigger, searchableModelOptions, workspaceEntries]);
+  }, [
+    composerTrigger,
+    searchableModelOptions,
+    workspaceEntries,
+    providerSlashCommands,
+    selectedProvider,
+  ]);
   const composerMenuOpen = Boolean(composerTrigger);
   const activeComposerMenuItem = useMemo(
     () =>
@@ -3486,6 +3512,27 @@ export default function ChatView({ threadId }: ChatViewProps) {
         const applied = applyPromptReplacement(trigger.rangeStart, trigger.rangeEnd, "", {
           expectedText: snapshot.value.slice(trigger.rangeStart, trigger.rangeEnd),
         });
+        if (applied) {
+          setComposerHighlightedItemId(null);
+        }
+        return;
+      }
+      if (item.type === "provider-slash-command") {
+        // Insert the command text into the composer so the user can add arguments
+        // before pressing Enter. The provider SDK interprets the slash command
+        // from the message text when the turn is sent.
+        const replacement = `/${item.commandName} `;
+        const replacementRangeEnd = extendReplacementRangeForTrailingSpace(
+          snapshot.value,
+          trigger.rangeEnd,
+          replacement,
+        );
+        const applied = applyPromptReplacement(
+          trigger.rangeStart,
+          replacementRangeEnd,
+          replacement,
+          { expectedText: snapshot.value.slice(trigger.rangeStart, replacementRangeEnd) },
+        );
         if (applied) {
           setComposerHighlightedItemId(null);
         }

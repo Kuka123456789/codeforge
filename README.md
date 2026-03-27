@@ -52,26 +52,26 @@ npx codeforge
 
 Bun monorepo managed with [Turbo](https://turbo.build/).
 
-| Package | Role |
-| --- | --- |
-| `apps/server` | Node.js WebSocket server. Wraps Codex app-server (JSON-RPC over stdio), manages Claude Agent SDK sessions, serves the web app. |
-| `apps/web` | React/Vite frontend. Session UX, conversation rendering, client-side state. Connects to server via WebSocket. |
-| `apps/desktop` | Electron shell wrapping the web and server apps. |
-| `packages/contracts` | Shared Effect/Schema definitions. TypeScript contracts for events, protocol, and types. Schema-only — no runtime logic. |
-| `packages/shared` | Shared runtime utilities. Explicit subpath exports (`@codeforge/shared/git`, etc.). |
+| Package              | Role                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/server`        | Node.js WebSocket server. Wraps Codex app-server (JSON-RPC over stdio), manages Claude Agent SDK sessions, serves the web app. |
+| `apps/web`           | React/Vite frontend. Session UX, conversation rendering, client-side state. Connects to server via WebSocket.                  |
+| `apps/desktop`       | Electron shell wrapping the web and server apps.                                                                               |
+| `packages/contracts` | Shared Effect/Schema definitions. TypeScript contracts for events, protocol, and types. Schema-only — no runtime logic.        |
+| `packages/shared`    | Shared runtime utilities. Explicit subpath exports (`@codeforge/shared/git`, etc.).                                            |
 
 ### Tech Stack
 
-| Layer | Technology |
-| --- | --- |
-| Runtime | Bun, Node.js |
-| Language | TypeScript (ESM, strict) |
+| Layer    | Technology                                                         |
+| -------- | ------------------------------------------------------------------ |
+| Runtime  | Bun, Node.js                                                       |
+| Language | TypeScript (ESM, strict)                                           |
 | Frontend | React 19, Vite 8, Tailwind CSS 4, Zustand, TanStack Router + Query |
-| Backend | Effect.TS, WebSockets, node-pty, SQLite |
-| Desktop | Electron |
-| Build | Turbo, tsdown |
-| Testing | Vitest, Playwright |
-| Linting | oxlint, oxfmt |
+| Backend  | Effect.TS, WebSockets, node-pty, SQLite                            |
+| Desktop  | Electron                                                           |
+| Build    | Turbo, tsdown                                                      |
+| Testing  | Vitest, Playwright                                                 |
+| Linting  | oxlint, oxfmt                                                      |
 
 ### How It Works
 

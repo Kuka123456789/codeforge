@@ -3,8 +3,6 @@ import { INLINE_TERMINAL_CONTEXT_PLACEHOLDER } from "./lib/terminalContext";
 
 export type ComposerSlashCommand = "model" | "plan" | "default";
 
-const SLASH_COMMANDS: ReadonlyArray<ComposerSlashCommand> = ["model", "plan", "default"];
-
 export type ComposerTriggerKind = "path" | "slash-command" | "slash-model";
 
 export interface ComposerTrigger {
@@ -202,15 +200,14 @@ export function detectComposerTrigger(text: string, cursorInput: number): Compos
           rangeEnd: cursor,
         };
       }
-      if (SLASH_COMMANDS.some((command) => command.startsWith(commandQuery.toLowerCase()))) {
-        return {
-          kind: "slash-command",
-          query: commandQuery,
-          rangeStart: lineStart,
-          rangeEnd: cursor,
-        };
-      }
-      return null;
+      // Open-ended: any `/`-prefixed token triggers the slash-command menu.
+      // Filtering against known commands (built-in + provider) happens in the UI.
+      return {
+        kind: "slash-command",
+        query: commandQuery,
+        rangeStart: lineStart,
+        rangeEnd: cursor,
+      };
     }
 
     const modelMatch = /^\/model(?:\s+(.*))?$/.exec(linePrefix);
