@@ -1,65 +1,82 @@
-# Contributing
+# Contributing to CodeForge
 
 ## Read This First
 
 We are not actively accepting contributions right now.
 
-You can still open an issue or PR, but please do so knowing there is a high chance we close it, defer it forever, or never look at it.
+You can still open an issue or PR, but there is a high chance we close it, defer it, or never look at it. This project is early and we are keeping scope, quality, and direction under tight control.
 
-If that sounds annoying, that is because it is. This project is still early and we are trying to keep scope, quality, and direction under control.
+## Trust & Labeling
 
-PRs are automatically labeled with a `vouch:*` trust status and a `size:*` diff size based on changed lines.
+PRs are automatically labeled with:
 
-If you are an external contributor, expect `vouch:unvouched` until we explicitly add you to [.github/VOUCHED.td](.github/VOUCHED.td).
+- **`vouch:*`** — trust status. External contributors start as `vouch:unvouched` until explicitly added to [.github/VOUCHED.td](.github/VOUCHED.td).
+- **`size:*`** — diff size based on changed lines.
 
-## What We Are Most Likely To Accept
+## What We Will Consider
 
-Small, focused bug fixes.
+- Small, focused bug fixes
+- Small reliability or performance improvements
+- Tightly scoped maintenance work that clearly improves the project without changing its direction
 
-Small reliability fixes.
+## What We Will Not Consider
 
-Small performance improvements.
+- Large PRs
+- Drive-by feature work
+- Opinionated rewrites
+- Anything that expands product scope without us asking for it first
 
-Tightly scoped maintenance work that clearly improves the project without changing its direction.
+If you open a 1,000+ line PR full of new features, we will close it.
 
-## What We Are Least Likely To Accept
+## PR Guidelines
 
-Large PRs.
+If you still want to open a PR:
 
-Drive-by feature work.
-
-Opinionated rewrites.
-
-Anything that expands product scope without us asking for it first.
-
-If you open a 1,000+ line PR full of new features, we will probably close it quickly and remember that you ignored the clearly written instructions.
-
-## If You Still Want To Open A PR
-
-Keep it small.
-
-Explain exactly what changed.
-
-Explain exactly why the change should exist.
-
-Do not mix unrelated fixes together.
-
-If the PR makes anything resembling a UI change, include clear before/after images.
-
-If the change depends on motion, timing, transitions, or interaction details, include a short video.
+1. **Keep it small.** Do not mix unrelated fixes together.
+2. **Explain what changed** and **why the change should exist.**
+3. **Include screenshots** (before/after) for any UI change.
+4. **Include a short video** if the change involves motion, timing, transitions, or interaction details.
 
 If we have to guess what changed, we are much less likely to review it.
 
+## Development
+
+### Prerequisites
+
+- [Bun](https://bun.sh/) v1.3.9+
+- [Codex CLI](https://github.com/openai/codex) installed and authorized
+
+### Setup
+
+```bash
+bun install
+```
+
+### Development Server
+
+```bash
+bun dev
+```
+
+### Quality Checks
+
+All of these must pass before submitting a PR:
+
+```bash
+bun fmt       # Format code (oxfmt)
+bun lint      # Lint code (oxlint)
+bun typecheck # Type-check (TypeScript)
+bun run test  # Run tests (Vitest)
+```
+
 ## Issues First
 
-If you are thinking about a non-trivial change, open an issue first.
+If you are thinking about a non-trivial change, open an issue first. That does not mean we will want the PR, but it gives you a chance to avoid wasting your time.
 
-That still does not mean we will want the PR, but it gives you a chance to avoid wasting your time.
+## Expectations
 
-## Be Realistic
-
-Opening a PR does not create an obligation on our side.
-
-We may close it. We may ignore it. We may ask you to shrink it. We may reimplement the idea ourselves later.
+Opening a PR does not create an obligation on our side. We may close it, ignore it, ask you to shrink it, or reimplement the idea ourselves later.
 
 If you are fine with that, proceed.
+
+Need support? Join the [Discord](https://discord.gg/jn4EGJjrvv).
