@@ -2491,6 +2491,512 @@ describe("ClaudeAdapterLive", () => {
     );
   });
 
+  it.effect(
+    "rollback to zero turns restarts SDK without resumeSessionAt",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        const session = yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // Complete one turn with an assistant UUID.
+        yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "hello",
+          attachments: [],
+        });
+
+        const completedFiber = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.completed",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        harness.query.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "hi" }] },
+          parent_tool_use_id: null,
+          uuid: "assistant-uuid-zero-test",
+          session_id: "sdk-session-zero",
+        } as unknown as SDKMessage);
+
+        harness.query.emit({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          errors: [],
+          session_id: "sdk-session-zero",
+          uuid: "result-zero",
+        } as unknown as SDKMessage);
+
+        yield* Fiber.join(completedFiber);
+
+        // Rollback ALL turns (to 0).
+        const rolledBack = yield* adapter.rollbackThread(session.threadId, 1);
+        assert.equal(rolledBack.turns.length, 0);
+
+        // A new query should have been created.
+        assert.equal(harness.queries.length, 2);
+        const restartInput = harness.getAllCreateQueryInputs()[1]!;
+
+        // resumeSessionAt should NOT be set (no target turn to point to).
+        assert.equal(
+          (restartInput.options as Record<string, unknown>).resumeSessionAt,
+          undefined,
+        );
+
+        // resume should still be set (same session ID).
+        assert.notEqual(
+          (restartInput.options as Record<string, unknown>).resume,
+          undefined,
+        );
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
+  it.effect(
+    "rollback of multiple turns preserves correct earlier turns and targets the right UUID",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        const session = yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // Helper to complete a turn with a specific assistant UUID.
+        const completeTurn = (
+          query: (typeof harness.queries)[number],
+          input: string,
+          assistantUuid: string,
+          sessionId: string,
+        ) =>
+          Effect.gen(function* () {
+            const turn = yield* adapter.sendTurn({
+              threadId: session.threadId,
+              input,
+              attachments: [],
+            });
+
+            const completedFiber = yield* Stream.filter(
+              adapter.streamEvents,
+              (event) => event.type === "turn.completed",
+            ).pipe(Stream.runHead, Effect.forkChild);
+
+            query.emit({
+              type: "assistant",
+              message: { role: "assistant", content: [{ type: "text", text: `re: ${input}` }] },
+              parent_tool_use_id: null,
+              uuid: assistantUuid,
+              session_id: sessionId,
+            } as unknown as SDKMessage);
+
+            query.emit({
+              type: "result",
+              subtype: "success",
+              is_error: false,
+              errors: [],
+              session_id: sessionId,
+              uuid: `result-${input}`,
+            } as unknown as SDKMessage);
+
+            yield* Fiber.join(completedFiber);
+            return turn;
+          });
+
+        // Complete 3 turns.
+        const turn1 = yield* completeTurn(harness.query, "first", "uuid-t1", "sid-1");
+        const turn2 = yield* completeTurn(harness.query, "second", "uuid-t2", "sid-1");
+        yield* completeTurn(harness.query, "third", "uuid-t3", "sid-1");
+
+        const threadBefore = yield* adapter.readThread(session.threadId);
+        assert.equal(threadBefore.turns.length, 3);
+
+        // Roll back 2 turns (keep only turn 1).
+        const rolledBack = yield* adapter.rollbackThread(session.threadId, 2);
+        assert.equal(rolledBack.turns.length, 1);
+        assert.equal(rolledBack.turns[0]?.id, turn1.turnId);
+
+        // Restart should target turn 1's assistant UUID.
+        const restartInput = harness.getAllCreateQueryInputs()[1]!;
+        assert.equal(
+          (restartInput.options as Record<string, unknown>).resumeSessionAt,
+          "uuid-t1",
+        );
+
+        // Session should still be usable — send a new turn on the new query.
+        const newQuery = harness.queries[1]!;
+        const newTurn = yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "after rollback",
+          attachments: [],
+        });
+
+        const newCompletedFiber = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.completed",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        newQuery.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "fresh response" }] },
+          parent_tool_use_id: null,
+          uuid: "uuid-post-rollback",
+          session_id: "sid-2",
+        } as unknown as SDKMessage);
+
+        newQuery.emit({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          errors: [],
+          session_id: "sid-2",
+          uuid: "result-post-rollback",
+        } as unknown as SDKMessage);
+
+        yield* Fiber.join(newCompletedFiber);
+
+        const threadAfter = yield* adapter.readThread(session.threadId);
+        assert.equal(threadAfter.turns.length, 2);
+        assert.equal(threadAfter.turns[0]?.id, turn1.turnId);
+        assert.equal(threadAfter.turns[1]?.id, newTurn.turnId);
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
+  it.effect(
+    "rollback preserves base query options (permissionMode, cwd, effort) on restart",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        const session = yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // Capture the original query options.
+        const originalInput = harness.getAllCreateQueryInputs()[0]!;
+        const originalOpts = originalInput.options;
+
+        // Complete a turn so we have something to roll back.
+        yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "msg",
+          attachments: [],
+        });
+
+        const completedFiber = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.completed",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        harness.query.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "ok" }] },
+          parent_tool_use_id: null,
+          uuid: "uuid-preserve-test",
+          session_id: "sid-preserve",
+        } as unknown as SDKMessage);
+
+        harness.query.emit({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          errors: [],
+          session_id: "sid-preserve",
+          uuid: "result-preserve",
+        } as unknown as SDKMessage);
+
+        yield* Fiber.join(completedFiber);
+
+        // Rollback.
+        yield* adapter.rollbackThread(session.threadId, 1);
+
+        const restartInput = harness.getAllCreateQueryInputs()[1]!;
+        const restartOpts = restartInput.options as Record<string, unknown>;
+
+        // The restart should preserve key base options.
+        assert.equal(restartOpts.permissionMode, originalOpts.permissionMode);
+        assert.equal(restartOpts.includePartialMessages, true);
+        assert.equal(
+          restartOpts.allowDangerouslySkipPermissions,
+          originalOpts.allowDangerouslySkipPermissions,
+        );
+        // canUseTool should be present on the restarted session.
+        assert.equal(typeof restartOpts.canUseTool, "function");
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
+  it.effect(
+    "rollback during an in-flight turn completes the turn as interrupted before restarting",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        const session = yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // Complete turn 1 normally.
+        yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "first",
+          attachments: [],
+        });
+
+        const turn1Fiber = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.completed",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        harness.query.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "r1" }] },
+          parent_tool_use_id: null,
+          uuid: "uuid-inflight-t1",
+          session_id: "sid-inflight",
+        } as unknown as SDKMessage);
+
+        harness.query.emit({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          errors: [],
+          session_id: "sid-inflight",
+          uuid: "result-inflight-t1",
+        } as unknown as SDKMessage);
+
+        yield* Fiber.join(turn1Fiber);
+
+        // Start turn 2 but DON'T complete it (no result message).
+        yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "second still going",
+          attachments: [],
+        });
+
+        // Emit an assistant message for the in-flight turn.
+        harness.query.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "partial" }] },
+          parent_tool_use_id: null,
+          uuid: "uuid-inflight-t2",
+          session_id: "sid-inflight",
+        } as unknown as SDKMessage);
+
+        // Collect the turn.completed event that rollback will emit for the interrupted turn.
+        const interruptedFiber = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) =>
+            event.type === "turn.completed" && event.payload.status === "interrupted",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        // Roll back both turns while turn 2 is still in-flight.
+        const rolledBack = yield* adapter.rollbackThread(session.threadId, 2);
+
+        // The in-flight turn should have been completed as interrupted.
+        const interrupted = yield* Fiber.join(interruptedFiber);
+        assert.equal(interrupted._tag, "Some");
+        if (interrupted._tag === "Some" && interrupted.value.type === "turn.completed") {
+          assert.equal(interrupted.value.payload.status, "interrupted");
+        }
+
+        // All turns should be rolled back.
+        assert.equal(rolledBack.turns.length, 0);
+
+        // Should have restarted the SDK.
+        assert.equal(harness.queries.length, 2);
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
+  it.effect(
+    "session remains functional after rollback — can send turns and receive events",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        const session = yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // Complete one turn.
+        yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "before rollback",
+          attachments: [],
+        });
+
+        const completedFiber1 = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.completed",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        harness.query.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "resp" }] },
+          parent_tool_use_id: null,
+          uuid: "uuid-functional-1",
+          session_id: "sid-functional",
+        } as unknown as SDKMessage);
+
+        harness.query.emit({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          errors: [],
+          session_id: "sid-functional",
+          uuid: "result-functional-1",
+        } as unknown as SDKMessage);
+
+        yield* Fiber.join(completedFiber1);
+
+        // Roll back.
+        yield* adapter.rollbackThread(session.threadId, 1);
+
+        // Now send a new turn on the restarted session.
+        const newQuery = harness.queries[1]!;
+
+        const newTurn = yield* adapter.sendTurn({
+          threadId: session.threadId,
+          input: "after rollback",
+          attachments: [],
+        });
+
+        // Verify the turn started event was emitted.
+        const turnStarted = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.started",
+        ).pipe(Stream.runHead);
+        assert.equal(turnStarted._tag, "Some");
+
+        // Complete the turn on the new query.
+        const completedFiber2 = yield* Stream.filter(
+          adapter.streamEvents,
+          (event) => event.type === "turn.completed",
+        ).pipe(Stream.runHead, Effect.forkChild);
+
+        newQuery.emit({
+          type: "assistant",
+          message: { role: "assistant", content: [{ type: "text", text: "new resp" }] },
+          parent_tool_use_id: null,
+          uuid: "uuid-functional-post",
+          session_id: "sid-functional-2",
+        } as unknown as SDKMessage);
+
+        newQuery.emit({
+          type: "result",
+          subtype: "success",
+          is_error: false,
+          errors: [],
+          session_id: "sid-functional-2",
+          uuid: "result-functional-post",
+        } as unknown as SDKMessage);
+
+        const completed = yield* Fiber.join(completedFiber2);
+        assert.equal(completed._tag, "Some");
+        if (completed._tag === "Some" && completed.value.type === "turn.completed") {
+          assert.equal(completed.value.payload.status, "completed");
+        }
+
+        // Thread should have 1 turn (the new one after rollback).
+        const thread = yield* adapter.readThread(session.threadId);
+        assert.equal(thread.turns.length, 1);
+        assert.equal(thread.turns[0]?.id, newTurn.turnId);
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
+  it.effect(
+    "rollback updates resume cursor turnCount correctly",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        const session = yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // Complete 2 turns.
+        for (const [idx, text] of ["one", "two"].entries()) {
+          yield* adapter.sendTurn({
+            threadId: session.threadId,
+            input: text,
+            attachments: [],
+          });
+
+          const fiber = yield* Stream.filter(
+            adapter.streamEvents,
+            (event) => event.type === "turn.completed",
+          ).pipe(Stream.runHead, Effect.forkChild);
+
+          harness.query.emit({
+            type: "assistant",
+            message: { role: "assistant", content: [{ type: "text", text: `r-${text}` }] },
+            parent_tool_use_id: null,
+            uuid: `uuid-cursor-${idx}`,
+            session_id: "sid-cursor",
+          } as unknown as SDKMessage);
+
+          harness.query.emit({
+            type: "result",
+            subtype: "success",
+            is_error: false,
+            errors: [],
+            session_id: "sid-cursor",
+            uuid: `result-cursor-${idx}`,
+          } as unknown as SDKMessage);
+
+          yield* Fiber.join(fiber);
+        }
+
+        // Roll back 1 turn.
+        const rolledBack = yield* adapter.rollbackThread(session.threadId, 1);
+
+        // The turnCount in the snapshot should be 1 (matching the 1 remaining turn).
+        assert.equal(rolledBack.turnCount, 1);
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
   it.effect("updates model on sendTurn when model override is provided", () => {
     const harness = makeHarness();
     return Effect.gen(function* () {
