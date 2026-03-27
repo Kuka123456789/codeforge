@@ -1,5 +1,5 @@
 import { parsePatchFiles } from "@pierre/diffs";
-import { FileDiff, type FileDiffMetadata, Virtualizer } from "@pierre/diffs/react";
+import { FileDiff, type FileDiffMetadata } from "@pierre/diffs/react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ThreadId, type TurnId } from "@codeforge/contracts";
@@ -580,13 +580,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                 </div>
               )
             ) : renderablePatch.kind === "files" ? (
-              <Virtualizer
-                className="diff-render-surface h-full min-h-0 overflow-auto px-2 pb-2"
-                config={{
-                  overscrollSize: 600,
-                  intersectionObserverMargin: 1200,
-                }}
-              >
+              <div className="diff-render-surface h-full min-h-0 overflow-auto px-2 pb-2">
                 {renderableFiles.map((fileDiff) => {
                   const filePath = resolveFileDiffPath(fileDiff);
                   const fileKey = buildFileDiffRenderKey(fileDiff);
@@ -621,7 +615,7 @@ export default function DiffPanel({ mode = "inline" }: DiffPanelProps) {
                     </div>
                   );
                 })}
-              </Virtualizer>
+              </div>
             ) : (
               <div className="h-full overflow-auto p-2">
                 <div className="space-y-2">
