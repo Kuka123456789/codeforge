@@ -1331,6 +1331,95 @@ describe("ClaudeAdapterLive", () => {
     );
   });
 
+  it.effect(
+    "derives context window from accumulated token deltas across multiple task_progress events",
+    () => {
+      const harness = makeHarness();
+      return Effect.gen(function* () {
+        const adapter = yield* ClaudeAdapter;
+
+        // Collect enough events: session.started(1) + thread.started(1) +
+        // 2x(token-usage + task.progress)(4) = 6, but we need extra for session events.
+        // Start session emits: session.started + session.status (2)
+        // Each task_progress emits: token-usage + task.progress (2 each)
+        const runtimeEventsFiber = yield* Stream.take(adapter.streamEvents, 8).pipe(
+          Stream.runCollect,
+          Effect.forkChild,
+        );
+
+        yield* adapter.startSession({
+          threadId: THREAD_ID,
+          provider: "claudeAgent",
+          runtimeMode: "full-access",
+        });
+
+        // First task_progress with accumulated usage (simulates first API call)
+        harness.query.emit({
+          type: "system",
+          subtype: "task_progress",
+          task_id: "task-delta-1",
+          description: "First API call",
+          usage: {
+            input_tokens: 50000,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 150000,
+            output_tokens: 2000,
+          },
+          session_id: "sdk-session-delta",
+          uuid: "task-delta-progress-1",
+        } as unknown as SDKMessage);
+
+        // Second task_progress with ACCUMULATED usage (includes first + second call)
+        // The second API call sent ~205k input and ~3k output,
+        // so accumulated input = 50k + 0 + 150k + 55k + 0 + 150k = 405k
+        // and accumulated output = 2k + 3k = 5k.
+        harness.query.emit({
+          type: "system",
+          subtype: "task_progress",
+          task_id: "task-delta-2",
+          description: "Second API call",
+          usage: {
+            input_tokens: 105000,
+            cache_creation_input_tokens: 0,
+            cache_read_input_tokens: 300000,
+            output_tokens: 5000,
+          },
+          session_id: "sdk-session-delta",
+          uuid: "task-delta-progress-2",
+        } as unknown as SDKMessage);
+
+        const runtimeEvents = Array.from(yield* Fiber.join(runtimeEventsFiber));
+        const usageEvents = runtimeEvents.filter(
+          (event) => event.type === "thread.token-usage.updated",
+        );
+
+        assert.equal(usageEvents.length, 2, "should emit two token usage events");
+
+        // First event: no previous accumulated, so context window = full accumulated
+        // input = 50000 + 0 + 150000 = 200000, output = 2000 → usedTokens = 202000
+        if (usageEvents[0]?.type === "thread.token-usage.updated") {
+          assert.equal(usageEvents[0].payload.usage.usedTokens, 202000);
+          assert.equal(usageEvents[0].payload.usage.inputTokens, 200000);
+          assert.equal(usageEvents[0].payload.usage.outputTokens, 2000);
+        }
+
+        // Second event: delta from accumulated → context window ≈ last call's tokens
+        // Delta input = 405000 - 200000 = 205000, delta output = 5000 - 2000 = 3000
+        // usedTokens = 205000 + 3000 = 208000 (approximately one context window)
+        if (usageEvents[1]?.type === "thread.token-usage.updated") {
+          assert.equal(usageEvents[1].payload.usage.usedTokens, 208000);
+          assert.equal(usageEvents[1].payload.usage.inputTokens, 205000);
+          assert.equal(usageEvents[1].payload.usage.outputTokens, 3000);
+          // Total processed should be the full accumulated total
+          assert.equal(usageEvents[1].payload.usage.totalProcessedTokens, 410000);
+        }
+      }).pipe(
+        Effect.provideService(Random.Random, makeDeterministicRandomService()),
+        Effect.provide(harness.layer),
+      );
+    },
+  );
+
   it.effect("emits Claude context window on result completion usage snapshots", () => {
     const harness = makeHarness();
     return Effect.gen(function* () {
@@ -1387,7 +1476,9 @@ describe("ClaudeAdapterLive", () => {
             usedTokens: 24542,
             lastUsedTokens: 24542,
             inputTokens: 23863,
+            lastInputTokens: 23863,
             outputTokens: 679,
+            lastOutputTokens: 679,
             maxTokens: 200000,
           },
         });
