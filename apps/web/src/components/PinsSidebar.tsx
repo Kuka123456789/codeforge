@@ -4,7 +4,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import ChatMarkdown from "./ChatMarkdown";
-import { PanelRightCloseIcon, XIcon } from "lucide-react";
+import { ExternalLinkIcon, PanelRightCloseIcon, XIcon } from "lucide-react";
 import { cn } from "~/lib/utils";
 import type { Pin } from "../pinStore";
 
@@ -204,12 +204,8 @@ const PinItem = memo(function PinItem({
         )}
       </div>
 
-      {/* Content — click scrolls to source message */}
-      <div
-        className="cursor-pointer px-3"
-        onClick={handleScrollTo}
-        title="Click to scroll to message"
-      >
+      {/* Content — click to expand/collapse */}
+      <div className="cursor-pointer px-3" onClick={toggleExpanded}>
         <div className={cn("text-sm", !expanded && "max-h-[120px] overflow-hidden")}>
           {pin.messageRole === "assistant" ? (
             <div
@@ -237,20 +233,30 @@ const PinItem = memo(function PinItem({
         )}
       </div>
 
-      {/* Show more / Show less toggle — sticky when expanded so it's always reachable */}
+      {/* Footer — sticky when expanded so collapse is always reachable */}
       <div
         className={cn(
-          "px-3 pb-2 pt-0.5",
-          expanded && "sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/30",
+          "flex items-center justify-between px-3 pb-2 pt-0.5",
+          expanded && "sticky bottom-0 border-t border-border/30 bg-background/95 backdrop-blur-sm",
         )}
       >
         <button
           type="button"
-          className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+          className="text-[11px] text-muted-foreground/60 transition-colors hover:text-muted-foreground"
           onClick={toggleExpanded}
         >
           {expanded ? "Show less" : "Show more"}
         </button>
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          onClick={handleScrollTo}
+          aria-label="Jump to message"
+          title="Jump to message"
+          className="text-muted-foreground/50 hover:text-foreground/70"
+        >
+          <ExternalLinkIcon className="size-3" />
+        </Button>
       </div>
 
       {/* Unpin button — top right */}
