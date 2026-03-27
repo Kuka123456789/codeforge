@@ -1,3 +1,4 @@
+import * as FS from "node:fs";
 import * as OS from "node:os";
 import { Effect, Path } from "effect";
 import { readPathFromLoginShell } from "@codeforge/shared/shell";
@@ -30,7 +31,11 @@ export const expandHomePath = Effect.fn(function* (input: string) {
 export const resolveBaseDir = Effect.fn(function* (raw: string | undefined) {
   const { join, resolve } = yield* Path.Path;
   if (!raw || raw.trim().length === 0) {
-    return join(OS.homedir(), ".codeforge");
+    const newPath = join(OS.homedir(), ".codeforge");
+    if (FS.existsSync(newPath)) return newPath;
+    const legacyPath = join(OS.homedir(), ".t3");
+    if (FS.existsSync(legacyPath)) return legacyPath;
+    return newPath;
   }
   return resolve(yield* expandHomePath(raw.trim()));
 });

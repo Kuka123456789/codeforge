@@ -13,6 +13,7 @@ build/
 .logs/
 release/
 .t3
+.codeforge
 .idea/
 apps/web/.playwright
 apps/web/playwright-report

@@ -57,7 +57,15 @@ const UPDATE_GET_STATE_CHANNEL = "desktop:update-get-state";
 const UPDATE_DOWNLOAD_CHANNEL = "desktop:update-download";
 const UPDATE_INSTALL_CHANNEL = "desktop:update-install";
 const GET_WS_URL_CHANNEL = "desktop:get-ws-url";
-const BASE_DIR = process.env.CODEFORGE_HOME?.trim() || Path.join(OS.homedir(), ".codeforge");
+const BASE_DIR = (() => {
+  const explicit = process.env.CODEFORGE_HOME?.trim();
+  if (explicit) return explicit;
+  const newPath = Path.join(OS.homedir(), ".codeforge");
+  if (FS.existsSync(newPath)) return newPath;
+  const legacyPath = Path.join(OS.homedir(), ".t3");
+  if (FS.existsSync(legacyPath)) return legacyPath;
+  return newPath;
+})();
 const STATE_DIR = Path.join(BASE_DIR, "userdata");
 const DESKTOP_SCHEME = "codeforge";
 const ROOT_DIR = Path.resolve(__dirname, "../../..");

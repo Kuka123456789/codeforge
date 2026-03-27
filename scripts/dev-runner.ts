@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
@@ -14,9 +15,13 @@ const BASE_WEB_PORT = 5733;
 const MAX_HASH_OFFSET = 3000;
 const MAX_PORT = 65535;
 
-export const DEFAULT_T3_HOME = Effect.map(Effect.service(Path.Path), (path) =>
-  path.join(homedir(), ".codeforge"),
-);
+export const DEFAULT_CODEFORGE_HOME = Effect.map(Effect.service(Path.Path), (path) => {
+  const newPath = path.join(homedir(), ".codeforge");
+  if (existsSync(newPath)) return newPath;
+  const legacyPath = path.join(homedir(), ".t3");
+  if (existsSync(legacyPath)) return legacyPath;
+  return newPath;
+});
 
 const MODE_ARGS = {
   dev: [
@@ -116,7 +121,7 @@ function resolveBaseDir(baseDir: string | undefined): Effect.Effect<string, neve
       return path.resolve(configured);
     }
 
-    return yield* DEFAULT_T3_HOME;
+    return yield* DEFAULT_CODEFORGE_HOME;
   });
 }
 
