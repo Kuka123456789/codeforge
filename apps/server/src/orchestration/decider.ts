@@ -134,6 +134,49 @@ export const decideOrchestrationCommand = Effect.fn("decideOrchestrationCommand"
       };
     }
 
+    case "project.archive": {
+      yield* requireProject({
+        readModel,
+        command,
+        projectId: command.projectId,
+      });
+      const occurredAt = nowIso();
+      return {
+        ...withEventBase({
+          aggregateKind: "project",
+          aggregateId: command.projectId,
+          occurredAt,
+          commandId: command.commandId,
+        }),
+        type: "project.archived",
+        payload: {
+          projectId: command.projectId,
+          archivedAt: occurredAt,
+        },
+      };
+    }
+
+    case "project.unarchive": {
+      yield* requireProject({
+        readModel,
+        command,
+        projectId: command.projectId,
+      });
+      const occurredAt = nowIso();
+      return {
+        ...withEventBase({
+          aggregateKind: "project",
+          aggregateId: command.projectId,
+          occurredAt,
+          commandId: command.commandId,
+        }),
+        type: "project.unarchived",
+        payload: {
+          projectId: command.projectId,
+        },
+      };
+    }
+
     case "thread.create": {
       yield* requireProject({
         readModel,

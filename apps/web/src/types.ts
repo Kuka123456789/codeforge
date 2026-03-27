@@ -85,6 +85,7 @@ export interface Project {
   expanded: boolean;
   createdAt?: string | undefined;
   updatedAt?: string | undefined;
+  archivedAt: string | null;
   scripts: ProjectScript[];
 }
 

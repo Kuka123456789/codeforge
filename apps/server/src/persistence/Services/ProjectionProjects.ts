@@ -21,6 +21,7 @@ export const ProjectionProject = Schema.Struct({
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
   deletedAt: Schema.NullOr(IsoDateTime),
+  archivedAt: Schema.NullOr(IsoDateTime),
 });
 export type ProjectionProject = typeof ProjectionProject.Type;
 

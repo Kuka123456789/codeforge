@@ -1,5 +1,6 @@
 import {
   ArchiveIcon,
+  ArchiveRestoreIcon,
   ArrowLeftIcon,
   ArrowUpDownIcon,
   ChevronRightIcon,
@@ -97,6 +98,7 @@ import {
   getFallbackThreadIdAfterDelete,
   getVisibleThreadsForProject,
   isArchived,
+  isProjectArchived,
   resolveProjectStatusIndicator,
   resolveSidebarNewThreadEnvMode,
   resolveThreadRowClassName,
@@ -436,27 +438,47 @@ function ArchivedThreadRow({
 function ArchivedThreadsSection({
   threads,
   projects,
-  onUnarchive,
-  onDelete,
+  onUnarchiveThread,
+  onDeleteThread,
+  onUnarchiveProject,
   activeThreadId,
 }: {
   threads: Thread[];
   projects: Project[];
-  onUnarchive: (threadId: ThreadId) => Promise<void>;
-  onDelete: (threadId: ThreadId) => Promise<void>;
+  onUnarchiveThread: (threadId: ThreadId) => Promise<void>;
+  onDeleteThread: (threadId: ThreadId) => Promise<void>;
+  onUnarchiveProject: (projectId: ProjectId) => Promise<void>;
   activeThreadId: ThreadId | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
   const archivedThreads = threads.filter(isArchived);
+  const archivedProjects = projects.filter(isProjectArchived);
 
-  if (archivedThreads.length === 0) return null;
+  // Threads whose owning project is archived (shown under the archived project heading)
+  const archivedProjectIds = new Set(archivedProjects.map((p) => p.id));
+  // Threads that are individually archived (but project is NOT archived)
+  const individuallyArchivedThreads = archivedThreads.filter(
+    (thread) => !archivedProjectIds.has(thread.projectId),
+  );
+  // For archived projects, show ALL non-deleted threads (both archived and non-archived)
+  const threadsByArchivedProject = new Map<ProjectId, Thread[]>();
+  for (const project of archivedProjects) {
+    const projectThreads = threads.filter((thread) => thread.projectId === project.id);
+    if (projectThreads.length > 0) {
+      threadsByArchivedProject.set(project.id, projectThreads);
+    }
+  }
+
+  const totalArchivedCount = individuallyArchivedThreads.length + archivedProjects.length;
+
+  if (totalArchivedCount === 0) return null;
 
   const projectNameById = new Map(projects.map((p) => [p.id, p.name]));
-  const archivedByProject = new Map<ProjectId, Thread[]>();
-  for (const thread of archivedThreads) {
-    const list = archivedByProject.get(thread.projectId) ?? [];
+  const individuallyArchivedByProject = new Map<ProjectId, Thread[]>();
+  for (const thread of individuallyArchivedThreads) {
+    const list = individuallyArchivedByProject.get(thread.projectId) ?? [];
     list.push(thread);
-    archivedByProject.set(thread.projectId, list);
+    individuallyArchivedByProject.set(thread.projectId, list);
   }
 
   return (
@@ -467,14 +489,63 @@ function ArchivedThreadsSection({
         onClick={() => setExpanded((prev) => !prev)}
       >
         <ArchiveIcon className="size-3" />
-        <span>Archived ({archivedThreads.length})</span>
+        <span>Archived ({totalArchivedCount})</span>
         <ChevronRightIcon
           className={`ml-auto size-3 transition-transform duration-150 ${expanded ? "rotate-90" : ""}`}
         />
       </button>
       {expanded && (
         <div className="flex flex-col gap-2">
-          {[...archivedByProject.entries()].map(([projectId, projectThreads]) => (
+          {/* Archived projects (with all their threads) */}
+          {archivedProjects.map((project) => {
+            const projectThreads = threadsByArchivedProject.get(project.id) ?? [];
+            return (
+              <div key={project.id}>
+                <div
+                  className="flex items-center gap-1 px-2 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/40 cursor-pointer hover:text-muted-foreground/60 transition-colors"
+                  onContextMenu={async (event) => {
+                    event.preventDefault();
+                    const api = readNativeApi();
+                    if (!api) return;
+                    const clicked = await api.contextMenu.show(
+                      [{ id: "unarchive", label: "Unarchive project" }],
+                      { x: event.clientX, y: event.clientY },
+                    );
+                    if (clicked === "unarchive") {
+                      await onUnarchiveProject(project.id);
+                    }
+                  }}
+                >
+                  <FolderIcon className="size-2.5" />
+                  <span className="truncate">{project.name}</span>
+                  <button
+                    type="button"
+                    className="ml-auto opacity-0 group-hover:opacity-100 hover:text-muted-foreground transition-opacity"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      void onUnarchiveProject(project.id);
+                    }}
+                    title="Unarchive project"
+                  >
+                    <ArchiveRestoreIcon className="size-3" />
+                  </button>
+                </div>
+                <SidebarMenu>
+                  {projectThreads.map((thread) => (
+                    <ArchivedThreadRow
+                      key={thread.id}
+                      thread={thread}
+                      isActive={activeThreadId === thread.id}
+                      onUnarchive={onUnarchiveThread}
+                      onDelete={onDeleteThread}
+                    />
+                  ))}
+                </SidebarMenu>
+              </div>
+            );
+          })}
+          {/* Individually archived threads (project is not archived) */}
+          {[...individuallyArchivedByProject.entries()].map(([projectId, projectThreads]) => (
             <div key={projectId}>
               <div className="px-2 pb-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground/40">
                 {projectNameById.get(projectId) ?? "Unknown project"}
@@ -485,8 +556,8 @@ function ArchivedThreadsSection({
                     key={thread.id}
                     thread={thread}
                     isActive={activeThreadId === thread.id}
-                    onUnarchive={onUnarchive}
-                    onDelete={onDelete}
+                    onUnarchive={onUnarchiveThread}
+                    onDelete={onDeleteThread}
                   />
                 ))}
               </SidebarMenu>
@@ -978,6 +1049,49 @@ export default function Sidebar() {
     });
   }, []);
 
+  const archiveProject = useCallback(
+    async (projectId: ProjectId): Promise<void> => {
+      const api = readNativeApi();
+      if (!api) return;
+
+      // If viewing a thread in this project, navigate away
+      if (routeThreadId) {
+        const activeThread = threads.find((t) => t.id === routeThreadId);
+        if (activeThread?.projectId === projectId) {
+          // Find a thread in a different project to navigate to
+          const fallback = threads.find((t) => t.projectId !== projectId && t.archivedAt === null);
+          if (fallback) {
+            void navigate({
+              to: "/$threadId",
+              params: { threadId: fallback.id },
+              replace: true,
+            });
+          } else {
+            void navigate({ to: "/", replace: true });
+          }
+        }
+      }
+
+      await api.orchestration.dispatchCommand({
+        type: "project.archive",
+        commandId: newCommandId(),
+        projectId,
+      });
+    },
+    [navigate, routeThreadId, threads],
+  );
+
+  const unarchiveProject = useCallback(async (projectId: ProjectId): Promise<void> => {
+    const api = readNativeApi();
+    if (!api) return;
+
+    await api.orchestration.dispatchCommand({
+      type: "project.unarchive",
+      commandId: newCommandId(),
+      projectId,
+    });
+  }, []);
+
   const { copyToClipboard: copyThreadIdToClipboard } = useCopyToClipboard<{ threadId: ThreadId }>({
     onCopy: (ctx) => {
       toastManager.add({
@@ -1192,9 +1306,16 @@ export default function Sidebar() {
       const api = readNativeApi();
       if (!api) return;
       const clicked = await api.contextMenu.show(
-        [{ id: "delete", label: "Remove project", destructive: true }],
+        [
+          { id: "archive", label: "Archive project" },
+          { id: "delete", label: "Remove project", destructive: true },
+        ],
         position,
       );
+      if (clicked === "archive") {
+        await archiveProject(projectId);
+        return;
+      }
       if (clicked !== "delete") return;
 
       const project = projects.find((entry) => entry.id === projectId);
@@ -1235,6 +1356,7 @@ export default function Sidebar() {
       }
     },
     [
+      archiveProject,
       clearComposerDraftForThread,
       clearProjectDraftThreadId,
       getDraftThreadByProjectId,
@@ -1330,6 +1452,10 @@ export default function Sidebar() {
   const sortedProjects = useMemo(
     () => sortProjectsForSidebar(projects, threads, appSettings.sidebarProjectSortOrder),
     [appSettings.sidebarProjectSortOrder, projects, threads],
+  );
+  const activeProjects = useMemo(
+    () => sortedProjects.filter((p) => !isProjectArchived(p)),
+    [sortedProjects],
   );
   const isManualProjectSorting = appSettings.sidebarProjectSortOrder === "manual";
   const isManualThreadSorting = appSettings.sidebarThreadSortOrder === "manual";
@@ -2091,10 +2217,10 @@ export default function Sidebar() {
             >
               <SidebarMenu>
                 <SortableContext
-                  items={sortedProjects.map((project) => project.id)}
+                  items={activeProjects.map((project) => project.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {sortedProjects.map((project) => (
+                  {activeProjects.map((project) => (
                     <SortableProjectItem key={project.id} projectId={project.id}>
                       {(dragHandleProps) => renderProjectItem(project, dragHandleProps)}
                     </SortableProjectItem>
@@ -2104,7 +2230,7 @@ export default function Sidebar() {
             </DndContext>
           ) : (
             <SidebarMenu ref={attachProjectListAutoAnimateRef}>
-              {sortedProjects.map((project) => (
+              {activeProjects.map((project) => (
                 <SidebarMenuItem key={project.id} className="rounded-md">
                   {renderProjectItem(project, null)}
                 </SidebarMenuItem>
@@ -2112,7 +2238,7 @@ export default function Sidebar() {
             </SidebarMenu>
           )}
 
-          {projects.length === 0 && !shouldShowProjectPathEntry && (
+          {activeProjects.length === 0 && !shouldShowProjectPathEntry && (
             <div className="px-2 pt-4 text-center text-xs text-muted-foreground/60">
               No projects yet
             </div>
@@ -2121,8 +2247,9 @@ export default function Sidebar() {
         <ArchivedThreadsSection
           threads={threads}
           projects={projects}
-          onUnarchive={unarchiveThread}
-          onDelete={deleteThread}
+          onUnarchiveThread={unarchiveThread}
+          onDeleteThread={deleteThread}
+          onUnarchiveProject={unarchiveProject}
           activeThreadId={routeThreadId ?? undefined}
         />
       </SidebarContent>

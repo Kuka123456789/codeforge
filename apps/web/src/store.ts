@@ -169,6 +169,7 @@ function mapProjectsFromReadModel(
           : true),
       createdAt: project.createdAt,
       updatedAt: project.updatedAt,
+      archivedAt: project.archivedAt ?? null,
       scripts: project.scripts.map((script) => ({ ...script })),
     } satisfies Project;
   });

@@ -149,6 +149,7 @@ export const OrchestrationProject = Schema.Struct({
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
   deletedAt: Schema.NullOr(IsoDateTime),
+  archivedAt: Schema.NullOr(IsoDateTime),
 });
 export type OrchestrationProject = typeof OrchestrationProject.Type;
 
@@ -332,6 +333,18 @@ const ProjectDeleteCommand = Schema.Struct({
   projectId: ProjectId,
 });
 
+const ProjectArchiveCommand = Schema.Struct({
+  type: Schema.Literal("project.archive"),
+  commandId: CommandId,
+  projectId: ProjectId,
+});
+
+const ProjectUnarchiveCommand = Schema.Struct({
+  type: Schema.Literal("project.unarchive"),
+  commandId: CommandId,
+  projectId: ProjectId,
+});
+
 const ThreadCreateCommand = Schema.Struct({
   type: Schema.Literal("thread.create"),
   commandId: CommandId,
@@ -474,6 +487,8 @@ const DispatchableClientOrchestrationCommand = Schema.Union([
   ProjectCreateCommand,
   ProjectMetaUpdateCommand,
   ProjectDeleteCommand,
+  ProjectArchiveCommand,
+  ProjectUnarchiveCommand,
   ThreadCreateCommand,
   ThreadDeleteCommand,
   ThreadArchiveCommand,
@@ -495,6 +510,8 @@ export const ClientOrchestrationCommand = Schema.Union([
   ProjectCreateCommand,
   ProjectMetaUpdateCommand,
   ProjectDeleteCommand,
+  ProjectArchiveCommand,
+  ProjectUnarchiveCommand,
   ThreadCreateCommand,
   ThreadDeleteCommand,
   ThreadArchiveCommand,
@@ -597,6 +614,8 @@ export const OrchestrationEventType = Schema.Literals([
   "project.created",
   "project.meta-updated",
   "project.deleted",
+  "project.archived",
+  "project.unarchived",
   "thread.created",
   "thread.deleted",
   "thread.archived",
@@ -645,6 +664,15 @@ export const ProjectMetaUpdatedPayload = Schema.Struct({
 export const ProjectDeletedPayload = Schema.Struct({
   projectId: ProjectId,
   deletedAt: IsoDateTime,
+});
+
+export const ProjectArchivedPayload = Schema.Struct({
+  projectId: ProjectId,
+  archivedAt: IsoDateTime,
+});
+
+export const ProjectUnarchivedPayload = Schema.Struct({
+  projectId: ProjectId,
 });
 
 export const ThreadCreatedPayload = Schema.Struct({
@@ -824,6 +852,16 @@ export const OrchestrationEvent = Schema.Union([
     ...EventBaseFields,
     type: Schema.Literal("project.deleted"),
     payload: ProjectDeletedPayload,
+  }),
+  Schema.Struct({
+    ...EventBaseFields,
+    type: Schema.Literal("project.archived"),
+    payload: ProjectArchivedPayload,
+  }),
+  Schema.Struct({
+    ...EventBaseFields,
+    type: Schema.Literal("project.unarchived"),
+    payload: ProjectUnarchivedPayload,
   }),
   Schema.Struct({
     ...EventBaseFields,

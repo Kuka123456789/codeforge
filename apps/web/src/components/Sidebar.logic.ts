@@ -2,7 +2,7 @@ import type {
   SidebarProjectSortOrder,
   SidebarThreadSortOrder,
 } from "@codeforge/contracts/settings";
-import type { Thread } from "../types";
+import type { Project, Thread } from "../types";
 import { cn } from "../lib/utils";
 import {
   findLatestProposedPlan,
@@ -282,6 +282,10 @@ export function sortThreadsForSidebar<
 
 export function isArchived(thread: Pick<Thread, "archivedAt">): boolean {
   return thread.archivedAt !== null;
+}
+
+export function isProjectArchived(project: Pick<Project, "archivedAt">): boolean {
+  return project.archivedAt !== null;
 }
 
 export function getFallbackThreadIdAfterDelete<

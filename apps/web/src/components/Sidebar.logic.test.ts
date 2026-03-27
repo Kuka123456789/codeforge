@@ -365,6 +365,7 @@ function makeProject(overrides: Partial<Project> = {}): Project {
     expanded: true,
     createdAt: "2026-03-09T10:00:00.000Z",
     updatedAt: "2026-03-09T10:00:00.000Z",
+    archivedAt: null,
     scripts: [],
     ...rest,
   };
