@@ -810,6 +810,122 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
         return { relativePath: target.relativePath };
       }
 
+      case WS_METHODS.projectsReadFile: {
+        const body = stripRequestTag(request.body);
+        const target = yield* resolveWorkspaceWritePath({
+          workspaceRoot: body.cwd,
+          relativePath: body.relativePath,
+          path,
+        });
+        const contents = yield* fileSystem.readFileString(target.absolutePath).pipe(
+          Effect.catchAll(() => Effect.fail(null)),
+          Effect.result,
+        );
+        if (Result.isErr(contents) || contents.value === null) {
+          return { relativePath: target.relativePath, contents: "", exists: false };
+        }
+        return { relativePath: target.relativePath, contents: contents.value, exists: true };
+      }
+
+      case WS_METHODS.projectsDeleteFile: {
+        const body = stripRequestTag(request.body);
+        const target = yield* resolveWorkspaceWritePath({
+          workspaceRoot: body.cwd,
+          relativePath: body.relativePath,
+          path,
+        });
+        yield* fileSystem.remove(target.absolutePath).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RouteRequestError({
+                message: `Failed to delete workspace file: ${String(cause)}`,
+              }),
+          ),
+        );
+        return { relativePath: target.relativePath };
+      }
+
+      case WS_METHODS.skillsList: {
+        const body = stripRequestTag(request.body);
+        const skills: Array<{
+          name: string;
+          source: "project" | "user";
+          description: string;
+          content: string;
+        }> = [];
+
+        const scanSkillsDir = (dir: string, source: "project" | "user") =>
+          Effect.gen(function* () {
+            const entries = yield* fileSystem.readDirectory(dir).pipe(
+              Effect.catchAll(() => Effect.succeed([] as ReadonlyArray<string>)),
+            );
+            for (const entry of entries) {
+              const skillMdPath = path.join(dir, entry, "SKILL.md");
+              const content = yield* fileSystem.readFileString(skillMdPath).pipe(
+                Effect.catchAll(() => Effect.succeed(null)),
+              );
+              if (content === null) continue;
+              const firstLine = content.split("\n").find((l: string) => l.trim().length > 0) ?? "";
+              skills.push({ name: entry, source, description: firstLine, content });
+            }
+          });
+
+        yield* scanSkillsDir(path.join(body.cwd, ".claude", "skills"), "project");
+        yield* scanSkillsDir(
+          path.join(yield* expandHomePath("~/.claude/skills"), ""),
+          "user",
+        ).pipe(Effect.catchAll(() => Effect.void));
+
+        return { skills };
+      }
+
+      case WS_METHODS.skillsSave: {
+        const body = stripRequestTag(request.body);
+        const baseDir =
+          body.source === "user"
+            ? yield* expandHomePath("~/.claude/skills")
+            : path.join(body.cwd, ".claude", "skills");
+        const skillDir = path.join(baseDir, body.name);
+        const skillPath = path.join(skillDir, "SKILL.md");
+        yield* fileSystem
+          .makeDirectory(skillDir, { recursive: true })
+          .pipe(
+            Effect.mapError(
+              (cause) =>
+                new RouteRequestError({
+                  message: `Failed to prepare skill directory: ${String(cause)}`,
+                }),
+            ),
+          );
+        yield* fileSystem.writeFileString(skillPath, body.content).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RouteRequestError({
+                message: `Failed to write skill file: ${String(cause)}`,
+              }),
+          ),
+        );
+        return { name: body.name };
+      }
+
+      case WS_METHODS.skillsDelete: {
+        const body = stripRequestTag(request.body);
+        const baseDir =
+          body.source === "user"
+            ? yield* expandHomePath("~/.claude/skills")
+            : path.join(body.cwd, ".claude", "skills");
+        const skillDir = path.join(baseDir, body.name);
+        yield* fileSystem.remove(skillDir, { recursive: true }).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RouteRequestError({
+                message: `Failed to delete skill: ${String(cause)}`,
+              }),
+          ),
+        );
+        return { name: body.name };
+      }
+
       case WS_METHODS.shellOpenInEditor: {
         const body = stripRequestTag(request.body);
         return yield* openInEditor(body);

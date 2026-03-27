@@ -158,6 +158,13 @@ export function createWsNativeApi(): NativeApi {
     projects: {
       searchEntries: (input) => transport.request(WS_METHODS.projectsSearchEntries, input),
       writeFile: (input) => transport.request(WS_METHODS.projectsWriteFile, input),
+      readFile: (input) => transport.request(WS_METHODS.projectsReadFile, input),
+      deleteFile: (input) => transport.request(WS_METHODS.projectsDeleteFile, input),
+    },
+    skills: {
+      list: (input) => transport.request(WS_METHODS.skillsList, input),
+      save: (input) => transport.request(WS_METHODS.skillsSave, input),
+      delete: (input) => transport.request(WS_METHODS.skillsDelete, input),
     },
     threads: {
       search: (input) => transport.request(WS_METHODS.threadsSearch, input),

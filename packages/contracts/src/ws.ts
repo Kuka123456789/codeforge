@@ -35,7 +35,13 @@ import {
   TerminalWriteInput,
 } from "./terminal";
 import { KeybindingRule } from "./keybindings";
-import { ProjectSearchEntriesInput, ProjectWriteFileInput } from "./project";
+import {
+  ProjectDeleteFileInput,
+  ProjectReadFileInput,
+  ProjectSearchEntriesInput,
+  ProjectWriteFileInput,
+} from "./project";
+import { SkillsDeleteInput, SkillsListInput, SkillsSaveInput } from "./skills";
 import { ThreadSearchInput } from "./threadSearch";
 import { OpenInEditorInput } from "./editor";
 import { ServerConfigUpdatedPayload, ServerProviderUpdatedPayload } from "./server";
@@ -50,6 +56,13 @@ export const WS_METHODS = {
   projectsRemove: "projects.remove",
   projectsSearchEntries: "projects.searchEntries",
   projectsWriteFile: "projects.writeFile",
+  projectsReadFile: "projects.readFile",
+  projectsDeleteFile: "projects.deleteFile",
+
+  // Skills
+  skillsList: "skills.list",
+  skillsSave: "skills.save",
+  skillsDelete: "skills.delete",
 
   // Shell methods
   shellOpenInEditor: "shell.openInEditor",
@@ -119,9 +132,16 @@ const WebSocketRequestBody = Schema.Union([
   tagRequestBody(ORCHESTRATION_WS_METHODS.getFullThreadDiff, OrchestrationGetFullThreadDiffInput),
   tagRequestBody(ORCHESTRATION_WS_METHODS.replayEvents, OrchestrationReplayEventsInput),
 
-  // Project Search
+  // Project file operations
   tagRequestBody(WS_METHODS.projectsSearchEntries, ProjectSearchEntriesInput),
   tagRequestBody(WS_METHODS.projectsWriteFile, ProjectWriteFileInput),
+  tagRequestBody(WS_METHODS.projectsReadFile, ProjectReadFileInput),
+  tagRequestBody(WS_METHODS.projectsDeleteFile, ProjectDeleteFileInput),
+
+  // Skills
+  tagRequestBody(WS_METHODS.skillsList, SkillsListInput),
+  tagRequestBody(WS_METHODS.skillsSave, SkillsSaveInput),
+  tagRequestBody(WS_METHODS.skillsDelete, SkillsDeleteInput),
 
   // Shell methods
   tagRequestBody(WS_METHODS.shellOpenInEditor, OpenInEditorInput),

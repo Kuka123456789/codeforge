@@ -20,11 +20,23 @@ import type {
   GitStatusResult,
 } from "./git";
 import type {
+  ProjectDeleteFileInput,
+  ProjectDeleteFileResult,
+  ProjectReadFileInput,
+  ProjectReadFileResult,
   ProjectSearchEntriesInput,
   ProjectSearchEntriesResult,
   ProjectWriteFileInput,
   ProjectWriteFileResult,
 } from "./project";
+import type {
+  SkillsDeleteInput,
+  SkillsDeleteResult,
+  SkillsListInput,
+  SkillsListResult,
+  SkillsSaveInput,
+  SkillsSaveResult,
+} from "./skills";
 import type { ThreadSearchInput, ThreadSearchResult } from "./threadSearch";
 import type {
   ServerConfig,
@@ -135,6 +147,13 @@ export interface NativeApi {
   projects: {
     searchEntries: (input: ProjectSearchEntriesInput) => Promise<ProjectSearchEntriesResult>;
     writeFile: (input: ProjectWriteFileInput) => Promise<ProjectWriteFileResult>;
+    readFile: (input: ProjectReadFileInput) => Promise<ProjectReadFileResult>;
+    deleteFile: (input: ProjectDeleteFileInput) => Promise<ProjectDeleteFileResult>;
+  };
+  skills: {
+    list: (input: SkillsListInput) => Promise<SkillsListResult>;
+    save: (input: SkillsSaveInput) => Promise<SkillsSaveResult>;
+    delete: (input: SkillsDeleteInput) => Promise<SkillsDeleteResult>;
   };
   threads: {
     search: (input: ThreadSearchInput) => Promise<ThreadSearchResult>;
