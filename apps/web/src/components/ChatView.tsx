@@ -83,7 +83,7 @@ import { useTurnDiffSummaries } from "../hooks/useTurnDiffSummaries";
 import BranchToolbar from "./BranchToolbar";
 import { resolveShortcutCommand, shortcutLabelForCommand } from "../keybindings";
 import PinsSidebar from "./PinsSidebar";
-import { usePinStore, usePinsForThread } from "../pinStore";
+import { usePinStore, usePinsForThread, isMessagePinned } from "../pinStore";
 import ThreadTerminalDrawer from "./ThreadTerminalDrawer";
 import {
   BotIcon,
@@ -343,6 +343,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const clearSending = useSendStatusStore((s) => s.clearSending);
   const addPin = usePinStore((s) => s.addPin);
   const removePin = usePinStore((s) => s.removePin);
+  const togglePin = usePinStore((s) => s.togglePin);
   const threadPins = usePinsForThread(threadId);
   const [sendStartedAt, setSendStartedAt] = useState<string | null>(null);
   const [isConnecting, _setIsConnecting] = useState(false);
@@ -1771,16 +1772,19 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const handlePinMessage = useCallback(
     (messageId: MessageId, messageRole: "user" | "assistant", text: string) => {
       if (!activeThread) return;
-      addPin({
+      const removedId = togglePin({
         threadId: activeThread.id,
         messageId,
         messageRole,
         selectedText: null,
         fullMessageText: text,
       });
-      setPinsSidebarOpen(true);
+      // Open sidebar when pinning; keep it open when unpinning.
+      if (removedId === null) {
+        setPinsSidebarOpen(true);
+      }
     },
-    [activeThread, addPin],
+    [activeThread, togglePin],
   );
 
   const handleScrollToPinSourceMessage = useCallback(

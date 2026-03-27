@@ -4,7 +4,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import ChatMarkdown from "./ChatMarkdown";
-import { ChevronDownIcon, ChevronRightIcon, PanelRightCloseIcon, XIcon } from "lucide-react";
+import { PanelRightCloseIcon, XIcon } from "lucide-react";
 import { cn } from "~/lib/utils";
 import type { Pin } from "../pinStore";
 
@@ -181,17 +181,8 @@ const PinItem = memo(function PinItem({
         "hover:border-border/80 hover:bg-background/80",
       )}
     >
-      {/* Header — clickable to expand/collapse */}
-      <button
-        type="button"
-        className="flex w-full items-center gap-1.5 px-3 pt-2.5 pb-1 text-left"
-        onClick={toggleExpanded}
-      >
-        {expanded ? (
-          <ChevronDownIcon className="size-3 shrink-0 text-muted-foreground/40" />
-        ) : (
-          <ChevronRightIcon className="size-3 shrink-0 text-muted-foreground/40" />
-        )}
+      {/* Header badges */}
+      <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
         <Badge
           variant="secondary"
           className={cn(
@@ -211,13 +202,10 @@ const PinItem = memo(function PinItem({
             Selection
           </Badge>
         )}
-      </button>
+      </div>
 
-      {/* Content */}
-      <div
-        className={cn("px-3 pb-3", !expanded && "cursor-pointer")}
-        onClick={!expanded ? toggleExpanded : undefined}
-      >
+      {/* Content — click scrolls to source message */}
+      <div className="cursor-pointer px-3" onClick={handleScrollTo} title="Click to scroll to message">
         <div className={cn("text-sm", !expanded && "max-h-[120px] overflow-hidden")}>
           {pin.messageRole === "assistant" ? (
             <div
@@ -245,40 +233,27 @@ const PinItem = memo(function PinItem({
         )}
       </div>
 
-      {/* Action buttons — top right */}
-      <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-        <Button
-          size="icon-xs"
-          variant="ghost"
-          onClick={handleScrollTo}
-          aria-label="Scroll to message"
-          title="Scroll to message"
-          className="text-muted-foreground/50 hover:text-foreground/70"
+      {/* Show more / Show less toggle */}
+      <div className="px-3 pb-2 pt-0.5">
+        <button
+          type="button"
+          className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+          onClick={toggleExpanded}
         >
-          <svg
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-        </Button>
-        <Button
-          size="icon-xs"
-          variant="ghost"
-          onClick={handleRemove}
-          aria-label="Unpin"
-          className="text-muted-foreground/50 hover:text-foreground/70"
-        >
-          <XIcon className="size-3" />
-        </Button>
+          {expanded ? "Show less" : "Show more"}
+        </button>
       </div>
+
+      {/* Unpin button — top right */}
+      <Button
+        size="icon-xs"
+        variant="ghost"
+        onClick={handleRemove}
+        aria-label="Unpin"
+        className="absolute right-1.5 top-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground/70"
+      >
+        <XIcon className="size-3" />
+      </Button>
     </div>
   );
 });

@@ -442,7 +442,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                       variant="outline"
                       onClick={() => onPinMessage(row.message.id, "user", row.message.text)}
                       title={
-                        pinnedMessageIds.has(row.message.id) ? "Already pinned" : "Pin message"
+                        pinnedMessageIds.has(row.message.id) ? "Unpin message" : "Pin message"
                       }
                       className={pinnedMessageIds.has(row.message.id) ? "text-amber-400" : ""}
                     >
@@ -499,7 +499,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                     size="xs"
                     variant="outline"
                     onClick={() => onPinMessage(row.message.id, "assistant", row.message.text)}
-                    title={pinnedMessageIds.has(row.message.id) ? "Already pinned" : "Pin message"}
+                    title={pinnedMessageIds.has(row.message.id) ? "Unpin message" : "Pin message"}
                     className={cn(
                       "bg-background/80",
                       pinnedMessageIds.has(row.message.id) && "text-amber-400",
