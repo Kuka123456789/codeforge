@@ -285,6 +285,16 @@ describe("parseStandaloneComposerSlashCommand", () => {
     expect(parseStandaloneComposerSlashCommand(" /clear ")).toBe("clear");
   });
 
+  it("parses standalone /resume command", () => {
+    expect(parseStandaloneComposerSlashCommand("/resume")).toBe("resume");
+    expect(parseStandaloneComposerSlashCommand(" /resume ")).toBe("resume");
+  });
+
+  it("parses standalone /context command", () => {
+    expect(parseStandaloneComposerSlashCommand("/context")).toBe("context");
+    expect(parseStandaloneComposerSlashCommand(" /context ")).toBe("context");
+  });
+
   it("ignores slash commands with extra message text", () => {
     expect(parseStandaloneComposerSlashCommand("/plan explain this")).toBeNull();
   });

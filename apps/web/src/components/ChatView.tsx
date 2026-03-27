@@ -103,6 +103,8 @@ import { Menu, MenuItem, MenuPopup, MenuTrigger } from "./ui/menu";
 import { cn, randomUUID } from "~/lib/utils";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "./ui/tooltip";
 import { toastManager } from "./ui/toast";
+import { ThreadSearchDialog } from "./ThreadSearchDialog";
+import { formatContextWindowTokens } from "~/lib/contextWindow";
 import { decodeProjectScriptKeybindingRule } from "~/lib/projectScriptKeybindings";
 import { type NewProjectScriptInput } from "./ProjectScriptsControl";
 import {
@@ -365,6 +367,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const [composerHighlightedItemId, setComposerHighlightedItemId] = useState<string | null>(null);
   const [pullRequestDialogState, setPullRequestDialogState] =
     useState<PullRequestDialogState | null>(null);
+  const [resumeSearchOpen, setResumeSearchOpen] = useState(false);
   const [attachmentPreviewHandoffByMessageId, setAttachmentPreviewHandoffByMessageId] = useState<
     Record<string, string[]>
   >({});
@@ -1128,6 +1131,20 @@ export default function ChatView({ threadId }: ChatViewProps) {
           label: "/clear",
           description: "Start a new thread",
         },
+        {
+          id: "slash:resume",
+          type: "slash-command",
+          command: "resume",
+          label: "/resume",
+          description: "Search and switch to a previous thread",
+        },
+        {
+          id: "slash:context",
+          type: "slash-command",
+          command: "context",
+          label: "/context",
+          description: "Show context window usage",
+        },
       ];
       const providerCommandItems: ComposerCommandItem[] = providerSlashCommands.map((cmd) => ({
         id: `provider-slash:${selectedProvider}:${cmd.name}`,
@@ -1800,6 +1817,51 @@ export default function ChatView({ threadId }: ChatViewProps) {
     navigate,
     setProjectDraftThreadId,
   ]);
+
+  const handleResumeCommand = useCallback(() => {
+    setResumeSearchOpen(true);
+  }, []);
+
+  const handleContextCommand = useCallback(() => {
+    const cw = activeContextWindow;
+    if (!cw) {
+      toastManager.add({
+        type: "warning",
+        title: "No context data",
+        description: "Context window usage is not available yet. Send a message first.",
+      });
+      return;
+    }
+    const used = formatContextWindowTokens(cw.usedTokens);
+    const max = cw.maxTokens ? formatContextWindowTokens(cw.maxTokens) : "unknown";
+    const pct = cw.usedPercentage !== null ? `${Math.round(cw.usedPercentage)}%` : "—";
+
+    const lines: string[] = [`${used} / ${max} tokens used (${pct})`];
+    if (cw.inputTokens != null || cw.outputTokens != null) {
+      const parts: string[] = [];
+      if (cw.inputTokens != null)
+        parts.push(`Input: ${formatContextWindowTokens(cw.inputTokens ?? null)}`);
+      if (cw.cachedInputTokens != null)
+        parts.push(`Cached: ${formatContextWindowTokens(cw.cachedInputTokens ?? null)}`);
+      if (cw.outputTokens != null)
+        parts.push(`Output: ${formatContextWindowTokens(cw.outputTokens ?? null)}`);
+      if (cw.reasoningOutputTokens != null)
+        parts.push(`Reasoning: ${formatContextWindowTokens(cw.reasoningOutputTokens ?? null)}`);
+      lines.push(parts.join(" · "));
+    }
+    if (cw.totalProcessedTokens != null && cw.totalProcessedTokens > cw.usedTokens) {
+      lines.push(`Total processed: ${formatContextWindowTokens(cw.totalProcessedTokens ?? null)}`);
+    }
+    if (cw.compactsAutomatically) {
+      lines.push("Auto-compaction: enabled");
+    }
+
+    toastManager.add({
+      type: "info",
+      title: "Context window",
+      description: lines.join("\n"),
+    });
+  }, [activeContextWindow]);
 
   const persistThreadSettingsForNextTurn = useCallback(
     async (input: {
@@ -2645,6 +2707,24 @@ export default function ChatView({ threadId }: ChatViewProps) {
         setComposerCursor(0);
         setComposerTrigger(null);
         void handleClearCommand();
+        return;
+      }
+      if (standaloneSlashCommand === "resume") {
+        promptRef.current = "";
+        clearComposerDraftContent(activeThread.id);
+        setComposerHighlightedItemId(null);
+        setComposerCursor(0);
+        setComposerTrigger(null);
+        handleResumeCommand();
+        return;
+      }
+      if (standaloneSlashCommand === "context") {
+        promptRef.current = "";
+        clearComposerDraftContent(activeThread.id);
+        setComposerHighlightedItemId(null);
+        setComposerCursor(0);
+        setComposerTrigger(null);
+        handleContextCommand();
         return;
       }
       handleInteractionModeChange(standaloneSlashCommand);
@@ -3557,6 +3637,22 @@ export default function ChatView({ threadId }: ChatViewProps) {
           void handleClearCommand();
           return;
         }
+        if (item.command === "resume") {
+          applyPromptReplacement(trigger.rangeStart, trigger.rangeEnd, "", {
+            expectedText: snapshot.value.slice(trigger.rangeStart, trigger.rangeEnd),
+          });
+          setComposerHighlightedItemId(null);
+          handleResumeCommand();
+          return;
+        }
+        if (item.command === "context") {
+          applyPromptReplacement(trigger.rangeStart, trigger.rangeEnd, "", {
+            expectedText: snapshot.value.slice(trigger.rangeStart, trigger.rangeEnd),
+          });
+          setComposerHighlightedItemId(null);
+          handleContextCommand();
+          return;
+        }
         void handleInteractionModeChange(item.command === "plan" ? "plan" : "default");
         const applied = applyPromptReplacement(trigger.rangeStart, trigger.rangeEnd, "", {
           expectedText: snapshot.value.slice(trigger.rangeStart, trigger.rangeEnd),
@@ -3598,7 +3694,9 @@ export default function ChatView({ threadId }: ChatViewProps) {
     [
       applyPromptReplacement,
       handleClearCommand,
+      handleContextCommand,
       handleInteractionModeChange,
+      handleResumeCommand,
       onProviderModelSelect,
       resolveActiveComposerTrigger,
     ],
@@ -4434,6 +4532,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
               onPrepared={handlePreparedPullRequestThread}
             />
           ) : null}
+          <ThreadSearchDialog open={resumeSearchOpen} onOpenChange={setResumeSearchOpen} />
         </div>
         {/* end chat column */}
 
