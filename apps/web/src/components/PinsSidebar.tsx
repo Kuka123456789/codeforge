@@ -237,8 +237,13 @@ const PinItem = memo(function PinItem({
         )}
       </div>
 
-      {/* Show more / Show less toggle */}
-      <div className="px-3 pb-2 pt-0.5">
+      {/* Show more / Show less toggle — sticky when expanded so it's always reachable */}
+      <div
+        className={cn(
+          "px-3 pb-2 pt-0.5",
+          expanded && "sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/30",
+        )}
+      >
         <button
           type="button"
           className="text-[11px] text-muted-foreground/60 hover:text-muted-foreground transition-colors"
