@@ -70,6 +70,7 @@ import {
 } from "../Errors.ts";
 import { ClaudeAdapter, type ClaudeAdapterShape } from "../Services/ClaudeAdapter.ts";
 import { type EventNdjsonLogger, makeEventNdjsonLogger } from "./EventNdjsonLogger.ts";
+import * as slashCommandsCache from "../slashCommandsCache.ts";
 
 const PROVIDER = "claudeAgent" as const;
 type ClaudeTextStreamKind = Extract<RuntimeContentStreamKind, "assistant_text" | "reasoning_text">;
@@ -2995,6 +2996,23 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
           }
           Effect.runFork(handleStreamExit(context, exit));
         });
+
+        // Discover supported slash commands from the SDK (non-blocking).
+        void queryRuntime
+          .supportedCommands()
+          .then((commands) => {
+            slashCommandsCache.setSlashCommands(
+              PROVIDER,
+              commands.map((cmd) => ({
+                name: cmd.name,
+                description: cmd.description,
+                argumentHint: cmd.argumentHint,
+              })),
+            );
+          })
+          .catch(() => {
+            // Slash command discovery is best-effort; failures are non-fatal.
+          });
 
         return {
           ...session,
