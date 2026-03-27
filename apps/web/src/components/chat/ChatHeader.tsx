@@ -6,8 +6,20 @@ import {
 } from "@t3tools/contracts";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import GitActionsControl from "../GitActionsControl";
-import { DiffIcon, TerminalSquareIcon } from "lucide-react";
+import {
+  ArchiveIcon,
+  ArchiveRestoreIcon,
+  ClipboardCopyIcon,
+  DiffIcon,
+  EllipsisIcon,
+  HashIcon,
+  PencilIcon,
+  TerminalSquareIcon,
+  Trash2Icon,
+} from "lucide-react";
 import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Menu, MenuItem, MenuPopup, MenuSeparator, MenuTrigger } from "../ui/menu";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "../ui/tooltip";
 import ProjectScriptsControl, { type NewProjectScriptInput } from "../ProjectScriptsControl";
 import { Toggle } from "../ui/toggle";
@@ -18,6 +30,8 @@ interface ChatHeaderProps {
   activeThreadId: ThreadId;
   activeThreadTitle: string;
   activeProjectName: string | undefined;
+  isArchived: boolean;
+  workspacePath: string | null;
   isGitRepo: boolean;
   openInCwd: string | null;
   activeProjectScripts: ProjectScript[] | undefined;
@@ -37,12 +51,19 @@ interface ChatHeaderProps {
   onToggleTerminal: () => void;
   onToggleDiff: () => void;
   onRenameThread?: (threadId: ThreadId, newTitle: string) => Promise<void>;
+  onArchiveThread?: (threadId: ThreadId) => Promise<void>;
+  onUnarchiveThread?: (threadId: ThreadId) => Promise<void>;
+  onDeleteThread?: (threadId: ThreadId) => Promise<void>;
+  onCopyPath?: (path: string) => void;
+  onCopyThreadId?: (threadId: ThreadId) => void;
 }
 
 export const ChatHeader = memo(function ChatHeader({
   activeThreadId,
   activeThreadTitle,
   activeProjectName,
+  isArchived,
+  workspacePath,
   isGitRepo,
   openInCwd,
   activeProjectScripts,
@@ -62,6 +83,11 @@ export const ChatHeader = memo(function ChatHeader({
   onToggleTerminal,
   onToggleDiff,
   onRenameThread,
+  onArchiveThread,
+  onUnarchiveThread,
+  onDeleteThread,
+  onCopyPath,
+  onCopyThreadId,
 }: ChatHeaderProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(activeThreadTitle);
