@@ -149,7 +149,6 @@ function EventRouter() {
 
   useEffect(() => {
     const api = readNativeApi();
-    console.log("[EventRouter] useEffect fired, api:", api ? "found" : "null");
     if (!api) return;
     let disposed = false;
     let latestSequence = 0;
@@ -158,9 +157,7 @@ function EventRouter() {
     let needsProviderInvalidation = false;
 
     const flushSnapshotSync = async (): Promise<void> => {
-      console.log("[EventRouter] calling getSnapshot...");
       const snapshot = await api.orchestration.getSnapshot();
-      console.log("[EventRouter] snapshot received", { projects: snapshot.projects.length, threads: snapshot.threads.length, seq: snapshot.snapshotSequence });
       if (disposed) return;
       latestSequence = Math.max(latestSequence, snapshot.snapshotSequence);
       syncServerReadModel(snapshot);
@@ -261,7 +258,6 @@ function EventRouter() {
         );
     });
     const unsubWelcome = onServerWelcome((payload) => {
-      console.log("[EventRouter] onServerWelcome fired", payload);
       // Migrate old localStorage settings to server on first connect
       migrateLocalSettingsToServer();
       void (async () => {
