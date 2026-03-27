@@ -85,13 +85,6 @@ export const ComposerCommandMenu = memo(function ComposerCommandMenu(props: {
   );
 });
 
-function SlashCommandIcon(props: { type: "slash-command" | "provider-slash-command" }) {
-  if (props.type === "slash-command") {
-    return <ZapIcon className="size-3.5 shrink-0 text-amber-500/80" />;
-  }
-  return <TerminalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />;
-}
-
 const ComposerCommandMenuItem = memo(function ComposerCommandMenuItem(props: {
   item: ComposerCommandItem;
   resolvedTheme: "light" | "dark";
@@ -107,13 +100,13 @@ const ComposerCommandMenuItem = memo(function ComposerCommandMenuItem(props: {
     [props.isActive],
   );
 
-  const isSlashLike =
-    props.item.type === "slash-command" || props.item.type === "provider-slash-command";
+  const { item } = props;
+  const isSlashLike = item.type === "slash-command" || item.type === "provider-slash-command";
 
   return (
     <CommandItem
       ref={scrollRef}
-      value={props.item.id}
+      value={item.id}
       className={cn(
         "cursor-pointer select-none gap-2",
         isSlashLike ? "items-start py-1.5" : "items-center",
@@ -123,47 +116,44 @@ const ComposerCommandMenuItem = memo(function ComposerCommandMenuItem(props: {
         event.preventDefault();
       }}
       onClick={() => {
-        props.onSelect(props.item);
+        props.onSelect(item);
       }}
     >
-      {props.item.type === "path" ? (
-        <VscodeEntryIcon
-          pathValue={props.item.path}
-          kind={props.item.pathKind}
-          theme={props.resolvedTheme}
-        />
+      {item.type === "path" ? (
+        <VscodeEntryIcon pathValue={item.path} kind={item.pathKind} theme={props.resolvedTheme} />
       ) : null}
-      {isSlashLike ? (
+      {item.type === "slash-command" ? (
         <div className="mt-0.5">
-          <SlashCommandIcon type={props.item.type} />
+          <ZapIcon className="size-3.5 shrink-0 text-amber-500/80" />
         </div>
       ) : null}
-      {props.item.type === "model" ? (
+      {item.type === "provider-slash-command" ? (
+        <div className="mt-0.5">
+          <TerminalIcon className="size-3.5 shrink-0 text-muted-foreground/70" />
+        </div>
+      ) : null}
+      {item.type === "model" ? (
         <Badge variant="outline" className="px-1.5 py-0 text-[10px]">
           model
         </Badge>
       ) : null}
 
-      {isSlashLike ? (
+      {item.type === "slash-command" || item.type === "provider-slash-command" ? (
         <div className="flex min-w-0 flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-sm">{props.item.label}</span>
-            {props.item.type === "provider-slash-command" && props.item.argumentHint ? (
-              <span className="text-muted-foreground/50 text-xs">{props.item.argumentHint}</span>
+            <span className="font-medium text-sm">{item.label}</span>
+            {item.type === "provider-slash-command" && item.argumentHint ? (
+              <span className="text-muted-foreground/50 text-xs">{item.argumentHint}</span>
             ) : null}
           </div>
-          <span className="text-muted-foreground/70 text-xs leading-snug">
-            {props.item.description}
-          </span>
+          <span className="text-muted-foreground/70 text-xs leading-snug">{item.description}</span>
         </div>
       ) : (
         <>
           <span className="flex min-w-0 items-center gap-1.5 truncate">
-            <span className="truncate">{props.item.label}</span>
+            <span className="truncate">{item.label}</span>
           </span>
-          <span className="truncate text-muted-foreground/70 text-xs">
-            {props.item.description}
-          </span>
+          <span className="truncate text-muted-foreground/70 text-xs">{item.description}</span>
         </>
       )}
     </CommandItem>
