@@ -149,8 +149,8 @@ interface ClaudeAccumulatedTokenCounts {
 
 interface ClaudeSessionContext {
   session: ProviderSession;
-  readonly promptQueue: Queue.Queue<PromptQueueItem>;
-  readonly query: ClaudeQueryRuntime;
+  promptQueue: Queue.Queue<PromptQueueItem>;
+  query: ClaudeQueryRuntime;
   streamFiber: Fiber.Fiber<void, Error> | undefined;
   readonly startedAt: string;
   readonly basePermissionMode: PermissionMode | undefined;
@@ -160,6 +160,7 @@ interface ClaudeSessionContext {
   readonly turns: Array<{
     id: TurnId;
     items: Array<unknown>;
+    lastAssistantUuid?: string;
   }>;
   readonly inFlightTools: Map<number, ToolInFlight>;
   turnState: ClaudeTurnState | undefined;
@@ -170,6 +171,12 @@ interface ClaudeSessionContext {
   lastAssistantUuid: string | undefined;
   lastThreadStartedId: string | undefined;
   stopped: boolean;
+  /**
+   * Base query options captured at session start, reused when restarting
+   * the SDK subprocess during rollback. Excludes `resume`, `sessionId`,
+   * and `resumeSessionAt` which are set dynamically per restart.
+   */
+  queryOptionsBase: Omit<ClaudeQueryOptions, "resume" | "sessionId" | "resumeSessionAt">;
 }
 
 interface ClaudeQueryRuntime extends AsyncIterable<SDKMessage> {
@@ -1578,6 +1585,9 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
         context.turns.push({
           id: turnState.turnId,
           items: [...turnState.items],
+          ...(context.lastAssistantUuid !== undefined
+            ? { lastAssistantUuid: context.lastAssistantUuid }
+            : {}),
         });
 
         if (usageSnapshot) {
@@ -2505,6 +2515,124 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
         sessions.delete(context.session.threadId);
       });
 
+    /**
+     * Restarts the underlying SDK subprocess for the given session context.
+     *
+     * This tears down the current query runtime (closing the child process)
+     * and spawns a fresh one with `resume` + `resumeSessionAt`, which makes
+     * the SDK reload the conversation transcript from disk and truncate it
+     * to `resumeSessionAt`. Used during rollback so the AI no longer sees
+     * messages beyond the rollback point.
+     */
+    const restartQueryRuntime = (
+      context: ClaudeSessionContext,
+      resumeSessionAt: string | undefined,
+    ): Effect.Effect<void, ProviderAdapterProcessError> =>
+      Effect.gen(function* () {
+        const threadId = context.session.threadId;
+
+        // 1. Prevent the old stream fiber's exit observer from triggering
+        //    full session teardown.
+        context.stopped = true;
+
+        // 2. Cancel pending approvals (same pattern as stopSessionInternal).
+        for (const [, pending] of context.pendingApprovals) {
+          yield* Deferred.succeed(pending.decision, "cancel");
+        }
+        context.pendingApprovals.clear();
+
+        // 3. Cancel pending user-input requests.
+        for (const [, pending] of context.pendingUserInputs) {
+          // Resolve with an empty answers object so the deferred doesn't hang.
+          yield* Deferred.succeed(pending.answers, {} as ProviderUserInputAnswers);
+        }
+        context.pendingUserInputs.clear();
+        context.inFlightTools.clear();
+
+        // 4. Shutdown old prompt queue.
+        yield* Queue.shutdown(context.promptQueue);
+
+        // 5. Interrupt old stream fiber.
+        const oldFiber = context.streamFiber;
+        context.streamFiber = undefined;
+        if (oldFiber && oldFiber.pollUnsafe() === undefined) {
+          yield* Fiber.interrupt(oldFiber);
+        }
+
+        // 6. Close old query runtime (kills the SDK subprocess).
+        // @effect-diagnostics-next-line tryCatchInEffectGen:off
+        try {
+          context.query.close();
+        } catch {
+          // Closing a stale/errored process may throw; safe to ignore.
+        }
+
+        // 7. Create a new prompt queue and async-iterable prompt stream.
+        const newPromptQueue = yield* Queue.unbounded<PromptQueueItem>();
+        const newPrompt = Stream.fromQueue(newPromptQueue).pipe(
+          Stream.filter(
+            (item): item is Extract<PromptQueueItem, { type: "message" }> =>
+              item.type === "message",
+          ),
+          Stream.map((item) => item.message),
+          Stream.catchCause((cause) =>
+            Cause.hasInterruptsOnly(cause) ? Stream.empty : Stream.failCause(cause),
+          ),
+          Stream.toAsyncIterable,
+        );
+
+        // 8. Build query options with resume + resumeSessionAt for the new subprocess.
+        const restartOptions: ClaudeQueryOptions = {
+          ...context.queryOptionsBase,
+          ...(context.resumeSessionId ? { resume: context.resumeSessionId } : {}),
+          ...(resumeSessionAt ? { resumeSessionAt } : {}),
+        };
+
+        // 9. Spawn a new SDK subprocess.
+        const newQueryRuntime = yield* Effect.try({
+          try: () =>
+            createQuery({
+              prompt: newPrompt,
+              options: restartOptions,
+            }),
+          catch: (cause) =>
+            new ProviderAdapterProcessError({
+              provider: PROVIDER,
+              threadId,
+              detail: toMessage(cause, "Failed to restart Claude runtime session for rollback."),
+              cause,
+            }),
+        });
+
+        // 10. Patch the context in-place so all existing closures
+        //     (e.g. canUseTool via contextRef) continue to work.
+        context.promptQueue = newPromptQueue;
+        context.query = newQueryRuntime;
+        context.turnState = undefined;
+        context.accumulatedTokenCounts = undefined;
+
+        // 11. Re-enable the context and start the new stream fiber.
+        context.stopped = false;
+        context.session = {
+          ...context.session,
+          status: "ready",
+          activeTurnId: undefined,
+          updatedAt: yield* nowIso,
+        };
+
+        const newStreamFiber = Effect.runFork(runSdkStream(context));
+        context.streamFiber = newStreamFiber;
+        newStreamFiber.addObserver((exit) => {
+          if (context.stopped) {
+            return;
+          }
+          if (context.streamFiber === newStreamFiber) {
+            context.streamFiber = undefined;
+          }
+          Effect.runFork(handleStreamExit(context, exit));
+        });
+      });
+
     const requireSession = (
       threadId: ThreadId,
     ): Effect.Effect<ClaudeSessionContext, ProviderAdapterError> => {
@@ -2865,7 +2993,12 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
           ...(fastMode ? { fastMode: true } : {}),
         };
 
-        const queryOptions: ClaudeQueryOptions = {
+        // Base options reusable across session restarts (e.g. during rollback).
+        // Excludes `resume`, `sessionId`, and `resumeSessionAt` which vary per start.
+        const queryOptionsBase: Omit<
+          ClaudeQueryOptions,
+          "resume" | "sessionId" | "resumeSessionAt"
+        > = {
           ...(input.cwd ? { cwd: input.cwd } : {}),
           ...(modelSelection?.model ? { model: modelSelection.model } : {}),
           pathToClaudeCodeExecutable: claudeBinaryPath,
@@ -2876,12 +3009,16 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
             ? { allowDangerouslySkipPermissions: true }
             : {}),
           ...(Object.keys(settings).length > 0 ? { settings } : {}),
-          ...(existingResumeSessionId ? { resume: existingResumeSessionId } : {}),
-          ...(newSessionId ? { sessionId: newSessionId } : {}),
           includePartialMessages: true,
           canUseTool,
           env: process.env,
           ...(input.cwd ? { additionalDirectories: [input.cwd] } : {}),
+        };
+
+        const queryOptions: ClaudeQueryOptions = {
+          ...queryOptionsBase,
+          ...(existingResumeSessionId ? { resume: existingResumeSessionId } : {}),
+          ...(newSessionId ? { sessionId: newSessionId } : {}),
         };
 
         const queryRuntime = yield* Effect.try({
@@ -2938,6 +3075,7 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
           lastAssistantUuid: resumeState?.resumeSessionAt,
           lastThreadStartedId: undefined,
           stopped: false,
+          queryOptionsBase,
         };
         yield* Ref.set(contextRef, context);
         sessions.set(threadId, context);
@@ -3124,8 +3262,30 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
     const rollbackThread: ClaudeAdapterShape["rollbackThread"] = (threadId, numTurns) =>
       Effect.gen(function* () {
         const context = yield* requireSession(threadId);
+
+        // If there's an in-flight turn, complete it first so it lands in
+        // `context.turns` before we splice.
+        if (context.turnState) {
+          yield* completeTurn(context, "interrupted", "Rollback requested.");
+        }
+
         const nextLength = Math.max(0, context.turns.length - numTurns);
+
+        // Determine the assistant message UUID at the rollback target so the
+        // SDK can truncate its transcript on restart.
+        const targetTurn = nextLength > 0 ? context.turns[nextLength - 1] : undefined;
+        const targetAssistantUuid = targetTurn?.lastAssistantUuid;
+
+        // Truncate local turn bookkeeping.
         context.turns.splice(nextLength);
+        context.lastAssistantUuid = targetAssistantUuid;
+
+        // Restart the SDK subprocess with `resume` + `resumeSessionAt` so the
+        // underlying CLI reloads the conversation transcript from disk and
+        // truncates it to the rollback point.  After this, the AI will no
+        // longer see any messages beyond `targetAssistantUuid`.
+        yield* restartQueryRuntime(context, targetAssistantUuid);
+
         yield* updateResumeCursor(context);
         return yield* snapshotThread(context);
       });

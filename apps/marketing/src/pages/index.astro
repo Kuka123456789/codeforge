@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import MockDemo from "../components/MockDemo.astro";
 ---
 
 <Layout>
@@ -18,9 +19,7 @@ import Layout from "../layouts/Layout.astro";
 
   <a href="/download" class="other-platforms">Other platforms</a>
 
-  <div class="screenshot-wrap">
-    <img src="/screenshot.jpeg" alt="CodeForge" class="screenshot" />
-  </div>
+  <MockDemo />
 
   <!-- ── Features / Differentiators ── -->
   <section class="features">
@@ -232,50 +231,6 @@ import Layout from "../layouts/Layout.astro";
   .other-platforms:hover {
     color: var(--fg-muted);
     text-decoration-color: var(--fg-muted);
-  }
-
-  /* ── Screenshot ── */
-
-  .screenshot-wrap {
-    margin: 0 auto;
-    width: min(95vw, 1400px);
-    opacity: 0;
-    transform: scale(0.98);
-    animation: screenshot-in 1s ease-out 0.15s forwards;
-  }
-
-  .screenshot {
-    width: 100%;
-    display: block;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-  }
-
-  .screenshot-wrap::after {
-    content: "";
-    display: block;
-    width: 100%;
-    height: 120px;
-    background: inherit;
-    margin-top: -1px;
-    opacity: 0.04;
-    transform: scaleY(-1);
-    mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
-    -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 60%);
-    pointer-events: none;
-  }
-
-  @keyframes screenshot-in {
-    from {
-      opacity: 0;
-      transform: scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
   }
 
   /* ── Features ── */
