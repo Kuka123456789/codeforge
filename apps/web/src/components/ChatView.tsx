@@ -142,6 +142,8 @@ import {
   type TerminalContextSelection,
 } from "../lib/terminalContext";
 import { deriveLatestContextWindowSnapshot } from "../lib/contextWindow";
+import { useCopyToClipboard } from "../hooks/useCopyToClipboard";
+import { getFallbackThreadIdAfterArchive } from "./Sidebar.logic";
 import { shouldUseCompactComposerFooter } from "./composerFooterLayout";
 import { selectThreadTerminalState, useTerminalStateStore } from "../terminalStateStore";
 import { ComposerPromptEditor, type ComposerPromptEditorHandle } from "./ComposerPromptEditor";
@@ -1200,6 +1202,110 @@ export default function ChatView({ threadId }: ChatViewProps) {
       },
     });
   }, [diffOpen, navigate, threadId]);
+
+  // ── Thread action handlers (archive, delete, copy) ──────────────────
+  const activeThreadWorkspacePath =
+    activeThread?.worktreePath ?? activeProject?.cwd ?? null;
+
+  const archiveThread = useCallback(
+    async (tid: ThreadId): Promise<void> => {
+      const api = readNativeApi();
+      if (!api) return;
+      const fallbackThreadId = getFallbackThreadIdAfterArchive({
+        threads,
+        archivedThreadId: tid,
+        sortOrder: settings.sidebarThreadSortOrder,
+      });
+      await api.orchestration.dispatchCommand({
+        type: "thread.archive",
+        commandId: newCommandId(),
+        threadId: tid,
+      });
+      if (fallbackThreadId) {
+        void navigate({
+          to: "/$threadId",
+          params: { threadId: fallbackThreadId },
+          replace: true,
+        });
+      } else {
+        void navigate({ to: "/", replace: true });
+      }
+    },
+    [navigate, settings.sidebarThreadSortOrder, threads],
+  );
+
+  const unarchiveThread = useCallback(async (tid: ThreadId): Promise<void> => {
+    const api = readNativeApi();
+    if (!api) return;
+    await api.orchestration.dispatchCommand({
+      type: "thread.unarchive",
+      commandId: newCommandId(),
+      threadId: tid,
+    });
+  }, []);
+
+  const deleteThreadFromHeader = useCallback(
+    async (tid: ThreadId): Promise<void> => {
+      const api = readNativeApi();
+      if (!api) return;
+      const thread = threads.find((t) => t.id === tid);
+      if (!thread) return;
+      if (settings.confirmThreadDelete) {
+        const confirmed = await api.dialogs.confirm(
+          [
+            `Delete thread "${thread.title}"?`,
+            "This permanently clears conversation history for this thread.",
+          ].join("\n"),
+        );
+        if (!confirmed) return;
+      }
+      await api.orchestration.dispatchCommand({
+        type: "thread.delete",
+        commandId: newCommandId(),
+        threadId: tid,
+      });
+      void navigate({ to: "/", replace: true });
+    },
+    [navigate, settings.confirmThreadDelete, threads],
+  );
+
+  const { copyToClipboard: copyPathToClipboard } = useCopyToClipboard<{
+    path: string;
+  }>({
+    onCopy: (ctx) => {
+      toastManager.add({
+        type: "success",
+        title: "Path copied",
+        description: ctx.path,
+      });
+    },
+    onError: (error) => {
+      toastManager.add({
+        type: "error",
+        title: "Failed to copy path",
+        description: error instanceof Error ? error.message : "An error occurred.",
+      });
+    },
+  });
+
+  const { copyToClipboard: copyThreadIdToClipboard } = useCopyToClipboard<{
+    threadId: ThreadId;
+  }>({
+    onCopy: (ctx) => {
+      toastManager.add({
+        type: "success",
+        title: "Thread ID copied",
+        description: ctx.threadId,
+      });
+    },
+    onError: (error) => {
+      toastManager.add({
+        type: "error",
+        title: "Failed to copy thread ID",
+        description: error instanceof Error ? error.message : "An error occurred.",
+      });
+    },
+  });
 
   const envLocked = Boolean(
     activeThread &&
@@ -3585,6 +3691,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
           activeThreadId={activeThread.id}
           activeThreadTitle={activeThread.title}
           activeProjectName={activeProject?.name}
+          isArchived={activeThread.archivedAt !== null}
+          workspacePath={activeThreadWorkspacePath}
           isGitRepo={isGitRepo}
           openInCwd={gitCwd}
           activeProjectScripts={activeProject?.scripts}
@@ -3607,16 +3715,21 @@ export default function ChatView({ threadId }: ChatViewProps) {
           onDeleteProjectScript={deleteProjectScript}
           onToggleTerminal={toggleTerminalVisibility}
           onToggleDiff={onToggleDiff}
-          onRenameThread={async (threadId, newTitle) => {
+          onRenameThread={async (tid, newTitle) => {
             const api = readNativeApi();
             if (!api) return;
             await api.orchestration.dispatchCommand({
               type: "thread.meta.update",
               commandId: newCommandId(),
-              threadId,
+              threadId: tid,
               title: newTitle,
             });
           }}
+          onArchiveThread={archiveThread}
+          onUnarchiveThread={unarchiveThread}
+          onDeleteThread={deleteThreadFromHeader}
+          onCopyPath={(path) => copyPathToClipboard(path, { path })}
+          onCopyThreadId={(tid) => copyThreadIdToClipboard(tid, { threadId: tid })}
         />
       </header>
 

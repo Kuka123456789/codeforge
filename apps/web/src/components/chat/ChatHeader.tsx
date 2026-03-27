@@ -223,6 +223,77 @@ export const ChatHeader = memo(function ChatHeader({
                 : "Toggle diff panel"}
           </TooltipPopup>
         </Tooltip>
+        <Menu>
+          <MenuTrigger
+            render={
+              <Button
+                size="xs"
+                variant="outline"
+                className="shrink-0"
+                aria-label="Thread actions"
+              />
+            }
+          >
+            <EllipsisIcon className="size-3" />
+          </MenuTrigger>
+          <MenuPopup align="end">
+            <MenuItem
+              onClick={() => {
+                setIsEditing(true);
+              }}
+            >
+              <PencilIcon />
+              Rename
+            </MenuItem>
+            {isArchived ? (
+              <MenuItem
+                onClick={() => {
+                  void onUnarchiveThread?.(activeThreadId);
+                }}
+              >
+                <ArchiveRestoreIcon />
+                Unarchive
+              </MenuItem>
+            ) : (
+              <MenuItem
+                onClick={() => {
+                  void onArchiveThread?.(activeThreadId);
+                }}
+              >
+                <ArchiveIcon />
+                Archive
+              </MenuItem>
+            )}
+            {workspacePath && (
+              <MenuItem
+                onClick={() => {
+                  onCopyPath?.(workspacePath);
+                }}
+              >
+                <ClipboardCopyIcon />
+                Copy Path
+              </MenuItem>
+            )}
+            <MenuItem
+              onClick={() => {
+                onCopyThreadId?.(activeThreadId);
+              }}
+            >
+              <HashIcon />
+              Copy Thread ID
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem
+              variant="destructive"
+              onClick={() => {
+                void onDeleteThread?.(activeThreadId);
+              }}
+            >
+              <Trash2Icon />
+              Delete
+            </MenuItem>
+          </MenuPopup>
+        </Menu>
       </div>
     </div>
   );
