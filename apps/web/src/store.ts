@@ -4,6 +4,7 @@ import {
   ThreadId,
   type OrchestrationReadModel,
   type OrchestrationSessionStatus,
+  type OrchestrationThreadActivity,
 } from "@codeforge/contracts";
 import { resolveModelSlugForProvider } from "@codeforge/shared/model";
 import { create } from "zustand";
@@ -307,6 +308,18 @@ export function syncServerReadModel(state: AppState, readModel: OrchestrationRea
             ...(message.streaming ? {} : { completedAt: message.updatedAt }),
             ...(attachments && attachments.length > 0 ? { attachments } : {}),
           };
+          // Prevent text "rewinding" during streaming: if the client has
+          // accumulated more text via direct delta application than the
+          // snapshot contains, keep the longer client-side text.
+          const existingMsg = existing?.messages.find((m) => m.id === message.id);
+          if (
+            existingMsg &&
+            existingMsg.streaming &&
+            message.streaming &&
+            existingMsg.text.length > normalizedMessage.text.length
+          ) {
+            return { ...normalizedMessage, text: existingMsg.text };
+          }
           return normalizedMessage;
         }),
         proposedPlans: thread.proposedPlans.map((proposedPlan) => ({
@@ -367,6 +380,109 @@ export function syncServerReadModel(state: AppState, readModel: OrchestrationRea
     threads,
     threadsHydrated: true,
   };
+}
+
+// ── Streaming delta payload ─────────────────────────────────────────
+// Mirrors the fields from ThreadMessageSentPayload that the client needs
+// for direct delta application without a full snapshot fetch.
+
+export interface StreamingDeltaPayload {
+  readonly threadId: ThreadId;
+  readonly messageId: string;
+  readonly role: "user" | "assistant" | "system";
+  readonly text: string;
+  readonly attachments?:
+    | ReadonlyArray<{
+        readonly type: "image";
+        readonly id: string;
+        readonly name: string;
+        readonly mimeType: string;
+        readonly sizeBytes: number;
+      }>
+    | undefined;
+  readonly turnId: string | null;
+  readonly streaming: boolean;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+/**
+ * Apply a streaming text delta directly to client state, avoiding a full
+ * snapshot round-trip. Mirrors the server projector logic in
+ * `apps/server/src/orchestration/projector.ts` (lines 426-446).
+ */
+export function applyStreamingDelta(state: AppState, payload: StreamingDeltaPayload): AppState {
+  const threadIndex = state.threads.findIndex((t) => t.id === payload.threadId);
+  if (threadIndex === -1) {
+    // Thread not yet in client state — the next snapshot sync will pick it up.
+    return state;
+  }
+
+  const thread = state.threads[threadIndex]!;
+  const existingMessage = thread.messages.find((m) => m.id === payload.messageId);
+
+  let nextMessages: ChatMessage[];
+
+  if (existingMessage) {
+    // Mirror server projector: append delta when streaming, replace on finalize.
+    nextMessages = thread.messages.map((m) => {
+      if (m.id !== payload.messageId) return m;
+      return {
+        ...m,
+        text: payload.streaming
+          ? `${m.text}${payload.text}`
+          : payload.text.length > 0
+            ? payload.text
+            : m.text,
+        streaming: payload.streaming,
+        ...(payload.streaming ? {} : { completedAt: payload.updatedAt }),
+      };
+    });
+  } else {
+    // New message — create entry (mirrors projector's append path).
+    const attachments = payload.attachments?.map((a) => ({
+      ...a,
+      previewUrl: toAttachmentPreviewUrl(attachmentPreviewRoutePath(a.id)),
+    }));
+    const newMessage: ChatMessage = {
+      id: payload.messageId as ChatMessage["id"],
+      role: payload.role,
+      text: payload.text,
+      createdAt: payload.createdAt,
+      streaming: payload.streaming,
+      ...(payload.streaming ? {} : { completedAt: payload.updatedAt }),
+      ...(attachments && attachments.length > 0 ? { attachments } : {}),
+    };
+    nextMessages = [...thread.messages, newMessage];
+  }
+
+  const nextThreads = [...state.threads];
+  nextThreads[threadIndex] = {
+    ...thread,
+    messages: nextMessages,
+  };
+
+  return { ...state, threads: nextThreads };
+}
+
+/**
+ * Apply an activity event directly to client state during streaming,
+ * keeping the activity feed live without a full snapshot fetch.
+ */
+export function applyActivityDelta(
+  state: AppState,
+  payload: { threadId: ThreadId; activity: OrchestrationThreadActivity },
+): AppState {
+  const threadIndex = state.threads.findIndex((t) => t.id === payload.threadId);
+  if (threadIndex === -1) return state;
+
+  const thread = state.threads[threadIndex]!;
+  const nextThreads = [...state.threads];
+  nextThreads[threadIndex] = {
+    ...thread,
+    activities: [...thread.activities, payload.activity],
+  };
+  return { ...state, threads: nextThreads };
 }
 
 export function markThreadVisited(
@@ -499,6 +615,11 @@ export function setThreadBranch(
 
 interface AppStore extends AppState {
   syncServerReadModel: (readModel: OrchestrationReadModel) => void;
+  applyStreamingDelta: (payload: StreamingDeltaPayload) => void;
+  applyActivityDelta: (payload: {
+    threadId: ThreadId;
+    activity: OrchestrationThreadActivity;
+  }) => void;
   markThreadVisited: (threadId: ThreadId, visitedAt?: string) => void;
   markThreadUnread: (threadId: ThreadId) => void;
   toggleProject: (projectId: Project["id"]) => void;
@@ -512,6 +633,8 @@ interface AppStore extends AppState {
 export const useStore = create<AppStore>((set) => ({
   ...readPersistedState(),
   syncServerReadModel: (readModel) => set((state) => syncServerReadModel(state, readModel)),
+  applyStreamingDelta: (payload) => set((state) => applyStreamingDelta(state, payload)),
+  applyActivityDelta: (payload) => set((state) => applyActivityDelta(state, payload)),
   markThreadVisited: (threadId, visitedAt) =>
     set((state) => markThreadVisited(state, threadId, visitedAt)),
   markThreadUnread: (threadId) => set((state) => markThreadUnread(state, threadId)),

@@ -133,6 +133,8 @@ function errorDetails(error: unknown): string {
 
 function EventRouter() {
   const syncServerReadModel = useStore((store) => store.syncServerReadModel);
+  const applyStreamingDelta = useStore((store) => store.applyStreamingDelta);
+  const applyActivityDelta = useStore((store) => store.applyActivityDelta);
   const setProjectExpanded = useStore((store) => store.setProjectExpanded);
   const removeOrphanedTerminalStates = useTerminalStateStore(
     (store) => store.removeOrphanedTerminalStates,
@@ -212,9 +214,33 @@ function EventRouter() {
         return;
       }
       latestSequence = event.sequence;
+
+      // ── Streaming delta: apply directly, skip full snapshot fetch ──
+      if (event.type === "thread.message-sent") {
+        const payload = event.payload;
+        applyStreamingDelta(payload);
+        if (!payload.streaming) {
+          // Final message (streaming=false): schedule a snapshot sync for
+          // eventual consistency (picks up session state, proposed plans, etc.).
+          domainEventFlushThrottler.maybeExecute();
+        }
+        return;
+      }
+
+      // ── Activity appended: apply directly to keep feed live ──
+      if (event.type === "thread.activity-appended") {
+        applyActivityDelta(event.payload);
+        // Still schedule a throttled snapshot sync for other state.
+        domainEventFlushThrottler.maybeExecute();
+        return;
+      }
+
+      // ── Turn completion / revert: full sync + provider invalidation ──
       if (event.type === "thread.turn-diff-completed" || event.type === "thread.reverted") {
         needsProviderInvalidation = true;
       }
+
+      // All other events: throttled snapshot sync (existing behavior).
       domainEventFlushThrottler.maybeExecute();
     });
     const unsubTerminalEvent = api.terminal.onEvent((event) => {
@@ -329,6 +355,8 @@ function EventRouter() {
     removeOrphanedTerminalStates,
     setProjectExpanded,
     syncServerReadModel,
+    applyStreamingDelta,
+    applyActivityDelta,
   ]);
 
   return null;
