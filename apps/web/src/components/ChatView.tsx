@@ -891,28 +891,42 @@ export default function ChatView({ threadId }: ChatViewProps) {
       deriveTimelineEntries(timelineMessages, activeThread?.proposedPlans ?? [], workLogEntries),
     [activeThread?.proposedPlans, timelineMessages, workLogEntries],
   );
-  const lastUserTimelineEntry = useMemo(() => {
-    for (let i = timelineEntries.length - 1; i >= 0; i--) {
+  // All user message entries with their timeline indices, ordered chronologically.
+  const userTimelineEntries = useMemo(() => {
+    const entries: { entry: (typeof timelineEntries)[number]; index: number }[] = [];
+    for (let i = 0; i < timelineEntries.length; i++) {
       const entry = timelineEntries[i];
-      if (entry?.kind === "message" && entry.message.role === "user") return { entry, index: i };
+      if (entry?.kind === "message" && entry.message.role === "user") {
+        entries.push({ entry, index: i });
+      }
     }
-    return null;
+    return entries;
   }, [timelineEntries]);
-  const lastUserMessageIdRef = useRef<string | null>(null);
-  const prevLastUserMessageId = lastUserMessageIdRef.current;
-  const nextLastUserMessageId = lastUserTimelineEntry?.entry.message.id ?? null;
-  lastUserMessageIdRef.current = nextLastUserMessageId;
-  // Reset dismiss state when a new user message appears.
-  if (nextLastUserMessageId !== prevLastUserMessageId) {
-    setPinnedPromptDismissed(false);
-  }
+  const userTimelineEntriesRef = useRef(userTimelineEntries);
+  userTimelineEntriesRef.current = userTimelineEntries;
+
+  // The pinned prompt is determined dynamically on scroll — it's the most
+  // recent user message whose DOM element is above the viewport (or
+  // virtualized away). Stored as state so the banner can render it.
+  const [pinnedEntry, setPinnedEntry] = useState<{
+    entry: (typeof timelineEntries)[number];
+    index: number;
+  } | null>(null);
   const pinnedPromptText = useMemo(
     () =>
-      lastUserTimelineEntry
-        ? deriveDisplayedUserMessageState(lastUserTimelineEntry.entry.message.text).visibleText
+      pinnedEntry?.entry.kind === "message"
+        ? deriveDisplayedUserMessageState(pinnedEntry.entry.message.text).visibleText
         : "",
-    [lastUserTimelineEntry],
+    [pinnedEntry],
   );
+  // Reset dismiss when the pinned message changes.
+  const pinnedMessageIdRef = useRef<string | null>(null);
+  const nextPinnedMessageId =
+    pinnedEntry?.entry.kind === "message" ? pinnedEntry.entry.message.id : null;
+  if (nextPinnedMessageId !== pinnedMessageIdRef.current) {
+    pinnedMessageIdRef.current = nextPinnedMessageId;
+    setPinnedPromptDismissed(false);
+  }
 
   const { turnDiffSummaries, inferredCheckpointTurnCountByTurnId } =
     useTurnDiffSummaries(activeThread);
@@ -1772,27 +1786,36 @@ export default function ChatView({ threadId }: ChatViewProps) {
 
     setShowScrollToBottom(!shouldAutoScrollRef.current);
 
-    // Check if the last user message has scrolled above the viewport.
-    const messageId = lastUserMessageIdRef.current;
-    if (messageId) {
-      const el = scrollContainer.querySelector(`[data-message-id="${messageId}"]`);
+    // Find the most recent user message that is above the viewport.
+    // Walk backwards through user messages; the first one whose DOM element
+    // is either absent (virtualized away above) or fully above the viewport
+    // top becomes the pinned prompt.
+    const entries = userTimelineEntriesRef.current;
+    const containerTop = scrollContainer.getBoundingClientRect().top;
+    let foundPinned: (typeof entries)[number] | null = null;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const { entry } = entries[i]!;
+      if (entry.kind !== "message") continue;
+      const el = scrollContainer.querySelector(`[data-message-id="${entry.message.id}"]`);
       if (!el) {
-        // Element is virtualized away (above viewport) — show pinned banner.
-        setShowPinnedPrompt(true);
-      } else {
-        const containerRect = scrollContainer.getBoundingClientRect();
-        setShowPinnedPrompt(el.getBoundingClientRect().bottom < containerRect.top);
+        // Virtualized away — must be above the viewport.
+        foundPinned = entries[i]!;
+        break;
       }
-    } else {
-      setShowPinnedPrompt(false);
+      if (el.getBoundingClientRect().bottom < containerTop) {
+        foundPinned = entries[i]!;
+        break;
+      }
     }
+    setPinnedEntry(foundPinned);
+    setShowPinnedPrompt(foundPinned !== null);
 
     lastKnownScrollTopRef.current = currentScrollTop;
   }, []);
-  const handleScrollToLastUserMessage = useCallback(() => {
-    if (lastUserTimelineEntry === null) return;
-    setScrollToRowIndex(lastUserTimelineEntry.index);
-  }, [lastUserTimelineEntry]);
+  const handleScrollToPinnedMessage = useCallback(() => {
+    if (pinnedEntry === null) return;
+    setScrollToRowIndex(pinnedEntry.index);
+  }, [pinnedEntry]);
   const handleScrollToRowComplete = useCallback(() => {
     setScrollToRowIndex(null);
   }, []);
@@ -3652,12 +3675,12 @@ export default function ChatView({ threadId }: ChatViewProps) {
               />
             </div>
 
-            {/* Pinned last user prompt — shown when user's last message is above the viewport */}
-            {lastUserTimelineEntry && (
+            {/* Pinned prompt — shows the most recent user message above the viewport */}
+            {userTimelineEntries.length > 0 && (
               <PinnedUserPromptBanner
                 visible={showPinnedPrompt && !pinnedPromptDismissed}
                 text={pinnedPromptText}
-                onScrollToMessage={handleScrollToLastUserMessage}
+                onScrollToMessage={handleScrollToPinnedMessage}
                 onDismiss={handleDismissPinnedPrompt}
               />
             )}
