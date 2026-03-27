@@ -21,6 +21,65 @@ import Layout from "../layouts/Layout.astro";
   <div class="screenshot-wrap">
     <img src="/screenshot.jpeg" alt="CodeForge" class="screenshot" />
   </div>
+
+  <!-- ── Features / Differentiators ── -->
+  <section class="features">
+    <h2 class="features-heading">What sets CodeForge apart</h2>
+
+    <div class="features-grid">
+      <div class="feature-card feature-card--highlight">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 17v5" /><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3.76z" />
+            <path d="m6 22 3-3" /><path d="m18 22-3-3" />
+          </svg>
+        </div>
+        <h3 class="feature-title">Pin messages &amp; responses</h3>
+        <p class="feature-desc">
+          Pin any message or selected text to keep important context visible.
+          No more scrolling back through long conversations to find that key insight.
+        </p>
+        <span class="feature-badge">Unique to CodeForge</span>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="3" width="20" height="14" rx="2" /><path d="M8 21h8" /><path d="M12 17v4" />
+          </svg>
+        </div>
+        <h3 class="feature-title">Multi-provider support</h3>
+        <p class="feature-desc">
+          Use Codex, Claude, and more from one interface. Switch models mid-conversation without losing context.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06" />
+            <path d="M10 2c1 .5 2 2 2 5" />
+          </svg>
+        </div>
+        <h3 class="feature-title">Native desktop app</h3>
+        <p class="feature-desc">
+          Fast, native experience on macOS, Windows, and Linux. Not another Electron wrapper — built for performance.
+        </p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="3" /><path d="M12 1v6" /><path d="M12 17v6" /><path d="m4.22 4.22 4.24 4.24" /><path d="m15.54 15.54 4.24 4.24" /><path d="M1 12h6" /><path d="M17 12h6" /><path d="m4.22 19.78 4.24-4.24" /><path d="m15.54 8.46 4.24-4.24" />
+          </svg>
+        </div>
+        <h3 class="feature-title">Real-time streaming</h3>
+        <p class="feature-desc">
+          Watch AI work in real time with live activity feeds, inline diffs, and an integrated terminal.
+        </p>
+      </div>
+    </div>
+  </section>
 </Layout>
 
 <script>
@@ -219,6 +278,89 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
+  /* ── Features ── */
+
+  .features {
+    width: min(90vw, 1100px);
+    margin: 8vh auto 0;
+    opacity: 0;
+    animation: fade-in 1s ease-out 0.5s forwards;
+  }
+
+  .features-heading {
+    font-size: clamp(1.15rem, 2.5vw, 1.5rem);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    color: var(--fg-muted);
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+
+  .feature-card {
+    position: relative;
+    padding: 1.75rem;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.015);
+    transition: border-color 0.3s ease, background 0.3s ease;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .feature-card--highlight {
+    border-color: rgba(245, 158, 11, 0.2);
+    background: rgba(245, 158, 11, 0.03);
+  }
+
+  .feature-card--highlight:hover {
+    border-color: rgba(245, 158, 11, 0.35);
+    background: rgba(245, 158, 11, 0.05);
+  }
+
+  .feature-icon {
+    color: var(--fg-dim);
+    margin-bottom: 1rem;
+  }
+
+  .feature-card--highlight .feature-icon {
+    color: #f59e0b;
+  }
+
+  .feature-title {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-desc {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--fg-muted);
+  }
+
+  .feature-badge {
+    display: inline-block;
+    margin-top: 0.85rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+  }
+
   /* ── Mobile ── */
 
   @media (max-width: 640px) {
@@ -232,6 +374,14 @@ import Layout from "../layouts/Layout.astro";
 
     .screenshot-wrap {
       width: 95vw;
+    }
+
+    .features {
+      margin-top: 5vh;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
