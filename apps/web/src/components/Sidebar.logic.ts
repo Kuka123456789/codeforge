@@ -1,4 +1,7 @@
-import type { SidebarProjectSortOrder, SidebarThreadSortOrder } from "@t3tools/contracts/settings";
+import type {
+  SidebarProjectSortOrder,
+  SidebarThreadSortOrder,
+} from "@codeforge/contracts/settings";
 import type { Thread } from "../types";
 import { cn } from "../lib/utils";
 import {

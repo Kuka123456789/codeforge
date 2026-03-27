@@ -39,8 +39,8 @@ import {
   TurnId,
   type UserInputQuestion,
   ClaudeCodeEffort,
-} from "@t3tools/contracts";
-import { hasEffortLevel, applyClaudePromptEffortPrefix, trimOrNull } from "@t3tools/shared/model";
+} from "@codeforge/contracts";
+import { hasEffortLevel, applyClaudePromptEffortPrefix, trimOrNull } from "@codeforge/shared/model";
 import {
   Cause,
   DateTime,

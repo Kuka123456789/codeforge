@@ -5,7 +5,7 @@ import {
   MessageId,
   ProjectId,
   ThreadId,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 

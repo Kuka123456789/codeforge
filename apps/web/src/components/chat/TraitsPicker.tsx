@@ -5,14 +5,14 @@ import {
   type ProviderModelOptions,
   type ServerProviderModel,
   type ThreadId,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import {
   applyClaudePromptEffortPrefix,
   isClaudeUltrathinkPrompt,
   trimOrNull,
   getDefaultEffort,
   hasEffortLevel,
-} from "@t3tools/shared/model";
+} from "@codeforge/shared/model";
 import { memo, useCallback, useState } from "react";
 import type { VariantProps } from "class-variance-authority";
 import { ChevronDownIcon } from "lucide-react";

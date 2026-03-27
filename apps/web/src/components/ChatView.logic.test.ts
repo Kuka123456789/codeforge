@@ -1,4 +1,4 @@
-import { ThreadId } from "@t3tools/contracts";
+import { ThreadId } from "@codeforge/contracts";
 import { describe, expect, it } from "vitest";
 
 import { buildExpiredTerminalContextToastCopy, deriveComposerSendState } from "./ChatView.logic";

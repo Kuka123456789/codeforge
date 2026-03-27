@@ -1,4 +1,4 @@
-import type { ThreadId } from "@t3tools/contracts";
+import type { ThreadId } from "@codeforge/contracts";
 import { create } from "zustand";
 
 interface SendStatusState {

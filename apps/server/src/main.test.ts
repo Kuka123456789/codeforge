@@ -1,7 +1,7 @@
 import * as Http from "node:http";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, it, vi } from "@effect/vitest";
-import type { OrchestrationReadModel } from "@t3tools/contracts";
+import type { OrchestrationReadModel } from "@codeforge/contracts";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -9,9 +9,9 @@ import * as Layer from "effect/Layer";
 import * as Command from "effect/unstable/cli/Command";
 import { FetchHttpClient } from "effect/unstable/http";
 import { beforeEach } from "vitest";
-import { NetService } from "@t3tools/shared/Net";
+import { NetService } from "@codeforge/shared/Net";
 
-import { CliConfig, recordStartupHeartbeat, t3Cli, type CliConfigShape } from "./main";
+import { CliConfig, recordStartupHeartbeat, codeforgeCli, type CliConfigShape } from "./main";
 import { ServerConfig, type ServerConfigShape } from "./config";
 import { Open, type OpenShape } from "./open";
 import { ProjectionSnapshotQuery } from "./orchestration/Services/ProjectionSnapshotQuery";
@@ -61,9 +61,9 @@ const testLayer = Layer.mergeAll(
 
 const runCli = (
   args: ReadonlyArray<string>,
-  env: Record<string, string> = { T3CODE_NO_BROWSER: "true" },
+  env: Record<string, string> = { CODEFORGE_NO_BROWSER: "true" },
 ) => {
-  return Command.runWith(t3Cli, { version: "0.0.0-test" })(args).pipe(
+  return Command.runWith(codeforgeCli, { version: "0.0.0-test" })(args).pipe(
     Effect.provide(
       ConfigProvider.layer(
         ConfigProvider.fromEnv({
@@ -130,13 +130,13 @@ it.layer(testLayer)("server CLI command", (it) => {
   it.effect("uses env fallbacks when flags are not provided", () =>
     Effect.gen(function* () {
       yield* runCli([], {
-        T3CODE_MODE: "desktop",
-        T3CODE_PORT: "4999",
-        T3CODE_HOST: "100.88.10.4",
-        T3CODE_HOME: "/tmp/t3-env-home",
+        CODEFORGE_MODE: "desktop",
+        CODEFORGE_PORT: "4999",
+        CODEFORGE_HOST: "100.88.10.4",
+        CODEFORGE_HOME: "/tmp/t3-env-home",
         VITE_DEV_SERVER_URL: "http://localhost:5173",
-        T3CODE_NO_BROWSER: "true",
-        T3CODE_AUTH_TOKEN: "env-token",
+        CODEFORGE_NO_BROWSER: "true",
+        CODEFORGE_AUTH_TOKEN: "env-token",
       });
 
       assert.equal(start.mock.calls.length, 1);
@@ -167,10 +167,10 @@ it.layer(testLayer)("server CLI command", (it) => {
       const fd = yield* openBootstrapFd({ authToken: "bootstrap-token" });
 
       yield* runCli([], {
-        T3CODE_MODE: "web",
-        T3CODE_BOOTSTRAP_FD: String(fd),
-        T3CODE_AUTH_TOKEN: "env-token",
-        T3CODE_NO_BROWSER: "true",
+        CODEFORGE_MODE: "web",
+        CODEFORGE_BOOTSTRAP_FD: String(fd),
+        CODEFORGE_AUTH_TOKEN: "env-token",
+        CODEFORGE_NO_BROWSER: "true",
       });
 
       assert.equal(start.mock.calls.length, 1);
@@ -185,7 +185,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         mode: "desktop",
         port: 4888,
         host: "127.0.0.2",
-        t3Home: "/tmp/t3-bootstrap-home",
+        codeforgeHome: "/tmp/t3-bootstrap-home",
         devUrl: "http://127.0.0.1:5173",
         noBrowser: true,
         authToken: "bootstrap-token",
@@ -194,7 +194,7 @@ it.layer(testLayer)("server CLI command", (it) => {
       });
 
       yield* runCli([], {
-        T3CODE_BOOTSTRAP_FD: String(fd),
+        CODEFORGE_BOOTSTRAP_FD: String(fd),
       });
 
       assert.equal(start.mock.calls.length, 1);
@@ -217,7 +217,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         mode: "desktop",
         port: 4888,
         host: "127.0.0.2",
-        t3Home: "/tmp/t3-bootstrap-home",
+        codeforgeHome: "/tmp/t3-bootstrap-home",
         devUrl: "http://127.0.0.1:5173",
         noBrowser: false,
         authToken: "bootstrap-token",
@@ -226,12 +226,12 @@ it.layer(testLayer)("server CLI command", (it) => {
       });
 
       yield* runCli(["--port", "4999", "--host", "0.0.0.0", "--auth-token", "cli-token"], {
-        T3CODE_MODE: "web",
-        T3CODE_BOOTSTRAP_FD: String(fd),
-        T3CODE_HOME: "/tmp/t3-env-home",
-        T3CODE_NO_BROWSER: "true",
-        T3CODE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
-        T3CODE_LOG_WS_EVENTS: "true",
+        CODEFORGE_MODE: "web",
+        CODEFORGE_BOOTSTRAP_FD: String(fd),
+        CODEFORGE_HOME: "/tmp/t3-env-home",
+        CODEFORGE_NO_BROWSER: "true",
+        CODEFORGE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
+        CODEFORGE_LOG_WS_EVENTS: "true",
       });
 
       assert.equal(start.mock.calls.length, 1);
@@ -247,12 +247,12 @@ it.layer(testLayer)("server CLI command", (it) => {
     }),
   );
 
-  it.effect("prefers --mode over T3CODE_MODE", () =>
+  it.effect("prefers --mode over CODEFORGE_MODE", () =>
     Effect.gen(function* () {
       findAvailablePort.mockImplementation((_preferred: number) => Effect.succeed(4666));
       yield* runCli(["--mode", "web"], {
-        T3CODE_MODE: "desktop",
-        T3CODE_NO_BROWSER: "true",
+        CODEFORGE_MODE: "desktop",
+        CODEFORGE_NO_BROWSER: "true",
       });
 
       assert.deepStrictEqual(findAvailablePort.mock.calls, [[3773]]);
@@ -263,10 +263,10 @@ it.layer(testLayer)("server CLI command", (it) => {
     }),
   );
 
-  it.effect("prefers --no-browser over T3CODE_NO_BROWSER", () =>
+  it.effect("prefers --no-browser over CODEFORGE_NO_BROWSER", () =>
     Effect.gen(function* () {
       yield* runCli(["--no-browser"], {
-        T3CODE_NO_BROWSER: "false",
+        CODEFORGE_NO_BROWSER: "false",
       });
 
       assert.equal(start.mock.calls.length, 1);
@@ -289,8 +289,8 @@ it.layer(testLayer)("server CLI command", (it) => {
   it.effect("uses fixed localhost defaults in desktop mode", () =>
     Effect.gen(function* () {
       yield* runCli([], {
-        T3CODE_MODE: "desktop",
-        T3CODE_NO_BROWSER: "true",
+        CODEFORGE_MODE: "desktop",
+        CODEFORGE_NO_BROWSER: "true",
       });
 
       assert.equal(findAvailablePort.mock.calls.length, 0);
@@ -304,8 +304,8 @@ it.layer(testLayer)("server CLI command", (it) => {
   it.effect("allows overriding desktop host with --host", () =>
     Effect.gen(function* () {
       yield* runCli(["--host", "0.0.0.0"], {
-        T3CODE_MODE: "desktop",
-        T3CODE_NO_BROWSER: "true",
+        CODEFORGE_MODE: "desktop",
+        CODEFORGE_NO_BROWSER: "true",
       });
 
       assert.equal(start.mock.calls.length, 1);
@@ -317,10 +317,10 @@ it.layer(testLayer)("server CLI command", (it) => {
   it.effect("supports CLI and env for bootstrap/log websocket toggles", () =>
     Effect.gen(function* () {
       yield* runCli(["--auto-bootstrap-project-from-cwd"], {
-        T3CODE_MODE: "desktop",
-        T3CODE_LOG_WS_EVENTS: "false",
-        T3CODE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
-        T3CODE_NO_BROWSER: "true",
+        CODEFORGE_MODE: "desktop",
+        CODEFORGE_LOG_WS_EVENTS: "false",
+        CODEFORGE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "false",
+        CODEFORGE_NO_BROWSER: "true",
       });
 
       assert.equal(start.mock.calls.length, 1);

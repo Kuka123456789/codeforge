@@ -1,4 +1,4 @@
-import type { GitBranch } from "@t3tools/contracts";
+import type { GitBranch } from "@codeforge/contracts";
 import { Schema } from "effect";
 
 export const EnvMode = Schema.Literals(["local", "worktree"]);

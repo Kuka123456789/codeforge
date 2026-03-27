@@ -17,8 +17,8 @@ import {
   ServerConfig,
   ModelSelection,
   ThreadEnvMode,
-} from "@t3tools/contracts";
-import { DEFAULT_SERVER_SETTINGS } from "@t3tools/contracts";
+} from "@codeforge/contracts";
+import { DEFAULT_SERVER_SETTINGS } from "@codeforge/contracts";
 import {
   type ClientSettings,
   ClientSettingsSchema,
@@ -28,17 +28,17 @@ import {
   SidebarThreadSortOrder,
   TimestampFormat,
   UnifiedSettings,
-} from "@t3tools/contracts/settings";
+} from "@codeforge/contracts/settings";
 import { serverConfigQueryOptions, serverQueryKeys } from "~/lib/serverReactQuery";
 import { ensureNativeApi } from "~/nativeApi";
 import { useLocalStorage } from "./useLocalStorage";
 import { normalizeCustomModelSlugs } from "~/modelSelection";
 import { Predicate, Schema, Struct } from "effect";
 import { DeepMutable } from "effect/Types";
-import { deepMerge } from "@t3tools/shared/Struct";
+import { deepMerge } from "@codeforge/shared/Struct";
 
-const CLIENT_SETTINGS_STORAGE_KEY = "t3code:client-settings:v1";
-const OLD_SETTINGS_KEY = "t3code:app-settings:v1";
+const CLIENT_SETTINGS_STORAGE_KEY = "codeforge:client-settings:v1";
+const OLD_SETTINGS_KEY = "codeforge:app-settings:v1";
 
 // ── Key sets for routing patches ─────────────────────────────────────
 

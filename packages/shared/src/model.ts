@@ -5,7 +5,7 @@ import {
   type ModelCapabilities,
   type ModelSlug,
   type ProviderKind,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 
 export interface SelectableModelOption {
   slug: string;

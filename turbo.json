@@ -5,13 +5,13 @@
     "VITE_WS_URL",
     "VITE_DEV_SERVER_URL",
     "ELECTRON_RENDERER_PORT",
-    "T3CODE_LOG_WS_EVENTS",
-    "T3CODE_MODE",
-    "T3CODE_PORT",
-    "T3CODE_NO_BROWSER",
-    "T3CODE_HOME",
-    "T3CODE_AUTH_TOKEN",
-    "T3CODE_DESKTOP_WS_URL"
+    "CODEFORGE_LOG_WS_EVENTS",
+    "CODEFORGE_MODE",
+    "CODEFORGE_PORT",
+    "CODEFORGE_NO_BROWSER",
+    "CODEFORGE_HOME",
+    "CODEFORGE_AUTH_TOKEN",
+    "CODEFORGE_DESKTOP_WS_URL"
   ],
   "tasks": {
     "build": {
@@ -19,7 +19,7 @@
       "outputs": ["dist/**", "dist-electron/**"]
     },
     "dev": {
-      "dependsOn": ["@t3tools/contracts#build"],
+      "dependsOn": ["@codeforge/contracts#build"],
       "cache": false,
       "persistent": true
     },

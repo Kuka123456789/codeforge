@@ -8,7 +8,7 @@
  */
 import { ServiceMap } from "effect";
 import type { Effect } from "effect";
-import type { ChatAttachment, ModelSelection } from "@t3tools/contracts";
+import type { ChatAttachment, ModelSelection } from "@codeforge/contracts";
 
 import type { TextGenerationError } from "../Errors.ts";
 
@@ -99,5 +99,5 @@ export interface TextGenerationShape {
  * TextGeneration - Service tag for commit and PR text generation.
  */
 export class TextGeneration extends ServiceMap.Service<TextGeneration, TextGenerationShape>()(
-  "t3/git/Services/TextGeneration",
+  "codeforge/git/Services/TextGeneration",
 ) {}

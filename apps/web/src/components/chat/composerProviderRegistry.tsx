@@ -4,13 +4,13 @@ import {
   type ProviderModelOptions,
   type ServerProviderModel,
   type ThreadId,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import {
   isClaudeUltrathinkPrompt,
   trimOrNull,
   getDefaultEffort,
   hasEffortLevel,
-} from "@t3tools/shared/model";
+} from "@codeforge/shared/model";
 import type { ReactNode } from "react";
 import {
   getProviderModelCapabilities,

@@ -16,7 +16,7 @@ import {
   ResolvedKeybindingRule,
   ResolvedKeybindingsConfig,
   type ServerConfigIssue,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { Mutable } from "effect/Types";
 import {
   Array,
@@ -43,7 +43,7 @@ import {
 } from "effect";
 import * as Semaphore from "effect/Semaphore";
 import { ServerConfig } from "./config";
-import { fromLenientJson } from "@t3tools/shared/schemaJson";
+import { fromLenientJson } from "@codeforge/shared/schemaJson";
 
 export class KeybindingsConfigError extends Schema.TaggedErrorClass<KeybindingsConfigError>()(
   "KeybindingsConfigParseError",
@@ -527,7 +527,7 @@ export interface KeybindingsShape {
  * Keybindings - Service tag for keybinding configuration operations.
  */
 export class Keybindings extends ServiceMap.Service<Keybindings, KeybindingsShape>()(
-  "t3/keybindings",
+  "codeforge/keybindings",
 ) {}
 
 const makeKeybindings = Effect.gen(function* () {

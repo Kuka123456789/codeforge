@@ -15,7 +15,7 @@ import {
   OrchestrationCheckpointStatus,
   ThreadId,
   TurnId,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { Option, ServiceMap, Schema } from "effect";
 import type { Effect } from "effect";
 
@@ -90,4 +90,4 @@ export interface ProjectionCheckpointRepositoryShape {
 export class ProjectionCheckpointRepository extends ServiceMap.Service<
   ProjectionCheckpointRepository,
   ProjectionCheckpointRepositoryShape
->()("t3/persistence/Services/ProjectionCheckpoints/ProjectionCheckpointRepository") {}
+>()("codeforge/persistence/Services/ProjectionCheckpoints/ProjectionCheckpointRepository") {}

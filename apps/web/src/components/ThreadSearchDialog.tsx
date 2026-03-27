@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import type { ThreadSearchResultItem } from "@t3tools/contracts";
+import type { ThreadSearchResultItem } from "@codeforge/contracts";
 import { MessageSquareIcon } from "lucide-react";
 
 import { ensureNativeApi } from "~/nativeApi";

@@ -1,4 +1,4 @@
-import type { ServerProvider } from "@t3tools/contracts";
+import type { ServerProvider } from "@codeforge/contracts";
 import type { Effect, Stream } from "effect";
 
 export interface ServerProviderShape {

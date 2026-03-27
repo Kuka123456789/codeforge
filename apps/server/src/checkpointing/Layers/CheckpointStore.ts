@@ -17,7 +17,7 @@ import { CheckpointInvariantError } from "../Errors.ts";
 import { GitCommandError } from "../../git/Errors.ts";
 import { GitCore } from "../../git/Services/GitCore.ts";
 import { CheckpointStore, type CheckpointStoreShape } from "../Services/CheckpointStore.ts";
-import { CheckpointRef } from "@t3tools/contracts";
+import { CheckpointRef } from "@codeforge/contracts";
 
 const makeCheckpointStore = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -99,9 +99,9 @@ const makeCheckpointStore = Effect.gen(function* () {
               ...process.env,
               GIT_INDEX_FILE: tempIndexPath,
               GIT_AUTHOR_NAME: "CodeForge",
-              GIT_AUTHOR_EMAIL: "t3code@users.noreply.github.com",
+              GIT_AUTHOR_EMAIL: "codeforge@users.noreply.github.com",
               GIT_COMMITTER_NAME: "CodeForge",
-              GIT_COMMITTER_EMAIL: "t3code@users.noreply.github.com",
+              GIT_COMMITTER_EMAIL: "codeforge@users.noreply.github.com",
             };
 
             const headExists = yield* hasHeadCommit(input.cwd);

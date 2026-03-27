@@ -16,7 +16,7 @@ import {
   ThreadId,
   TitleSource,
   TurnId,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { Option, Schema, ServiceMap } from "effect";
 import type { Effect } from "effect";
 
@@ -96,4 +96,4 @@ export interface ProjectionThreadRepositoryShape {
 export class ProjectionThreadRepository extends ServiceMap.Service<
   ProjectionThreadRepository,
   ProjectionThreadRepositoryShape
->()("t3/persistence/Services/ProjectionThreads/ProjectionThreadRepository") {}
+>()("codeforge/persistence/Services/ProjectionThreads/ProjectionThreadRepository") {}

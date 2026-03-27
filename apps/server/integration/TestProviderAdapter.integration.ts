@@ -11,7 +11,7 @@ import {
   ThreadId,
   TurnId,
   ProviderKind,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { Effect, Queue, Stream } from "effect";
 
 import {

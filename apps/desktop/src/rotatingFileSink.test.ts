@@ -2,13 +2,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-import { RotatingFileSink } from "@t3tools/shared/logging";
+import { RotatingFileSink } from "@codeforge/shared/logging";
 import { afterEach, describe, expect, it } from "vitest";
 
 const tempRoots: string[] = [];
 
 function makeTempDir(): string {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "t3-rotating-log-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "codeforge-rotating-log-"));
   tempRoots.push(dir);
   return dir;
 }

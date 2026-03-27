@@ -10,8 +10,8 @@
 import { Effect, Layer, Option, Schema, Stream } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 
-import { ClaudeModelSelection } from "@t3tools/contracts";
-import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@t3tools/shared/git";
+import { ClaudeModelSelection } from "@codeforge/contracts";
+import { sanitizeBranchFragment, sanitizeFeatureBranchName } from "@codeforge/shared/git";
 
 import { TextGenerationError } from "../Errors.ts";
 import { type TextGenerationShape, TextGeneration } from "../Services/TextGeneration.ts";

@@ -3,7 +3,7 @@ import {
   DEFAULT_MODEL,
   DEFAULT_MODEL_BY_PROVIDER,
   type ModelCapabilities,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 
 import {
   applyClaudePromptEffortPrefix,

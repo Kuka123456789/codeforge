@@ -16,8 +16,8 @@ import {
   type ProviderKind,
   type ServerProvider,
   type ServerProviderModel,
-} from "@t3tools/contracts";
-import { normalizeModelSlug } from "@t3tools/shared/model";
+} from "@codeforge/contracts";
+import { normalizeModelSlug } from "@codeforge/shared/model";
 import { useSettings, useUpdateSettings } from "../hooks/useSettings";
 import {
   getCustomModelOptionsByProvider,
@@ -48,7 +48,7 @@ import { serverConfigQueryOptions, serverQueryKeys } from "../lib/serverReactQue
 import { cn } from "../lib/utils";
 import { formatRelativeTime } from "../timestampFormat";
 import { ensureNativeApi, readNativeApi } from "../nativeApi";
-import { DEFAULT_UNIFIED_SETTINGS } from "@t3tools/contracts/settings";
+import { DEFAULT_UNIFIED_SETTINGS } from "@codeforge/contracts/settings";
 import { Equal } from "effect";
 
 const THEME_OPTIONS = [

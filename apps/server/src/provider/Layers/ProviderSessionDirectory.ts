@@ -1,4 +1,4 @@
-import { type ProviderKind, type ThreadId } from "@t3tools/contracts";
+import { type ProviderKind, type ThreadId } from "@codeforge/contracts";
 import { Effect, Layer, Option } from "effect";
 
 import { ProviderSessionRuntimeRepository } from "../../persistence/Services/ProviderSessionRuntime.ts";

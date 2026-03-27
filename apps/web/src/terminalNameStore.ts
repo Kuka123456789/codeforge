@@ -8,11 +8,11 @@
  * Key structure: `${threadId}:${terminalId}` → custom name.
  */
 
-import type { ThreadId } from "@t3tools/contracts";
+import type { ThreadId } from "@codeforge/contracts";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const STORAGE_KEY = "t3code:terminal-names:v1";
+const STORAGE_KEY = "codeforge:terminal-names:v1";
 
 function nameKey(threadId: ThreadId, terminalId: string): string {
   return `${threadId}:${terminalId}`;

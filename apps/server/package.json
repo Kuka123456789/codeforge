@@ -1,14 +1,14 @@
 {
-  "name": "t3",
+  "name": "codeforge",
   "version": "0.0.14",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pingdotgg/t3code",
+    "url": "https://github.com/pingdotgg/codeforge",
     "directory": "apps/server"
   },
   "bin": {
-    "t3": "./dist/index.mjs"
+    "codeforge": "./dist/index.mjs"
   },
   "files": [
     "dist"
@@ -33,11 +33,11 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@codeforge/contracts": "workspace:*",
+    "@codeforge/shared": "workspace:*",
+    "@codeforge/web": "workspace:*",
     "@effect/language-service": "catalog:",
     "@effect/vitest": "catalog:",
-    "@t3tools/contracts": "workspace:*",
-    "@t3tools/shared": "workspace:*",
-    "@t3tools/web": "workspace:*",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "@types/ws": "^8.5.13",

@@ -1,4 +1,4 @@
-import { ProjectId, type ModelSelection, type ThreadId } from "@t3tools/contracts";
+import { ProjectId, type ModelSelection, type ThreadId } from "@codeforge/contracts";
 import { type ChatMessage, type Thread } from "../types";
 import { randomUUID } from "~/lib/utils";
 import { type ComposerImageAttachment, type DraftThreadState } from "../composerDraftStore";
@@ -9,8 +9,8 @@ import {
   type TerminalContextDraft,
 } from "../lib/terminalContext";
 
-export const LAST_INVOKED_SCRIPT_BY_PROJECT_KEY = "t3code:last-invoked-script-by-project";
-const WORKTREE_BRANCH_PREFIX = "t3code";
+export const LAST_INVOKED_SCRIPT_BY_PROJECT_KEY = "codeforge:last-invoked-script-by-project";
+const WORKTREE_BRANCH_PREFIX = "codeforge";
 
 export const LastInvokedScriptByProjectSchema = Schema.Record(ProjectId, Schema.String);
 

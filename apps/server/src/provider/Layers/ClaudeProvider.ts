@@ -6,10 +6,10 @@ import type {
   ServerProviderModel,
   ServerProviderAuthStatus,
   ServerProviderState,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { Effect, Equal, Layer, Option, Result, Stream } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { getDefaultEffort, hasEffortLevel, trimOrNull } from "@t3tools/shared/model";
+import { getDefaultEffort, hasEffortLevel, trimOrNull } from "@codeforge/shared/model";
 
 import {
   buildServerProvider,

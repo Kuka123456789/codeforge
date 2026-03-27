@@ -37,13 +37,13 @@ import {
   ThreadId,
   type GitStatusResult,
   type ResolvedKeybindingsConfig,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useNavigate, useParams } from "@tanstack/react-router";
 import {
   type SidebarProjectSortOrder,
   type SidebarThreadSortOrder,
-} from "@t3tools/contracts/settings";
+} from "@codeforge/contracts/settings";
 import type { Project, Thread } from "../types";
 import { isElectron } from "../env";
 import { APP_STAGE_LABEL, APP_VERSION } from "../branding";
@@ -373,7 +373,7 @@ function SortableThreadItem({
         transform: CSS.Translate.toString(transform),
         transition,
       }}
-      className={`w-full ${isDragging ? "z-20 cursor-grabbing opacity-80" : ""} ${
+      className={`group/menu-sub-item relative w-full ${isDragging ? "z-20 cursor-grabbing opacity-80" : ""} ${
         isOver && !isDragging ? "ring-1 ring-primary/40 rounded-sm" : ""
       }`}
       data-sidebar="menu-sub-item"
@@ -1510,7 +1510,7 @@ export default function Sidebar() {
               </span>
             )}
             <span
-              className={`text-[10px] ${
+              className={`text-[10px] group-hover/menu-sub-item:hidden ${
                 isHighlighted
                   ? "text-foreground/72 dark:text-foreground/82"
                   : "text-muted-foreground/40"
@@ -1518,6 +1518,17 @@ export default function Sidebar() {
             >
               {formatRelativeTimeString(thread.updatedAt ?? thread.createdAt)}
             </span>
+            <button
+              type="button"
+              aria-label="Archive thread"
+              className="hidden group-hover/menu-sub-item:inline-flex items-center justify-center rounded-sm p-0.5 text-muted-foreground/60 hover:text-foreground transition-colors"
+              onClick={(event) => {
+                event.stopPropagation();
+                void archiveThread(thread.id);
+              }}
+            >
+              <ArchiveIcon className="size-3" />
+            </button>
           </div>
         </SidebarMenuSubButton>
       );

@@ -1,4 +1,4 @@
-import { ThreadId, type ThreadSearchResultItem } from "@t3tools/contracts";
+import { ThreadId, type ThreadSearchResultItem } from "@codeforge/contracts";
 import { Schema, ServiceMap } from "effect";
 import type { Effect } from "effect";
 
@@ -60,4 +60,4 @@ export interface ThreadSearchIndexShape {
 export class ThreadSearchIndex extends ServiceMap.Service<
   ThreadSearchIndex,
   ThreadSearchIndexShape
->()("t3/persistence/Services/ThreadSearchIndex/ThreadSearchIndex") {}
+>()("codeforge/persistence/Services/ThreadSearchIndex/ThreadSearchIndex") {}

@@ -4,8 +4,8 @@ import {
   ThreadId,
   type OrchestrationReadModel,
   type OrchestrationSessionStatus,
-} from "@t3tools/contracts";
-import { resolveModelSlugForProvider } from "@t3tools/shared/model";
+} from "@codeforge/contracts";
+import { resolveModelSlugForProvider } from "@codeforge/shared/model";
 import { create } from "zustand";
 import { type ChatMessage, type Project, type Thread } from "./types";
 import { Debouncer } from "@tanstack/react-pacer";
@@ -18,13 +18,13 @@ export interface AppState {
   threadsHydrated: boolean;
 }
 
-const PERSISTED_STATE_KEY = "t3code:renderer-state:v8";
+const PERSISTED_STATE_KEY = "codeforge:renderer-state:v8";
 const LEGACY_PERSISTED_STATE_KEYS = [
-  "t3code:renderer-state:v7",
-  "t3code:renderer-state:v6",
-  "t3code:renderer-state:v5",
-  "t3code:renderer-state:v4",
-  "t3code:renderer-state:v3",
+  "codeforge:renderer-state:v7",
+  "codeforge:renderer-state:v6",
+  "codeforge:renderer-state:v5",
+  "codeforge:renderer-state:v4",
+  "codeforge:renderer-state:v3",
   "codething:renderer-state:v4",
   "codething:renderer-state:v3",
   "codething:renderer-state:v2",

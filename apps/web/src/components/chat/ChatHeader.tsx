@@ -3,7 +3,7 @@ import {
   type ProjectScript,
   type ResolvedKeybindingsConfig,
   type ThreadId,
-} from "@t3tools/contracts";
+} from "@codeforge/contracts";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import GitActionsControl from "../GitActionsControl";
 import {
