@@ -1,5 +1,5 @@
 import { type ProjectEntry, type ModelSlug, type ProviderKind } from "@codeforge/contracts";
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { type ComposerSlashCommand, type ComposerTriggerKind } from "../../composer-logic";
 import { BotIcon } from "lucide-react";
 import { cn } from "~/lib/utils";
@@ -91,8 +91,18 @@ const ComposerCommandMenuItem = memo(function ComposerCommandMenuItem(props: {
   isActive: boolean;
   onSelect: (item: ComposerCommandItem) => void;
 }) {
+  const scrollRef = useCallback(
+    (node: HTMLElement | null) => {
+      if (node && props.isActive) {
+        node.scrollIntoView({ block: "nearest" });
+      }
+    },
+    [props.isActive],
+  );
+
   return (
     <CommandItem
+      ref={scrollRef}
       value={props.item.id}
       className={cn(
         "cursor-pointer select-none gap-2",
