@@ -115,6 +115,22 @@ const makeWithDatabase = (
           }),
       });
 
+      // node:sqlite omits keys whose value is NULL from result objects.
+      // Schema decoders expect the key to exist (with a null value), so we
+      // back-fill missing columns using statement.columns() metadata.
+      const normalizeNulls = (statement: StatementSync, rows: ReadonlyArray<any>) => {
+        if (rows.length === 0) return rows;
+        const cols = statement.columns().map((c: { name: string }) => c.name);
+        for (const row of rows) {
+          for (const col of cols) {
+            if (!(col in row)) {
+              row[col] = null;
+            }
+          }
+        }
+        return rows;
+      };
+
       const runStatement = (
         statement: StatementSync,
         params: ReadonlyArray<unknown>,
@@ -124,7 +140,7 @@ const makeWithDatabase = (
           statement.setReadBigInts(Boolean(ServiceMap.get(fiber.services, Client.SafeIntegers)));
           try {
             if (hasRows(statement)) {
-              return Effect.succeed(statement.all(...(params as any)));
+              return Effect.succeed(normalizeNulls(statement, statement.all(...(params as any))));
             }
             const result = statement.run(...(params as any));
             return Effect.succeed(raw ? (result as unknown as ReadonlyArray<any>) : []);
