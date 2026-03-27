@@ -185,8 +185,9 @@ function EventRouter() {
       pending = false;
       try {
         await flushSnapshotSync();
-      } catch {
+      } catch (err) {
         // Keep prior state and wait for next domain event to trigger a resync.
+        console.error("[EventRouter] snapshot sync failed:", err);
       }
       syncing = false;
     };
