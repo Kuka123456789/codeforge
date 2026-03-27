@@ -263,16 +263,28 @@ export const MessagesTimeline = memo(function MessagesTimeline({
     useAnimationFrameWithResizeObserver: true,
     overscan: 8,
   });
+  const prevWidthRef = useRef<number | null>(null);
   useEffect(() => {
     if (timelineWidthPx === null) return;
+    const prev = prevWidthRef.current;
+    prevWidthRef.current = timelineWidthPx;
+    // Skip cache invalidation for tiny width changes (e.g. scrollbar appearing/disappearing).
+    if (prev !== null && Math.abs(prev - timelineWidthPx) <= 2) return;
     rowVirtualizer.measure();
   }, [rowVirtualizer, timelineWidthPx]);
   useEffect(() => {
-    rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = (_item, _delta, instance) => {
+    rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = (item, _delta, instance) => {
+      // Near the bottom: skip adjustments to preserve auto-scroll-to-bottom behavior.
       const viewportHeight = instance.scrollRect?.height ?? 0;
       const scrollOffset = instance.scrollOffset ?? 0;
       const remainingDistance = instance.getTotalSize() - (scrollOffset + viewportHeight);
-      return remainingDistance > AUTO_SCROLL_BOTTOM_THRESHOLD_PX;
+      if (remainingDistance <= AUTO_SCROLL_BOTTOM_THRESHOLD_PX) {
+        return false;
+      }
+
+      // Only adjust for items ABOVE the current scroll offset (the tanstack default).
+      // Items below the viewport don't affect visible content when they resize.
+      return item.start < scrollOffset;
     };
     return () => {
       rowVirtualizer.shouldAdjustScrollPositionOnItemSizeChange = undefined;
@@ -474,8 +486,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                   const allDirectoriesExpanded =
                     allDirectoriesExpandedByTurnId[turnSummary.turnId] ?? false;
                   return (
-                    <div className="mt-2 rounded-lg border border-border/80 bg-card/45 p-2.5">
-                      <div className="mb-1.5 flex items-center justify-between gap-2">
+                    <div className="mt-2 rounded-lg border border-border/80 bg-card/45 p-2 pb-1.5">
+                      <div className="mb-1 flex items-center justify-between gap-2">
                         <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/65">
                           <span>Changed files ({changedFileCountLabel})</span>
                           {hasNonZeroStat(summaryStat) && (

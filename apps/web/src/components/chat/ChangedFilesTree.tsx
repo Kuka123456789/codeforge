@@ -50,7 +50,7 @@ export const ChangedFilesTree = memo(function ChangedFilesTree(props: {
         <div key={`dir:${node.path}`}>
           <button
             type="button"
-            className="group flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left hover:bg-background/80"
+            className="group flex w-full items-center gap-1.5 rounded-md py-0.5 pr-2 text-left hover:bg-background/80"
             style={{ paddingLeft: `${leftPadding}px` }}
             onClick={() => toggleDirectory(node.path, depth === 0)}
           >
@@ -76,9 +76,7 @@ export const ChangedFilesTree = memo(function ChangedFilesTree(props: {
             )}
           </button>
           {isExpanded && (
-            <div className="space-y-0.5">
-              {node.children.map((childNode) => renderTreeNode(childNode, depth + 1))}
-            </div>
+            <div>{node.children.map((childNode) => renderTreeNode(childNode, depth + 1))}</div>
           )}
         </div>
       );
@@ -88,7 +86,7 @@ export const ChangedFilesTree = memo(function ChangedFilesTree(props: {
       <button
         key={`file:${node.path}`}
         type="button"
-        className="group flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left hover:bg-background/80"
+        className="group flex w-full items-center gap-1.5 rounded-md py-0.5 pr-2 text-left hover:bg-background/80"
         style={{ paddingLeft: `${leftPadding}px` }}
         onClick={() => onOpenTurnDiff(turnId, node.path)}
       >
@@ -111,7 +109,7 @@ export const ChangedFilesTree = memo(function ChangedFilesTree(props: {
     );
   };
 
-  return <div className="space-y-0.5">{treeNodes.map((node) => renderTreeNode(node, 0))}</div>;
+  return <div>{treeNodes.map((node) => renderTreeNode(node, 0))}</div>;
 });
 
 function collectDirectoryPaths(nodes: ReadonlyArray<TurnDiffTreeNode>): string[] {
