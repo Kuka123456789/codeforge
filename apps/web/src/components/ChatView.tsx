@@ -1204,8 +1204,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   }, [diffOpen, navigate, threadId]);
 
   // ── Thread action handlers (archive, delete, copy) ──────────────────
-  const activeThreadWorkspacePath =
-    activeThread?.worktreePath ?? activeProject?.cwd ?? null;
+  const activeThreadWorkspacePath = activeThread?.worktreePath ?? activeProject?.cwd ?? null;
 
   const archiveThread = useCallback(
     async (tid: ThreadId): Promise<void> => {
