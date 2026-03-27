@@ -214,7 +214,10 @@ const PinItem = memo(function PinItem({
       </button>
 
       {/* Content */}
-      <div className={cn("px-3 pb-3", !expanded && "cursor-pointer")} onClick={!expanded ? toggleExpanded : undefined}>
+      <div
+        className={cn("px-3 pb-3", !expanded && "cursor-pointer")}
+        onClick={!expanded ? toggleExpanded : undefined}
+      >
         <div className={cn("text-sm", !expanded && "max-h-[120px] overflow-hidden")}>
           {pin.messageRole === "assistant" ? (
             <div

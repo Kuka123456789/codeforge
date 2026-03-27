@@ -44,9 +44,7 @@ export const usePinStore = create<PinState>((set) => ({
 
 export function usePinsForThread(threadId: ThreadId | undefined): Pin[] {
   return usePinStore(
-    useShallow((state) =>
-      threadId ? state.pins.filter((p) => p.threadId === threadId) : [],
-    ),
+    useShallow((state) => (threadId ? state.pins.filter((p) => p.threadId === threadId) : [])),
   );
 }
 
