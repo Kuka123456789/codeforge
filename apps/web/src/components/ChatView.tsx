@@ -47,8 +47,6 @@ import {
   derivePhase,
   deriveTimelineEntries,
   deriveActiveWorkStartedAt,
-  deriveActivePlanState,
-  findSidebarProposedPlan,
   findLatestProposedPlan,
   deriveWorkLogEntries,
   hasActionableProposedPlan,
@@ -84,7 +82,8 @@ import { useTheme } from "../hooks/useTheme";
 import { useTurnDiffSummaries } from "../hooks/useTurnDiffSummaries";
 import BranchToolbar from "./BranchToolbar";
 import { resolveShortcutCommand, shortcutLabelForCommand } from "../keybindings";
-import PlanSidebar from "./PlanSidebar";
+import PinsSidebar from "./PinsSidebar";
+import { usePinStore, usePinsForThread, isMessagePinned } from "../pinStore";
 import ThreadTerminalDrawer from "./ThreadTerminalDrawer";
 import {
   BotIcon,
@@ -92,9 +91,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   CircleAlertIcon,
-  ListTodoIcon,
   LockIcon,
   LockOpenIcon,
+  PinIcon,
   XIcon,
 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -342,6 +341,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const [sendPhase, setSendPhase] = useState<SendPhase>("idle");
   const markSending = useSendStatusStore((s) => s.markSending);
   const clearSending = useSendStatusStore((s) => s.clearSending);
+  const addPin = usePinStore((s) => s.addPin);
+  const removePin = usePinStore((s) => s.removePin);
   const [sendStartedAt, setSendStartedAt] = useState<string | null>(null);
   const [isConnecting, _setIsConnecting] = useState(false);
   const [isRevertingCheckpoint, setIsRevertingCheckpoint] = useState(false);
@@ -355,13 +356,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const [pendingUserInputQuestionIndexByRequestId, setPendingUserInputQuestionIndexByRequestId] =
     useState<Record<string, number>>({});
   const [expandedWorkGroups, setExpandedWorkGroups] = useState<Record<string, boolean>>({});
-  const [planSidebarOpen, setPlanSidebarOpen] = useState(false);
+  const [pinsSidebarOpen, setPinsSidebarOpen] = useState(false);
   const [isComposerFooterCompact, setIsComposerFooterCompact] = useState(false);
-  // Tracks whether the user explicitly dismissed the sidebar for the active turn.
-  const planSidebarDismissedForTurnRef = useRef<string | null>(null);
-  // When set, the thread-change reset effect will open the sidebar instead of closing it.
-  // Used by "Implement in a new thread" to carry the sidebar-open intent across navigation.
-  const planSidebarOpenOnNextThreadRef = useRef(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [terminalFocusRequestId, setTerminalFocusRequestId] = useState(0);
   const [composerHighlightedItemId, setComposerHighlightedItemId] = useState<string | null>(null);
@@ -495,6 +491,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
     [draftThread, fallbackDraftProject?.defaultModelSelection, localDraftError, threadId],
   );
   const activeThread = serverThread ?? localDraftThread;
+  const threadPins = usePinsForThread(activeThread?.id);
   const runtimeMode =
     composerDraft.runtimeMode ?? activeThread?.runtimeMode ?? DEFAULT_RUNTIME_MODE;
   const interactionMode =
@@ -712,20 +709,6 @@ export default function ChatView({ threadId }: ChatViewProps) {
       activeLatestTurn?.turnId ?? null,
     );
   }, [activeLatestTurn?.turnId, activeThread?.proposedPlans, latestTurnSettled]);
-  const sidebarProposedPlan = useMemo(
-    () =>
-      findSidebarProposedPlan({
-        threads,
-        latestTurn: activeLatestTurn,
-        latestTurnSettled,
-        threadId: activeThread?.id ?? null,
-      }),
-    [activeLatestTurn, activeThread?.id, latestTurnSettled, threads],
-  );
-  const activePlan = useMemo(
-    () => deriveActivePlanState(threadActivities, activeLatestTurn?.turnId ?? undefined),
-    [activeLatestTurn?.turnId, threadActivities],
-  );
   const showPlanFollowUpPrompt =
     pendingUserInputs.length === 0 &&
     interactionMode === "plan" &&
@@ -1776,19 +1759,21 @@ export default function ChatView({ threadId }: ChatViewProps) {
       runtimeMode === "full-access" ? "approval-required" : "full-access",
     );
   }, [handleRuntimeModeChange, runtimeMode]);
-  const togglePlanSidebar = useCallback(() => {
-    setPlanSidebarOpen((open) => {
-      if (open) {
-        const turnKey = activePlan?.turnId ?? sidebarProposedPlan?.turnId ?? null;
-        if (turnKey) {
-          planSidebarDismissedForTurnRef.current = turnKey;
-        }
-      } else {
-        planSidebarDismissedForTurnRef.current = null;
+  const togglePinsSidebar = useCallback(() => {
+    setPinsSidebarOpen((open) => !open);
+  }, []);
+
+  const handleScrollToPinSourceMessage = useCallback(
+    (messageId: MessageId) => {
+      const rowIndex = timelineEntries.findIndex(
+        (entry) => entry.kind === "message" && entry.message.id === messageId,
+      );
+      if (rowIndex >= 0) {
+        setScrollToRowIndex(rowIndex);
       }
-      return !open;
-    });
-  }, [activePlan?.turnId, sidebarProposedPlan?.turnId]);
+    },
+    [timelineEntries],
+  );
 
   const handleClearCommand = useCallback(async () => {
     if (!activeProject) return;
@@ -2151,13 +2136,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   useEffect(() => {
     setExpandedWorkGroups({});
     setPullRequestDialogState(null);
-    if (planSidebarOpenOnNextThreadRef.current) {
-      planSidebarOpenOnNextThreadRef.current = false;
-      setPlanSidebarOpen(true);
-    } else {
-      setPlanSidebarOpen(false);
-    }
-    planSidebarDismissedForTurnRef.current = null;
+    setPinsSidebarOpen(false);
   }, [activeThread?.id]);
 
   useEffect(() => {
@@ -2357,6 +2336,39 @@ export default function ChatView({ threadId }: ChatViewProps) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [closeExpandedImage, expandedImage, navigateExpandedImage]);
+
+  // Keyboard shortcut: Cmd/Ctrl+Shift+P to pin selected text
+  useEffect(() => {
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey || e.key !== "P") return;
+      e.preventDefault();
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed) return;
+
+      const messageEl = selection.anchorNode?.parentElement?.closest("[data-message-id]");
+      if (!messageEl) return;
+
+      const messageId = messageEl.getAttribute("data-message-id") as MessageId;
+      const messageRole = messageEl.getAttribute("data-message-role") as "user" | "assistant";
+      const selectedText = selection.toString().trim();
+      if (!selectedText || !activeThread) return;
+
+      const message = activeThread.messages.find((m) => m.id === messageId);
+      if (!message) return;
+
+      addPin({
+        threadId: activeThread.id,
+        messageId,
+        messageRole,
+        selectedText,
+        fullMessageText: message.text,
+      });
+      setPinsSidebarOpen(true);
+      selection.removeAllRanges();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeThread, addPin]);
 
   const activeWorktreePath = activeThread?.worktreePath;
   const envMode: DraftThreadEnvMode = activeWorktreePath
@@ -3277,13 +3289,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
             : {}),
           createdAt: messageCreatedAt,
         });
-        // Optimistically open the plan sidebar when implementing (not refining).
-        // "default" mode here means the agent is executing the plan, which produces
-        // step-tracking activities that the sidebar will display.
-        if (nextInteractionMode === "default") {
-          planSidebarDismissedForTurnRef.current = null;
-          setPlanSidebarOpen(true);
-        }
+        // Plan sidebar removed — pins sidebar is user-driven only.
         sendInFlightRef.current = false;
       } catch (err) {
         setOptimisticUserMessages((existing) =>
@@ -3388,8 +3394,6 @@ export default function ChatView({ threadId }: ChatViewProps) {
       .then(() => api.orchestration.getSnapshot())
       .then((snapshot) => {
         syncServerReadModel(snapshot);
-        // Signal that the plan sidebar should open on the new thread.
-        planSidebarOpenOnNextThreadRef.current = true;
         return navigate({
           to: "/$threadId",
           params: { threadId: nextThreadId },
@@ -4231,15 +4235,13 @@ export default function ChatView({ threadId }: ChatViewProps) {
 
                         {isComposerFooterCompact ? (
                           <CompactComposerControlsMenu
-                            activePlan={Boolean(
-                              activePlan || sidebarProposedPlan || planSidebarOpen,
-                            )}
+                            hasPins={threadPins.length > 0}
                             interactionMode={interactionMode}
-                            planSidebarOpen={planSidebarOpen}
+                            pinsSidebarOpen={pinsSidebarOpen}
                             runtimeMode={runtimeMode}
                             traitsMenuContent={providerTraitsMenuContent}
                             onToggleInteractionMode={toggleInteractionMode}
-                            onTogglePlanSidebar={togglePlanSidebar}
+                            onTogglePinsSidebar={togglePinsSidebar}
                             onToggleRuntimeMode={toggleRuntimeMode}
                           />
                         ) : (
@@ -4306,32 +4308,30 @@ export default function ChatView({ threadId }: ChatViewProps) {
                               </span>
                             </Button>
 
-                            {activePlan || sidebarProposedPlan || planSidebarOpen ? (
-                              <>
-                                <Separator
-                                  orientation="vertical"
-                                  className="mx-0.5 hidden h-4 sm:block"
-                                />
-                                <Button
-                                  variant="ghost"
-                                  className={cn(
-                                    "shrink-0 whitespace-nowrap px-2 sm:px-3",
-                                    planSidebarOpen
-                                      ? "text-blue-400 hover:text-blue-300"
-                                      : "text-muted-foreground/70 hover:text-foreground/80",
-                                  )}
-                                  size="sm"
-                                  type="button"
-                                  onClick={togglePlanSidebar}
-                                  title={
-                                    planSidebarOpen ? "Hide plan sidebar" : "Show plan sidebar"
-                                  }
-                                >
-                                  <ListTodoIcon />
-                                  <span className="sr-only sm:not-sr-only">Plan</span>
-                                </Button>
-                              </>
-                            ) : null}
+                            <Separator
+                              orientation="vertical"
+                              className="mx-0.5 hidden h-4 sm:block"
+                            />
+                            <Button
+                              variant="ghost"
+                              className={cn(
+                                "shrink-0 whitespace-nowrap px-2 sm:px-3",
+                                pinsSidebarOpen
+                                  ? "text-amber-400 hover:text-amber-300"
+                                  : "text-muted-foreground/70 hover:text-foreground/80",
+                              )}
+                              size="sm"
+                              type="button"
+                              onClick={togglePinsSidebar}
+                              title={
+                                pinsSidebarOpen ? "Hide pins" : "Show pins"
+                              }
+                            >
+                              <PinIcon />
+                              <span className="sr-only sm:not-sr-only">
+                                Pins{threadPins.length > 0 ? ` (${threadPins.length})` : ""}
+                              </span>
+                            </Button>
                           </>
                         )}
                       </div>
@@ -4536,22 +4536,14 @@ export default function ChatView({ threadId }: ChatViewProps) {
         </div>
         {/* end chat column */}
 
-        {/* Plan sidebar */}
-        {planSidebarOpen ? (
-          <PlanSidebar
-            activePlan={activePlan}
-            activeProposedPlan={sidebarProposedPlan}
+        {/* Pins sidebar */}
+        {pinsSidebarOpen ? (
+          <PinsSidebar
+            pins={threadPins}
             markdownCwd={gitCwd ?? undefined}
-            workspaceRoot={activeProject?.cwd ?? undefined}
-            timestampFormat={timestampFormat}
-            onClose={() => {
-              setPlanSidebarOpen(false);
-              // Track that the user explicitly dismissed for this turn so auto-open won't fight them.
-              const turnKey = activePlan?.turnId ?? sidebarProposedPlan?.turnId ?? null;
-              if (turnKey) {
-                planSidebarDismissedForTurnRef.current = turnKey;
-              }
-            }}
+            onClose={() => setPinsSidebarOpen(false)}
+            onRemovePin={removePin}
+            onScrollToMessage={handleScrollToPinSourceMessage}
           />
         ) : null}
       </div>

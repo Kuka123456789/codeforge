@@ -83,6 +83,8 @@ interface MessagesTimelineProps {
   workspaceRoot: string | undefined;
   scrollToRowIndex: number | null;
   onScrollToRowComplete: () => void;
+  pinnedMessageIds: Set<MessageId>;
+  onPinMessage: (messageId: MessageId, messageRole: "user" | "assistant", text: string) => void;
 }
 
 export const MessagesTimeline = memo(function MessagesTimeline({
@@ -109,6 +111,8 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   workspaceRoot,
   scrollToRowIndex,
   onScrollToRowComplete,
+  pinnedMessageIds,
+  onPinMessage,
 }: MessagesTimelineProps) {
   const timelineRootRef = useRef<HTMLDivElement | null>(null);
   const [timelineWidthPx, setTimelineWidthPx] = useState<number | null>(null);
