@@ -1,5 +1,6 @@
 import type { MessageId, ThreadId } from "@codeforge/contracts";
 import { create } from "zustand";
+import { useShallow } from "zustand/shallow";
 
 export interface Pin {
   id: string;
@@ -42,8 +43,10 @@ export const usePinStore = create<PinState>((set) => ({
 }));
 
 export function usePinsForThread(threadId: ThreadId | undefined): Pin[] {
-  return usePinStore((state) =>
-    threadId ? state.pins.filter((p) => p.threadId === threadId) : [],
+  return usePinStore(
+    useShallow((state) =>
+      threadId ? state.pins.filter((p) => p.threadId === threadId) : [],
+    ),
   );
 }
 
