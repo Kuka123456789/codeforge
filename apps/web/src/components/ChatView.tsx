@@ -1121,6 +1121,13 @@ export default function ChatView({ threadId }: ChatViewProps) {
           label: "/default",
           description: "Switch this thread back to normal chat mode",
         },
+        {
+          id: "slash:clear",
+          type: "slash-command",
+          command: "clear",
+          label: "/clear",
+          description: "Start a new thread",
+        },
       ];
       const providerCommandItems: ComposerCommandItem[] = providerSlashCommands.map((cmd) => ({
         id: `provider-slash:${selectedProvider}:${cmd.name}`,
@@ -3507,6 +3514,10 @@ export default function ChatView({ threadId }: ChatViewProps) {
           if (applied) {
             setComposerHighlightedItemId(null);
           }
+          return;
+        }
+        if (item.command === "clear") {
+          void handleClearCommand();
           return;
         }
         void handleInteractionModeChange(item.command === "plan" ? "plan" : "default");
