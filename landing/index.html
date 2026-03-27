@@ -267,12 +267,20 @@
         border-right: 1px solid var(--border);
         padding: 12px 0;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+      .demo-sb-main {
+        flex: 1;
+        overflow: hidden;
       }
       .demo-sb-section {
-        margin-bottom: 14px;
+        margin-bottom: 6px;
       }
       .demo-sb-label {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         padding: 0 14px;
         font-size: 0.63rem;
         font-weight: 600;
@@ -280,6 +288,16 @@
         letter-spacing: 0.06em;
         color: var(--text-muted);
         margin-bottom: 5px;
+      }
+      .demo-sb-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .demo-sb-actions svg {
+        color: var(--text-muted);
+        opacity: 0.7;
+        cursor: pointer;
       }
       .demo-sb-item {
         display: flex;
@@ -296,6 +314,85 @@
         color: var(--text);
         background: rgba(255, 255, 255, 0.05);
       }
+      .demo-sb-project {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 14px;
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .demo-sb-project--active {
+        color: var(--text);
+      }
+      .demo-sb-project svg.chevron {
+        transition: transform 0.2s;
+        color: var(--text-muted);
+        opacity: 0.5;
+      }
+      .demo-sb-project--collapsed svg.chevron {
+        transform: rotate(-90deg);
+      }
+      .demo-sb-threads {
+        padding-left: 10px;
+        border-left: 1px solid rgba(255, 255, 255, 0.04);
+        margin-left: 22px;
+      }
+      .demo-sb-thread {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        font-size: 0.68rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .demo-sb-thread--active {
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+      }
+      .demo-sb-thread-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.54rem;
+        color: #60a5fa;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+      .demo-sb-more {
+        padding: 3px 10px;
+        font-size: 0.58rem;
+        color: var(--text-muted);
+        opacity: 0.6;
+      }
+      .demo-sb-footer {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 8px 12px 4px;
+        border-top: 1px solid var(--border);
+      }
+      .demo-sb-footer-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        color: var(--text-muted);
+        cursor: pointer;
+      }
+      .demo-sb-footer-btn:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .demo-sb-footer-btn--skills {
+        color: #60a5fa;
+      }
       .demo-status-dot {
         width: 6px;
         height: 6px;
@@ -304,9 +401,12 @@
         flex-shrink: 0;
       }
       .demo-status-dot--live {
-        background: #22c55e;
-        box-shadow: 0 0 6px rgba(34, 197, 94, 0.5);
+        background: #60a5fa;
+        box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
         animation: demo-pulse 2s ease-in-out infinite;
+      }
+      .demo-status-dot--done {
+        background: #22c55e;
       }
       @keyframes demo-pulse {
         0%,
@@ -453,18 +553,96 @@
 
       /* Composer */
       .demo-composer {
-        margin-top: auto;
-        padding: 10px 0 14px;
-      }
-      .demo-composer > span:first-child {
-        display: block;
-      }
-      .demo-composer {
         border: 1px solid rgba(255, 255, 255, 0.1);
         border-radius: 12px;
-        padding: 11px 13px;
+        padding: 11px 13px 8px;
         background: rgba(255, 255, 255, 0.02);
         margin-top: auto;
+      }
+      .demo-composer-input {
+        display: block;
+        color: var(--text-muted);
+        opacity: 0.6;
+        font-size: 0.74rem;
+        margin-bottom: 8px;
+      }
+      .demo-composer-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .demo-composer-left {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .demo-composer-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .demo-composer-btn {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        padding: 3px 7px;
+        border-radius: 5px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .demo-composer-btn--provider {
+        border-color: rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .demo-composer-btn--mode {
+        font-size: 0.58rem;
+        padding: 2px 6px;
+      }
+      .demo-composer-btn--access {
+        font-size: 0.58rem;
+        color: #22c55e;
+        background: rgba(34, 197, 94, 0.08);
+        padding: 2px 7px;
+        border-radius: 4px;
+      }
+      .demo-ctx-meter {
+        position: relative;
+        width: 26px;
+        height: 26px;
+        flex-shrink: 0;
+      }
+      .demo-ctx-meter svg {
+        width: 100%;
+        height: 100%;
+        transform: rotate(-90deg);
+      }
+      .demo-ctx-meter-label {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.44rem;
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+      .demo-send-btn {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--primary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        cursor: pointer;
+      }
+      .demo-send-btn svg {
+        color: #fff;
       }
 
       /* Diff panel */
@@ -600,9 +778,20 @@
           width: 130px;
           min-width: 130px;
         }
+        .demo-sb-footer {
+          display: none;
+        }
+        .demo-sb-more,
+        .demo-sb-thread-status {
+          display: none;
+        }
         .demo-body {
           min-height: 320px;
           max-height: 320px;
+        }
+        .demo-composer-btn--mode,
+        .demo-composer-btn--access {
+          display: none;
         }
       }
       @media (max-width: 480px) {
@@ -1175,40 +1364,68 @@
         <div class="demo-body">
           <!-- Sidebar -->
           <aside class="demo-sidebar">
-            <div class="demo-sb-section">
-              <span class="demo-sb-label">Projects</span>
-              <div class="demo-sb-item demo-sb-item--active">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  style="flex-shrink: 0; color: var(--text-muted)"
-                >
-                  <path
-                    d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"
-                  />
-                </svg>
-                codeforge
+            <div class="demo-sb-main">
+              <div class="demo-sb-section">
+                <span class="demo-sb-label">
+                  Projects
+                  <span class="demo-sb-actions">
+                    <!-- Search (Cmd+K) -->
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <!-- Add project -->
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  </span>
+                </span>
+
+                <!-- Project: codeforge (expanded, active) -->
+                <div class="demo-sb-project demo-sb-project--active">
+                  <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-muted)"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                  codeforge
+                </div>
+                <div class="demo-sb-threads">
+                  <div class="demo-sb-thread demo-sb-thread--active">
+                    <span class="demo-status-dot demo-status-dot--live"></span>
+                    Add auth middleware
+                    <span class="demo-sb-thread-status">Working</span>
+                  </div>
+                  <div class="demo-sb-thread">
+                    <span class="demo-status-dot demo-status-dot--done"></span>
+                    Fix API rate limiter
+                  </div>
+                  <div class="demo-sb-thread">
+                    <span class="demo-status-dot"></span>
+                    Refactor DB queries
+                  </div>
+                  <div class="demo-sb-thread" style="opacity:0.5">
+                    <span class="demo-status-dot"></span>
+                    Setup CI pipeline
+                  </div>
+                  <div class="demo-sb-more">+3 more</div>
+                </div>
+
+                <!-- Project: my-saas (collapsed) -->
+                <div class="demo-sb-project demo-sb-project--collapsed" style="opacity:0.7">
+                  <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-muted)"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                  my-saas-app
+                </div>
+
+                <!-- Project: dotfiles (collapsed) -->
+                <div class="demo-sb-project demo-sb-project--collapsed" style="opacity:0.5">
+                  <svg class="chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--text-muted)"><path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                  dotfiles
+                </div>
               </div>
             </div>
-            <div class="demo-sb-section">
-              <span class="demo-sb-label">Threads</span>
-              <div class="demo-sb-item demo-sb-item--active">
-                <span class="demo-status-dot demo-status-dot--live"></span>Add auth middleware
+
+            <!-- Sidebar footer: Skills + Settings -->
+            <div class="demo-sb-footer">
+              <div class="demo-sb-footer-btn demo-sb-footer-btn--skills" title="Skills">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
               </div>
-              <div class="demo-sb-item">
-                <span class="demo-status-dot"></span>Fix API rate limiter
-              </div>
-              <div class="demo-sb-item">
-                <span class="demo-status-dot"></span>Refactor DB queries
-              </div>
-              <div class="demo-sb-item" style="opacity: 0.5">
-                <span class="demo-status-dot"></span>Setup CI pipeline
+              <div class="demo-sb-footer-btn" title="Settings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
               </div>
             </div>
           </aside>
@@ -1331,31 +1548,40 @@
 
             <!-- Composer -->
             <div class="demo-composer demo-anim" style="animation-delay: 0.6s">
-              <span style="color: var(--text-muted); opacity: 0.6; font-size: 0.74rem"
-                >Ask anything, @tag files/folders, or use /model</span
-              >
-              <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px">
-                <span
-                  style="
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                    font-size: 0.62rem;
-                    color: var(--text-muted);
-                  "
-                  ><span class="demo-provider-pip" style="width: 6px; height: 6px"></span> Claude
-                  Sonnet</span
-                >
-                <span
-                  style="
-                    font-size: 0.58rem;
-                    color: #22c55e;
-                    background: rgba(34, 197, 94, 0.08);
-                    padding: 1px 6px;
-                    border-radius: 4px;
-                  "
-                  >Full access</span
-                >
+              <span class="demo-composer-input">Ask anything, @tag files, or /commands...</span>
+              <div class="demo-composer-toolbar">
+                <div class="demo-composer-left">
+                  <!-- Provider/Model picker -->
+                  <span class="demo-composer-btn demo-composer-btn--provider">
+                    <span class="demo-provider-pip" style="width:6px;height:6px"></span>
+                    Claude Sonnet
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                  </span>
+                  <!-- Plan/Chat mode -->
+                  <span class="demo-composer-btn demo-composer-btn--mode" title="Chat mode">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                    Chat
+                  </span>
+                  <!-- Access level -->
+                  <span class="demo-composer-btn demo-composer-btn--access">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                    Full access
+                  </span>
+                </div>
+                <div class="demo-composer-right">
+                  <!-- Context window meter -->
+                  <div class="demo-ctx-meter" title="Context: 42k tokens">
+                    <svg viewBox="0 0 36 36">
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2.5"/>
+                      <circle cx="18" cy="18" r="15" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-dasharray="28 66" stroke-linecap="round"/>
+                    </svg>
+                    <span class="demo-ctx-meter-label">42k</span>
+                  </div>
+                  <!-- Send button -->
+                  <div class="demo-send-btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
