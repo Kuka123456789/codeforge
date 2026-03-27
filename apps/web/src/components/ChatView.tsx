@@ -1121,6 +1121,13 @@ export default function ChatView({ threadId }: ChatViewProps) {
           label: "/default",
           description: "Switch this thread back to normal chat mode",
         },
+        {
+          id: "slash:clear",
+          type: "slash-command",
+          command: "clear",
+          label: "/clear",
+          description: "Start a new thread",
+        },
       ];
       const providerCommandItems: ComposerCommandItem[] = providerSlashCommands.map((cmd) => ({
         id: `provider-slash:${selectedProvider}:${cmd.name}`,
@@ -2631,27 +2638,21 @@ export default function ChatView({ threadId }: ChatViewProps) {
         ? parseStandaloneComposerSlashCommand(trimmed)
         : null;
     if (standaloneSlashCommand) {
+      if (standaloneSlashCommand === "clear") {
+        promptRef.current = "";
+        clearComposerDraftContent(activeThread.id);
+        setComposerHighlightedItemId(null);
+        setComposerCursor(0);
+        setComposerTrigger(null);
+        void handleClearCommand();
+        return;
+      }
       handleInteractionModeChange(standaloneSlashCommand);
       promptRef.current = "";
       clearComposerDraftContent(activeThread.id);
       setComposerHighlightedItemId(null);
       setComposerCursor(0);
       setComposerTrigger(null);
-      return;
-    }
-    // Check for provider slash commands that need client-side handling
-    // (e.g. "/clear" starts a new thread instead of being sent to the SDK).
-    const clientHandledCommand =
-      composerImages.length === 0 && sendableComposerTerminalContexts.length === 0
-        ? parseStandaloneClientHandledProviderCommand(trimmed)
-        : null;
-    if (clientHandledCommand === "clear") {
-      promptRef.current = "";
-      clearComposerDraftContent(activeThread.id);
-      setComposerHighlightedItemId(null);
-      setComposerCursor(0);
-      setComposerTrigger(null);
-      void handleClearCommand();
       return;
     }
     if (!hasSendableContent) {
@@ -3552,6 +3553,10 @@ export default function ChatView({ threadId }: ChatViewProps) {
           }
           return;
         }
+        if (item.command === "clear") {
+          void handleClearCommand();
+          return;
+        }
         void handleInteractionModeChange(item.command === "plan" ? "plan" : "default");
         const applied = applyPromptReplacement(trigger.rangeStart, trigger.rangeEnd, "", {
           expectedText: snapshot.value.slice(trigger.rangeStart, trigger.rangeEnd),
@@ -3562,13 +3567,6 @@ export default function ChatView({ threadId }: ChatViewProps) {
         return;
       }
       if (item.type === "provider-slash-command") {
-        // Some provider commands need client-side handling (e.g. /clear starts
-        // a new thread) rather than being forwarded to the provider SDK.
-        const clientAction = CLIENT_HANDLED_PROVIDER_COMMANDS.get(item.commandName);
-        if (clientAction === "clear") {
-          void handleClearCommand();
-          return;
-        }
         // Insert the command text into the composer so the user can add arguments
         // before pressing Enter. The provider SDK interprets the slash command
         // from the message text when the turn is sent.
