@@ -574,6 +574,7 @@ function ArchivedThreadsSection({
 export default function Sidebar() {
   const projects = useStore((store) => store.projects);
   const threads = useStore((store) => store.threads);
+  console.log("[Sidebar] render", { projects: projects.length, threads: threads.length });
   const markThreadUnread = useStore((store) => store.markThreadUnread);
   const toggleProject = useStore((store) => store.toggleProject);
   const reorderProjects = useStore((store) => store.reorderProjects);
