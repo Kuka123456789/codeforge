@@ -42,7 +42,9 @@ export const usePinStore = create<PinState>((set) => ({
 }));
 
 export function usePinsForThread(threadId: ThreadId | undefined): Pin[] {
-  return usePinStore((state) => (threadId ? state.pins.filter((p) => p.threadId === threadId) : []));
+  return usePinStore((state) =>
+    threadId ? state.pins.filter((p) => p.threadId === threadId) : [],
+  );
 }
 
 export function isMessagePinned(pins: Pin[], messageId: MessageId): boolean {

@@ -27,6 +27,8 @@ import {
   GlobeIcon,
   HammerIcon,
   type LucideIcon,
+  PinIcon,
+  PinOffIcon,
   SquarePenIcon,
   TerminalIcon,
   Undo2Icon,
@@ -434,6 +436,22 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                 )}
                 <div className="mt-1.5 flex items-center justify-end gap-2">
                   <div className="flex items-center gap-1.5 opacity-0 transition-opacity duration-200 focus-within:opacity-100 group-hover:opacity-100">
+                    <Button
+                      type="button"
+                      size="xs"
+                      variant="outline"
+                      onClick={() => onPinMessage(row.message.id, "user", row.message.text)}
+                      title={
+                        pinnedMessageIds.has(row.message.id) ? "Already pinned" : "Pin message"
+                      }
+                      className={pinnedMessageIds.has(row.message.id) ? "text-amber-400" : ""}
+                    >
+                      {pinnedMessageIds.has(row.message.id) ? (
+                        <PinOffIcon className="size-3" />
+                      ) : (
+                        <PinIcon className="size-3" />
+                      )}
+                    </Button>
                     {displayedUserMessage.copyText && (
                       <MessageCopyButton text={displayedUserMessage.copyText} />
                     )}
@@ -474,7 +492,26 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                   <span className="h-px flex-1 bg-border" />
                 </div>
               )}
-              <div className="min-w-0 px-1 py-0.5">
+              <div className="group/assistant relative min-w-0 px-1 py-0.5">
+                <div className="absolute right-0 top-0 z-10 flex items-center gap-1 opacity-0 transition-opacity duration-200 group-hover/assistant:opacity-100">
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    onClick={() => onPinMessage(row.message.id, "assistant", row.message.text)}
+                    title={pinnedMessageIds.has(row.message.id) ? "Already pinned" : "Pin message"}
+                    className={cn(
+                      "bg-background/80",
+                      pinnedMessageIds.has(row.message.id) && "text-amber-400",
+                    )}
+                  >
+                    {pinnedMessageIds.has(row.message.id) ? (
+                      <PinOffIcon className="size-3" />
+                    ) : (
+                      <PinIcon className="size-3" />
+                    )}
+                  </Button>
+                </div>
                 <ChatMarkdown
                   text={messageText}
                   cwd={markdownCwd}

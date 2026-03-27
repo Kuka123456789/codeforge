@@ -83,7 +83,7 @@ import { useTurnDiffSummaries } from "../hooks/useTurnDiffSummaries";
 import BranchToolbar from "./BranchToolbar";
 import { resolveShortcutCommand, shortcutLabelForCommand } from "../keybindings";
 import PinsSidebar from "./PinsSidebar";
-import { usePinStore, usePinsForThread, isMessagePinned } from "../pinStore";
+import { usePinStore, usePinsForThread } from "../pinStore";
 import ThreadTerminalDrawer from "./ThreadTerminalDrawer";
 import {
   BotIcon,
@@ -343,6 +343,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const clearSending = useSendStatusStore((s) => s.clearSending);
   const addPin = usePinStore((s) => s.addPin);
   const removePin = usePinStore((s) => s.removePin);
+  const threadPins = usePinsForThread(threadId);
   const [sendStartedAt, setSendStartedAt] = useState<string | null>(null);
   const [isConnecting, _setIsConnecting] = useState(false);
   const [isRevertingCheckpoint, setIsRevertingCheckpoint] = useState(false);
@@ -491,7 +492,6 @@ export default function ChatView({ threadId }: ChatViewProps) {
     [draftThread, fallbackDraftProject?.defaultModelSelection, localDraftError, threadId],
   );
   const activeThread = serverThread ?? localDraftThread;
-  const threadPins = usePinsForThread(activeThread?.id);
   const runtimeMode =
     composerDraft.runtimeMode ?? activeThread?.runtimeMode ?? DEFAULT_RUNTIME_MODE;
   const interactionMode =
@@ -1762,6 +1762,26 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const togglePinsSidebar = useCallback(() => {
     setPinsSidebarOpen((open) => !open);
   }, []);
+
+  const pinnedMessageIds = useMemo(
+    () => new Set(threadPins.filter((p) => p.selectedText === null).map((p) => p.messageId)),
+    [threadPins],
+  );
+
+  const handlePinMessage = useCallback(
+    (messageId: MessageId, messageRole: "user" | "assistant", text: string) => {
+      if (!activeThread) return;
+      addPin({
+        threadId: activeThread.id,
+        messageId,
+        messageRole,
+        selectedText: null,
+        fullMessageText: text,
+      });
+      setPinsSidebarOpen(true);
+    },
+    [activeThread, addPin],
+  );
 
   const handleScrollToPinSourceMessage = useCallback(
     (messageId: MessageId) => {
@@ -3983,6 +4003,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
                 workspaceRoot={activeProject?.cwd ?? undefined}
                 scrollToRowIndex={scrollToRowIndex}
                 onScrollToRowComplete={handleScrollToRowComplete}
+                pinnedMessageIds={pinnedMessageIds}
+                onPinMessage={handlePinMessage}
               />
             </div>
 
@@ -4323,9 +4345,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
                               size="sm"
                               type="button"
                               onClick={togglePinsSidebar}
-                              title={
-                                pinsSidebarOpen ? "Hide pins" : "Show pins"
-                              }
+                              title={pinsSidebarOpen ? "Hide pins" : "Show pins"}
                             >
                               <PinIcon />
                               <span className="sr-only sm:not-sr-only">

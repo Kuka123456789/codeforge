@@ -91,6 +91,8 @@ describe("MessagesTimeline", () => {
         workspaceRoot={undefined}
         scrollToRowIndex={null}
         onScrollToRowComplete={() => {}}
+        pinnedMessageIds={new Set()}
+        onPinMessage={() => {}}
       />,
     );
 
@@ -138,6 +140,8 @@ describe("MessagesTimeline", () => {
         workspaceRoot={undefined}
         scrollToRowIndex={null}
         onScrollToRowComplete={() => {}}
+        pinnedMessageIds={new Set()}
+        onPinMessage={() => {}}
       />,
     );
 

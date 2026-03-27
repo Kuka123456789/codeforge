@@ -60,7 +60,15 @@ const PinsSidebar = memo(function PinsSidebar({
               </p>
             </div>
           ) : (
-            pins.map((pin) => <PinItem key={pin.id} pin={pin} markdownCwd={markdownCwd} onRemove={onRemovePin} onScrollTo={onScrollToMessage} />)
+            pins.map((pin) => (
+              <PinItem
+                key={pin.id}
+                pin={pin}
+                markdownCwd={markdownCwd}
+                onRemove={onRemovePin}
+                onScrollTo={onScrollToMessage}
+              />
+            ))
           )}
         </div>
       </ScrollArea>
