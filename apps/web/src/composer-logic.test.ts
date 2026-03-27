@@ -6,6 +6,7 @@ import {
   detectComposerTrigger,
   expandCollapsedComposerCursor,
   isCollapsedCursorAdjacentToInlineToken,
+  parseStandaloneClientHandledProviderCommand,
   parseStandaloneComposerSlashCommand,
   replaceTextRange,
 } from "./composer-logic";
@@ -280,12 +281,30 @@ describe("parseStandaloneComposerSlashCommand", () => {
     expect(parseStandaloneComposerSlashCommand("/default")).toBe("default");
   });
 
-  it("parses standalone /clear command", () => {
-    expect(parseStandaloneComposerSlashCommand("/clear")).toBe("clear");
-    expect(parseStandaloneComposerSlashCommand(" /clear ")).toBe("clear");
+  it("does not match client-handled provider commands like /clear", () => {
+    expect(parseStandaloneComposerSlashCommand("/clear")).toBeNull();
   });
 
   it("ignores slash commands with extra message text", () => {
     expect(parseStandaloneComposerSlashCommand("/plan explain this")).toBeNull();
+  });
+});
+
+describe("parseStandaloneClientHandledProviderCommand", () => {
+  it("detects /clear as a client-handled provider command", () => {
+    expect(parseStandaloneClientHandledProviderCommand("/clear")).toBe("clear");
+    expect(parseStandaloneClientHandledProviderCommand(" /clear ")).toBe("clear");
+  });
+
+  it("returns null for unknown commands", () => {
+    expect(parseStandaloneClientHandledProviderCommand("/compact")).toBeNull();
+  });
+
+  it("returns null for non-command text", () => {
+    expect(parseStandaloneClientHandledProviderCommand("hello world")).toBeNull();
+  });
+
+  it("returns null for commands with arguments", () => {
+    expect(parseStandaloneClientHandledProviderCommand("/clear everything")).toBeNull();
   });
 });
