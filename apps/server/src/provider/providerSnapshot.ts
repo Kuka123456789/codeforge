@@ -108,6 +108,7 @@ export function buildServerProvider(input: {
   checkedAt: string;
   models: ReadonlyArray<ServerProviderModel>;
   probe: ProviderProbeResult;
+  slashCommands?: ReadonlyArray<ServerProvider["slashCommands"][number]>;
 }): ServerProvider {
   return {
     provider: input.provider,
@@ -119,6 +120,7 @@ export function buildServerProvider(input: {
     checkedAt: input.checkedAt,
     ...(input.probe.message ? { message: input.probe.message } : {}),
     models: input.models,
+    slashCommands: input.slashCommands ?? [],
   };
 }
 

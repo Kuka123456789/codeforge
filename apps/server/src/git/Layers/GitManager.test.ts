@@ -485,7 +485,7 @@ function makeManager(input?: {
   const { service: gitHubCli, ghCalls } = createGitHubCliWithFakeGh(input?.ghScenario);
   const textGeneration = createTextGeneration(input?.textGeneration);
   const ServerConfigLayer = ServerConfig.layerTest(process.cwd(), {
-    prefix: "t3-git-manager-test-",
+    prefix: "codeforge-git-manager-test-",
   });
 
   const serverSettingsLayer = ServerSettingsService.layerTest();
@@ -509,7 +509,7 @@ function makeManager(input?: {
 }
 
 const GitManagerTestLayer = GitCoreLive.pipe(
-  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "t3-git-manager-test-" })),
+  Layer.provide(ServerConfig.layerTest(process.cwd(), { prefix: "codeforge-git-manager-test-" })),
   Layer.provideMerge(NodeServices.layer),
 );
 

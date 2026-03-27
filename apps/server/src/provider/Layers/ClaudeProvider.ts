@@ -7,7 +7,7 @@ import type {
   ServerProviderAuthStatus,
   ServerProviderState,
 } from "@codeforge/contracts";
-import { Effect, Equal, Layer, Option, Result, Stream } from "effect";
+import { Effect, Equal, Layer, Option, PubSub, Result, Stream } from "effect";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { getDefaultEffort, hasEffortLevel, trimOrNull } from "@codeforge/shared/model";
 
@@ -25,6 +25,7 @@ import {
 import { makeManagedServerProvider } from "../makeManagedServerProvider";
 import { ClaudeProvider } from "../Services/ClaudeProvider";
 import { ServerSettingsError, ServerSettingsService } from "../../serverSettings";
+import { getSlashCommands, onSlashCommandsChanged } from "../slashCommandsCache";
 
 const PROVIDER = "claudeAgent" as const;
 const BUILT_IN_MODELS: ReadonlyArray<ServerProviderModel> = [
@@ -367,6 +368,7 @@ export const checkClaudeProviderStatus = Effect.fn("checkClaudeProviderStatus")(
         authStatus: parsed.authStatus,
         ...(parsed.message ? { message: parsed.message } : {}),
       },
+      slashCommands: getSlashCommands(PROVIDER),
     });
   },
 );
@@ -382,6 +384,18 @@ export const ClaudeProviderLive = Layer.effect(
       Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
     );
 
+    // Bridge the module-level slashCommandsCache into an Effect Stream so
+    // that makeManagedServerProvider can force-refresh when commands are
+    // discovered during session startup.
+    const slashCommandsDiscoveredPubSub = yield* Effect.acquireRelease(
+      PubSub.unbounded<void>(),
+      PubSub.shutdown,
+    );
+    const disposeListener = onSlashCommandsChanged(() => {
+      PubSub.unsafeOffer(slashCommandsDiscoveredPubSub, undefined);
+    });
+    yield* Effect.addFinalizer(() => Effect.sync(disposeListener));
+
     return yield* makeManagedServerProvider<ClaudeSettings>({
       getSettings: serverSettings.getSettings.pipe(
         Effect.map((settings) => settings.providers.claudeAgent),
@@ -392,6 +406,7 @@ export const ClaudeProviderLive = Layer.effect(
       ),
       haveSettingsChanged: (previous, next) => !Equal.equals(previous, next),
       checkProvider,
+      externalRefreshTrigger: Stream.fromPubSub(slashCommandsDiscoveredPubSub),
     });
   }),
 );

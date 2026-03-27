@@ -11,6 +11,8 @@ export function makeManagedServerProvider<Settings>(input: {
   readonly haveSettingsChanged: (previous: Settings, next: Settings) => boolean;
   readonly checkProvider: Effect.Effect<ServerProvider, ServerSettingsError>;
   readonly refreshInterval?: Duration.Input;
+  /** External trigger to force a snapshot refresh (e.g. when slash commands are discovered). */
+  readonly externalRefreshTrigger?: Stream.Stream<void>;
 }): Effect.Effect<ServerProviderShape, ServerSettingsError, Scope.Scope> {
   return Effect.gen(function* () {
     const refreshSemaphore = yield* Semaphore.make(1);
@@ -56,6 +58,12 @@ export function makeManagedServerProvider<Settings>(input: {
         Effect.ignoreCause({ log: true }),
       ),
     ).pipe(Effect.forkScoped);
+
+    if (input.externalRefreshTrigger) {
+      yield* Stream.runForEach(input.externalRefreshTrigger, () =>
+        Effect.asVoid(refreshSnapshot.pipe(Effect.ignoreCause({ log: true }))),
+      ).pipe(Effect.forkScoped);
+    }
 
     return {
       getSnapshot: input.getSettings.pipe(

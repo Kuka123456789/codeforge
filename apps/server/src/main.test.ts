@@ -35,7 +35,7 @@ const findAvailablePort = vi.fn((preferred: number) => Effect.succeed(preferred)
 // Shared service layer used by this CLI test suite.
 const testLayer = Layer.mergeAll(
   Layer.succeed(CliConfig, {
-    cwd: "/tmp/t3-test-workspace",
+    cwd: "/tmp/codeforge-test-workspace",
     fixPath: Effect.void,
     resolveStaticDir: Effect.undefined,
   } satisfies CliConfigShape),
@@ -95,7 +95,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         "--host",
         "0.0.0.0",
         "--home-dir",
-        "/tmp/t3-cli-home",
+        "/tmp/codeforge-cli-home",
         "--dev-url",
         "http://127.0.0.1:5173",
         "--no-browser",
@@ -107,8 +107,8 @@ it.layer(testLayer)("server CLI command", (it) => {
       assert.equal(resolvedConfig?.mode, "desktop");
       assert.equal(resolvedConfig?.port, 4010);
       assert.equal(resolvedConfig?.host, "0.0.0.0");
-      assert.equal(resolvedConfig?.baseDir, "/tmp/t3-cli-home");
-      assert.equal(resolvedConfig?.stateDir, "/tmp/t3-cli-home/dev");
+      assert.equal(resolvedConfig?.baseDir, "/tmp/codeforge-cli-home");
+      assert.equal(resolvedConfig?.stateDir, "/tmp/codeforge-cli-home/dev");
       assert.equal(resolvedConfig?.devUrl?.toString(), "http://127.0.0.1:5173/");
       assert.equal(resolvedConfig?.noBrowser, true);
       assert.equal(resolvedConfig?.authToken, "auth-secret");
@@ -133,7 +133,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         CODEFORGE_MODE: "desktop",
         CODEFORGE_PORT: "4999",
         CODEFORGE_HOST: "100.88.10.4",
-        CODEFORGE_HOME: "/tmp/t3-env-home",
+        CODEFORGE_HOME: "/tmp/codeforge-env-home",
         VITE_DEV_SERVER_URL: "http://localhost:5173",
         CODEFORGE_NO_BROWSER: "true",
         CODEFORGE_AUTH_TOKEN: "env-token",
@@ -143,8 +143,8 @@ it.layer(testLayer)("server CLI command", (it) => {
       assert.equal(resolvedConfig?.mode, "desktop");
       assert.equal(resolvedConfig?.port, 4999);
       assert.equal(resolvedConfig?.host, "100.88.10.4");
-      assert.equal(resolvedConfig?.baseDir, "/tmp/t3-env-home");
-      assert.equal(resolvedConfig?.stateDir, "/tmp/t3-env-home/dev");
+      assert.equal(resolvedConfig?.baseDir, "/tmp/codeforge-env-home");
+      assert.equal(resolvedConfig?.stateDir, "/tmp/codeforge-env-home/dev");
       assert.equal(resolvedConfig?.devUrl?.toString(), "http://localhost:5173/");
       assert.equal(resolvedConfig?.noBrowser, true);
       assert.equal(resolvedConfig?.authToken, "env-token");
@@ -156,7 +156,10 @@ it.layer(testLayer)("server CLI command", (it) => {
 
   const openBootstrapFd = Effect.fn(function* (payload: Record<string, unknown>) {
     const fs = yield* FileSystem.FileSystem;
-    const filePath = yield* fs.makeTempFileScoped({ prefix: "t3-bootstrap-", suffix: ".ndjson" });
+    const filePath = yield* fs.makeTempFileScoped({
+      prefix: "codeforge-bootstrap-",
+      suffix: ".ndjson",
+    });
     yield* fs.writeFileString(filePath, `${JSON.stringify(payload)}\n`);
     const { fd } = yield* fs.open(filePath, { flag: "r" });
     return fd;
@@ -185,7 +188,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         mode: "desktop",
         port: 4888,
         host: "127.0.0.2",
-        codeforgeHome: "/tmp/t3-bootstrap-home",
+        codeforgeHome: "/tmp/codeforge-bootstrap-home",
         devUrl: "http://127.0.0.1:5173",
         noBrowser: true,
         authToken: "bootstrap-token",
@@ -201,8 +204,8 @@ it.layer(testLayer)("server CLI command", (it) => {
       assert.equal(resolvedConfig?.mode, "desktop");
       assert.equal(resolvedConfig?.port, 4888);
       assert.equal(resolvedConfig?.host, "127.0.0.2");
-      assert.equal(resolvedConfig?.baseDir, "/tmp/t3-bootstrap-home");
-      assert.equal(resolvedConfig?.stateDir, "/tmp/t3-bootstrap-home/dev");
+      assert.equal(resolvedConfig?.baseDir, "/tmp/codeforge-bootstrap-home");
+      assert.equal(resolvedConfig?.stateDir, "/tmp/codeforge-bootstrap-home/dev");
       assert.equal(resolvedConfig?.devUrl?.toString(), "http://127.0.0.1:5173/");
       assert.equal(resolvedConfig?.noBrowser, true);
       assert.equal(resolvedConfig?.authToken, "bootstrap-token");
@@ -217,7 +220,7 @@ it.layer(testLayer)("server CLI command", (it) => {
         mode: "desktop",
         port: 4888,
         host: "127.0.0.2",
-        codeforgeHome: "/tmp/t3-bootstrap-home",
+        codeforgeHome: "/tmp/codeforge-bootstrap-home",
         devUrl: "http://127.0.0.1:5173",
         noBrowser: false,
         authToken: "bootstrap-token",
@@ -228,7 +231,7 @@ it.layer(testLayer)("server CLI command", (it) => {
       yield* runCli(["--port", "4999", "--host", "0.0.0.0", "--auth-token", "cli-token"], {
         CODEFORGE_MODE: "web",
         CODEFORGE_BOOTSTRAP_FD: String(fd),
-        CODEFORGE_HOME: "/tmp/t3-env-home",
+        CODEFORGE_HOME: "/tmp/codeforge-env-home",
         CODEFORGE_NO_BROWSER: "true",
         CODEFORGE_AUTO_BOOTSTRAP_PROJECT_FROM_CWD: "true",
         CODEFORGE_LOG_WS_EVENTS: "true",
@@ -238,7 +241,7 @@ it.layer(testLayer)("server CLI command", (it) => {
       assert.equal(resolvedConfig?.mode, "web");
       assert.equal(resolvedConfig?.port, 4999);
       assert.equal(resolvedConfig?.host, "0.0.0.0");
-      assert.equal(resolvedConfig?.baseDir, "/tmp/t3-env-home");
+      assert.equal(resolvedConfig?.baseDir, "/tmp/codeforge-env-home");
       assert.equal(resolvedConfig?.devUrl?.toString(), "http://127.0.0.1:5173/");
       assert.equal(resolvedConfig?.noBrowser, true);
       assert.equal(resolvedConfig?.authToken, "cli-token");
