@@ -1,12 +1,20 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { MessageId } from "@codeforge/contracts";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
 import ChatMarkdown from "./ChatMarkdown";
-import { PanelRightCloseIcon, XIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, PanelRightCloseIcon, XIcon } from "lucide-react";
 import { cn } from "~/lib/utils";
 import type { Pin } from "../pinStore";
+
+const MIN_WIDTH = 280;
+const MAX_WIDTH = 800;
+const DEFAULT_WIDTH = 340;
+
+function clampWidth(w: number): number {
+  return Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, Math.round(w)));
+}
 
 interface PinsSidebarProps {
   pins: Pin[];
@@ -23,8 +31,62 @@ const PinsSidebar = memo(function PinsSidebar({
   onRemovePin,
   onScrollToMessage,
 }: PinsSidebarProps) {
+  const [width, setWidth] = useState(DEFAULT_WIDTH);
+  const widthRef = useRef(width);
+  widthRef.current = width;
+
+  const resizeStateRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
+
+  const handleResizePointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    resizeStateRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startWidth: widthRef.current,
+    };
+  }, []);
+
+  const handleResizePointerMove = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = resizeStateRef.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    // Dragging left increases width (sidebar is on the right)
+    const nextWidth = clampWidth(state.startWidth + (state.startX - event.clientX));
+    if (nextWidth !== widthRef.current) {
+      widthRef.current = nextWidth;
+      setWidth(nextWidth);
+    }
+  }, []);
+
+  const handleResizePointerEnd = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const state = resizeStateRef.current;
+    if (!state || state.pointerId !== event.pointerId) return;
+    resizeStateRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  }, []);
+
   return (
-    <div className="flex h-full w-[340px] shrink-0 flex-col border-l border-border/70 bg-card/50">
+    <div
+      className="relative flex h-full shrink-0 flex-col border-l border-border/70 bg-card/50"
+      style={{ width: `${width}px` }}
+    >
+      {/* Resize handle */}
+      <div
+        className="absolute inset-y-0 left-0 z-20 w-1.5 cursor-col-resize"
+        onPointerDown={handleResizePointerDown}
+        onPointerMove={handleResizePointerMove}
+        onPointerUp={handleResizePointerEnd}
+        onPointerCancel={handleResizePointerEnd}
+      />
+
       {/* Header */}
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/60 px-3">
         <div className="flex items-center gap-2">
@@ -87,9 +149,15 @@ const PinItem = memo(function PinItem({
   onRemove: (pinId: string) => void;
   onScrollTo: (messageId: MessageId) => void;
 }) {
-  const handleClick = useCallback(() => {
-    onScrollTo(pin.messageId);
-  }, [onScrollTo, pin.messageId]);
+  const [expanded, setExpanded] = useState(false);
+
+  const handleScrollTo = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onScrollTo(pin.messageId);
+    },
+    [onScrollTo, pin.messageId],
+  );
 
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {
@@ -99,21 +167,31 @@ const PinItem = memo(function PinItem({
     [onRemove, pin.id],
   );
 
+  const toggleExpanded = useCallback(() => {
+    setExpanded((v) => !v);
+  }, []);
+
   const displayText = pin.selectedText ?? pin.fullMessageText;
   const isSelection = pin.selectedText !== null;
 
   return (
-    <button
-      type="button"
+    <div
       className={cn(
-        "group relative w-full cursor-pointer rounded-lg border border-border/50 bg-background/50 p-3 text-left transition-colors duration-150",
+        "group relative w-full rounded-lg border border-border/50 bg-background/50 transition-colors duration-150",
         "hover:border-border/80 hover:bg-background/80",
       )}
-      onClick={handleClick}
-      title="Click to scroll to message"
     >
-      {/* Header badges */}
-      <div className="mb-2 flex items-center gap-1.5">
+      {/* Header — clickable to expand/collapse */}
+      <button
+        type="button"
+        className="flex w-full items-center gap-1.5 px-3 pt-2.5 pb-1 text-left"
+        onClick={toggleExpanded}
+      >
+        {expanded ? (
+          <ChevronDownIcon className="size-3 shrink-0 text-muted-foreground/40" />
+        ) : (
+          <ChevronRightIcon className="size-3 shrink-0 text-muted-foreground/40" />
+        )}
         <Badge
           variant="secondary"
           className={cn(
@@ -133,32 +211,72 @@ const PinItem = memo(function PinItem({
             Selection
           </Badge>
         )}
-      </div>
+      </button>
 
-      {/* Content preview */}
-      <div className="max-h-[200px] overflow-hidden text-sm">
-        {pin.messageRole === "assistant" ? (
-          <div className="line-clamp-[8] [&_.chat-markdown]:text-xs [&_.chat-markdown]:leading-relaxed">
-            <ChatMarkdown text={displayText} cwd={markdownCwd} isStreaming={false} />
-          </div>
-        ) : (
-          <pre className="line-clamp-[8] whitespace-pre-wrap font-mono text-xs leading-relaxed text-foreground/80">
-            {displayText}
-          </pre>
+      {/* Content */}
+      <div className={cn("px-3 pb-3", !expanded && "cursor-pointer")} onClick={!expanded ? toggleExpanded : undefined}>
+        <div className={cn("text-sm", !expanded && "max-h-[120px] overflow-hidden")}>
+          {pin.messageRole === "assistant" ? (
+            <div
+              className={cn(
+                "[&_.chat-markdown]:text-xs [&_.chat-markdown]:leading-relaxed",
+                !expanded && "line-clamp-[5]",
+              )}
+            >
+              <ChatMarkdown text={displayText} cwd={markdownCwd} isStreaming={false} />
+            </div>
+          ) : (
+            <pre
+              className={cn(
+                "whitespace-pre-wrap font-mono text-xs leading-relaxed text-foreground/80",
+                !expanded && "line-clamp-[5]",
+              )}
+            >
+              {displayText}
+            </pre>
+          )}
+        </div>
+        {/* Fade-out gradient when collapsed */}
+        {!expanded && (
+          <div className="pointer-events-none relative -mt-6 h-6 bg-gradient-to-t from-background/80 to-transparent" />
         )}
       </div>
 
-      {/* Remove button */}
-      <Button
-        size="icon-xs"
-        variant="ghost"
-        onClick={handleRemove}
-        aria-label="Unpin"
-        className="absolute right-1.5 top-1.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100 text-muted-foreground/50 hover:text-foreground/70"
-      >
-        <XIcon className="size-3" />
-      </Button>
-    </button>
+      {/* Action buttons — top right */}
+      <div className="absolute right-1.5 top-1.5 flex items-center gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          onClick={handleScrollTo}
+          aria-label="Scroll to message"
+          title="Scroll to message"
+          className="text-muted-foreground/50 hover:text-foreground/70"
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </Button>
+        <Button
+          size="icon-xs"
+          variant="ghost"
+          onClick={handleRemove}
+          aria-label="Unpin"
+          className="text-muted-foreground/50 hover:text-foreground/70"
+        >
+          <XIcon className="size-3" />
+        </Button>
+      </div>
+    </div>
   );
 });
 
