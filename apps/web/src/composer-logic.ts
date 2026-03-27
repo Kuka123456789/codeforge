@@ -1,7 +1,7 @@
 import { splitPromptIntoComposerSegments } from "./composer-editor-mentions";
 import { INLINE_TERMINAL_CONTEXT_PLACEHOLDER } from "./lib/terminalContext";
 
-export type ComposerSlashCommand = "model" | "plan" | "default" | "clear";
+export type ComposerSlashCommand = "model" | "plan" | "default";
 
 export type ComposerTriggerKind = "path" | "slash-command" | "slash-model";
 
@@ -238,14 +238,36 @@ export function detectComposerTrigger(text: string, cursorInput: number): Compos
 export function parseStandaloneComposerSlashCommand(
   text: string,
 ): Exclude<ComposerSlashCommand, "model"> | null {
-  const match = /^\/(plan|default|clear)\s*$/i.exec(text.trim());
+  const match = /^\/(plan|default)\s*$/i.exec(text.trim());
   if (!match) {
     return null;
   }
   const command = match[1]?.toLowerCase();
   if (command === "plan") return "plan";
-  if (command === "clear") return "clear";
   return "default";
+}
+
+/**
+ * Provider slash commands (reported by the SDK via `supportedCommands()`) that
+ * require client-side handling instead of being forwarded to the provider as
+ * message text.  The key is the command name, the value is a tag identifying
+ * the client action.
+ */
+export const CLIENT_HANDLED_PROVIDER_COMMANDS: ReadonlyMap<string, "clear"> = new Map([
+  ["clear", "clear"],
+]);
+
+/**
+ * If the entire composer text is a standalone provider slash command that
+ * requires client-side handling, returns the client action tag.  Returns
+ * `null` otherwise.
+ */
+export function parseStandaloneClientHandledProviderCommand(text: string): "clear" | null {
+  const match = /^\/(\S+)\s*$/i.exec(text.trim());
+  if (!match) return null;
+  const name = match[1]?.toLowerCase();
+  if (!name) return null;
+  return CLIENT_HANDLED_PROVIDER_COMMANDS.get(name) ?? null;
 }
 
 export function replaceTextRange(
