@@ -58,9 +58,13 @@ These must be done before the landing page goes live or any promotion happens.
 
 These are the real features CodeForge adds over upstream T3 Code:
 
-1. **Chat archiving** — Archive old conversations to keep your workspace clean. T3 Code doesn't have this.
-2. **Better chat renaming** — Inline clickable rename in the chat header. Faster and more intuitive.
-3. **Better git staging UX** — Selective file staging with a polished interface for choosing what goes into commits.
-4. **Better UI overall** — Resizable sidebar, escape to stop generation, edit & resend messages, context window usage display, word wrap toggle for diffs, scroll-to-bottom pill, sorted threads by recency, collapsed sidebar previews.
+1. **Native slash commands for all providers** — Slash command system that works across Claude, Codex, and any provider. T3 Code has limited support.
+2. **Skills management** — Organize and manage reusable AI skills. T3 Code doesn't have this.
+3. **Smart chat search** — Search across all conversations. T3 Code doesn't have this.
+4. **Prompt history UI** — View and navigate previous prompts with a polished interface. T3 Code has only basic support.
+5. **Chat archiving** — Archive old conversations to keep your workspace clean. T3 Code doesn't have this.
+6. **Better chat renaming** — Inline clickable rename in the chat header. Faster and more intuitive.
+7. **Better git staging UX** — Selective file staging with a polished interface for choosing what goes into commits.
+8. **Better UI overall** — Resizable sidebar, escape to stop generation, edit & resend messages, context window usage display, word wrap toggle for diffs, scroll-to-bottom pill, sorted threads by recency, collapsed sidebar previews.
 
 Note: T3 Code now also has multi-provider support, multi-terminal, and likely customizable keybindings. Don't claim these as differentiators.
