@@ -83,7 +83,7 @@ import { useTurnDiffSummaries } from "../hooks/useTurnDiffSummaries";
 import BranchToolbar from "./BranchToolbar";
 import { resolveShortcutCommand, shortcutLabelForCommand } from "../keybindings";
 import PinsSidebar from "./PinsSidebar";
-import { usePinStore, usePinsForThread, isMessagePinned } from "../pinStore";
+import { usePinStore, usePinsForThread } from "../pinStore";
 import ThreadTerminalDrawer from "./ThreadTerminalDrawer";
 import {
   BotIcon,

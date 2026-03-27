@@ -441,9 +441,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
                       size="xs"
                       variant="outline"
                       onClick={() => onPinMessage(row.message.id, "user", row.message.text)}
-                      title={
-                        pinnedMessageIds.has(row.message.id) ? "Unpin message" : "Pin message"
-                      }
+                      title={pinnedMessageIds.has(row.message.id) ? "Unpin message" : "Pin message"}
                       className={pinnedMessageIds.has(row.message.id) ? "text-amber-400" : ""}
                     >
                       {pinnedMessageIds.has(row.message.id) ? (

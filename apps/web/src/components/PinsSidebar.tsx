@@ -205,7 +205,11 @@ const PinItem = memo(function PinItem({
       </div>
 
       {/* Content — click scrolls to source message */}
-      <div className="cursor-pointer px-3" onClick={handleScrollTo} title="Click to scroll to message">
+      <div
+        className="cursor-pointer px-3"
+        onClick={handleScrollTo}
+        title="Click to scroll to message"
+      >
         <div className={cn("text-sm", !expanded && "max-h-[120px] overflow-hidden")}>
           {pin.messageRole === "assistant" ? (
             <div
