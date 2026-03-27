@@ -1138,7 +1138,8 @@ export default function ChatView({ threadId }: ChatViewProps) {
       }
       return allItems.filter((item) => {
         const label = item.label.slice(1).toLowerCase();
-        return label.includes(query);
+        const desc = item.description.toLowerCase();
+        return label.includes(query) || desc.includes(query);
       });
     }
 
