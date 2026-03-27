@@ -3950,6 +3950,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
                         questionIndex={activePendingQuestionIndex}
                         onSelectOption={onSelectActivePendingUserInputOption}
                         onAdvance={onAdvanceActivePendingUserInput}
+                        onPrevious={onPreviousActivePendingUserInputQuestion}
                       />
                     </div>
                   ) : showPlanFollowUpPrompt && activeProposedPlan ? (
