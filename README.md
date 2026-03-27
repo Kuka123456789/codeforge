@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/pingdotgg/codeforge/releases">Download</a> · <a href="https://discord.gg/jn4EGJjrvv">Discord</a> · <a href="./CONTRIBUTING.md">Contributing</a>
+  <a href="https://github.com/Kuka123456789/codeforge/releases">Download</a> · <a href="https://discord.gg/jn4EGJjrvv">Discord</a> · <a href="./CONTRIBUTING.md">Contributing</a>
 </p>
 
 <p align="center">
@@ -35,7 +35,7 @@ CodeForge gives you a single UI for working with AI coding agents. Point it at a
 
 ### Desktop App (Recommended)
 
-Download from the [Releases page](https://github.com/pingdotgg/codeforge/releases).
+Download from the [Releases page](https://github.com/Kuka123456789/codeforge/releases).
 
 ### CLI
 

@@ -1,4 +1,4 @@
-const REPO = "pingdotgg/codeforge";
+const REPO = "Kuka123456789/codeforge";
 
 export const RELEASES_URL = `https://github.com/${REPO}/releases`;
 

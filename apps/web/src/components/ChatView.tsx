@@ -38,9 +38,7 @@ import {
   collapseExpandedComposerCursor,
   detectComposerTrigger,
   expandCollapsedComposerCursor,
-  parseStandaloneClientHandledProviderCommand,
   parseStandaloneComposerSlashCommand,
-  CLIENT_HANDLED_PROVIDER_COMMANDS,
   replaceTextRange,
 } from "../composer-logic";
 import {
