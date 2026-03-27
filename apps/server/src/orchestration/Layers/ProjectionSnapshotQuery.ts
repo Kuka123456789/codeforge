@@ -548,6 +548,7 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
             createdAt: row.createdAt,
             updatedAt: row.updatedAt,
             deletedAt: row.deletedAt,
+            archivedAt: row.archivedAt,
           }));
 
           const threads: ReadonlyArray<OrchestrationThread> = threadRows.map((row) => ({
