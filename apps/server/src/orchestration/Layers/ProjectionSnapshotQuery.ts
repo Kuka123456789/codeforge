@@ -539,39 +539,22 @@ const makeProjectionSnapshotQuery = Effect.gen(function* () {
             });
           }
 
-          const projects: ReadonlyArray<OrchestrationProject> = projectRows.map((row) => ({
-            id: row.projectId,
-            title: row.title,
-            workspaceRoot: row.workspaceRoot,
-            defaultModelSelection: row.defaultModelSelection,
-            scripts: row.scripts,
-            createdAt: row.createdAt,
-            updatedAt: row.updatedAt,
-            deletedAt: row.deletedAt,
-            archivedAt: row.archivedAt,
-          }));
+          const projects: ReadonlyArray<OrchestrationProject> = projectRows.map(
+            ({ projectId, ...rest }) => ({ id: projectId, ...rest }),
+          );
 
-          const threads: ReadonlyArray<OrchestrationThread> = threadRows.map((row) => ({
-            id: row.threadId,
-            projectId: row.projectId,
-            title: row.title,
-            titleSource: row.titleSource,
-            modelSelection: row.modelSelection,
-            runtimeMode: row.runtimeMode,
-            interactionMode: row.interactionMode,
-            branch: row.branch,
-            worktreePath: row.worktreePath,
-            latestTurn: latestTurnByThread.get(row.threadId) ?? null,
-            createdAt: row.createdAt,
-            updatedAt: row.updatedAt,
-            deletedAt: row.deletedAt,
-            archivedAt: row.archivedAt,
-            messages: messagesByThread.get(row.threadId) ?? [],
-            proposedPlans: proposedPlansByThread.get(row.threadId) ?? [],
-            activities: activitiesByThread.get(row.threadId) ?? [],
-            checkpoints: checkpointsByThread.get(row.threadId) ?? [],
-            session: sessionsByThread.get(row.threadId) ?? null,
-          }));
+          const threads: ReadonlyArray<OrchestrationThread> = threadRows.map(
+            ({ threadId, latestTurnId: _, ...rest }) => ({
+              id: threadId,
+              ...rest,
+              latestTurn: latestTurnByThread.get(threadId) ?? null,
+              messages: messagesByThread.get(threadId) ?? [],
+              proposedPlans: proposedPlansByThread.get(threadId) ?? [],
+              activities: activitiesByThread.get(threadId) ?? [],
+              checkpoints: checkpointsByThread.get(threadId) ?? [],
+              session: sessionsByThread.get(threadId) ?? null,
+            }),
+          );
 
           const snapshot = {
             snapshotSequence: computeSnapshotSequence(stateRows),

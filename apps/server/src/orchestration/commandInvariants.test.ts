@@ -36,6 +36,7 @@ const readModel: OrchestrationReadModel = {
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
+      archivedAt: null,
     },
     {
       id: ProjectId.makeUnsafe("project-b"),
@@ -49,6 +50,7 @@ const readModel: OrchestrationReadModel = {
       createdAt: now,
       updatedAt: now,
       deletedAt: null,
+      archivedAt: null,
     },
   ],
   threads: [
