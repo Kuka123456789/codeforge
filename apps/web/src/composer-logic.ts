@@ -1,6 +1,10 @@
 import { splitPromptIntoComposerSegments } from "./composer-editor-mentions";
 import { INLINE_TERMINAL_CONTEXT_PLACEHOLDER } from "./lib/terminalContext";
 
+export type ComposerSlashCommand = "model" | "plan" | "default";
+
+const SLASH_COMMANDS: ReadonlyArray<ComposerSlashCommand> = ["model", "plan", "default"];
+
 export type ComposerTriggerKind = "path" | "slash-command" | "slash-model";
 
 export interface ComposerTrigger {
