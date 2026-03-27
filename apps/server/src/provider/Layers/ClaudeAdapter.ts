@@ -1456,6 +1456,30 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
         const lastGoodUsage = context.lastKnownTokenUsage;
         const maxTokens = resultContextWindow ?? context.lastKnownContextWindow;
 
+        // Derive the usage snapshot, then update accumulated tracking.
+        // Order matters: deriveClaudeContextWindowSnapshot needs the PREVIOUS accumulated
+        // to compute deltas, so we must read it before updating.
+        let usageSnapshot: ThreadTokenUsageSnapshot | undefined;
+        if (lastGoodUsage) {
+          usageSnapshot = {
+            ...lastGoodUsage,
+            ...(typeof maxTokens === "number" && Number.isFinite(maxTokens) && maxTokens > 0
+              ? { maxTokens }
+              : {}),
+            ...(accumulatedSnapshot && accumulatedSnapshot.usedTokens > lastGoodUsage.usedTokens
+              ? { totalProcessedTokens: accumulatedSnapshot.usedTokens }
+              : {}),
+          };
+        } else if (accumulatedSnapshot) {
+          const { snapshot, accumulated } = deriveClaudeContextWindowSnapshot(
+            accumulatedSnapshot,
+            context.accumulatedTokenCounts,
+            maxTokens,
+          );
+          usageSnapshot = snapshot;
+          context.accumulatedTokenCounts = accumulated;
+        }
+
         // Update accumulated tracking from result usage (most complete snapshot).
         if (accumulatedSnapshot) {
           const accInput = accumulatedSnapshot.inputTokens ?? 0;
@@ -1467,24 +1491,6 @@ function makeClaudeAdapter(options?: ClaudeAdapterLiveOptions) {
             };
           }
         }
-
-        const usageSnapshot: ThreadTokenUsageSnapshot | undefined = lastGoodUsage
-          ? {
-              ...lastGoodUsage,
-              ...(typeof maxTokens === "number" && Number.isFinite(maxTokens) && maxTokens > 0
-                ? { maxTokens }
-                : {}),
-              ...(accumulatedSnapshot && accumulatedSnapshot.usedTokens > lastGoodUsage.usedTokens
-                ? { totalProcessedTokens: accumulatedSnapshot.usedTokens }
-                : {}),
-            }
-          : accumulatedSnapshot
-            ? deriveClaudeContextWindowSnapshot(
-                accumulatedSnapshot,
-                context.accumulatedTokenCounts,
-                maxTokens,
-              ).snapshot
-            : undefined;
 
         const turnState = context.turnState;
         if (!turnState) {

@@ -373,7 +373,7 @@ function SortableThreadItem({
         transform: CSS.Translate.toString(transform),
         transition,
       }}
-      className={`w-full ${isDragging ? "z-20 opacity-80" : ""} ${
+      className={`w-full ${isDragging ? "z-20 cursor-grabbing opacity-80" : ""} ${
         isOver && !isDragging ? "ring-1 ring-primary/40 rounded-sm" : ""
       }`}
       data-sidebar="menu-sub-item"
