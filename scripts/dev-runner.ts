@@ -30,10 +30,10 @@ const MODE_ARGS = {
     "--ui=tui",
     "--filter=@codeforge/contracts",
     "--filter=@codeforge/web",
-    "--filter=codeforge",
+    "--filter=codeforge-chat",
     "--parallel",
   ],
-  "dev:server": ["run", "dev", "--filter=codeforge"],
+  "dev:server": ["run", "dev", "--filter=codeforge-chat"],
   "dev:web": ["run", "dev", "--filter=@codeforge/web"],
   "dev:desktop": [
     "run",

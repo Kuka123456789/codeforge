@@ -594,28 +594,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const isOnSettings = useLocation({ select: (loc) => loc.pathname === "/settings" });
   const appSettings = useSettings();
-  const { updateSettings: rawUpdateSettings } = useUpdateSettings();
-
-  // Debug wrapper to trace settings updates
-  const updateSettings = (patch: Parameters<typeof rawUpdateSettings>[0]) => {
-    console.log("[SIDEBAR DEBUG] updateSettings called with:", JSON.stringify(patch));
-    console.log(
-      "[SIDEBAR DEBUG] current appSettings.sidebarProjectSortOrder:",
-      appSettings.sidebarProjectSortOrder,
-    );
-    console.log(
-      "[SIDEBAR DEBUG] current appSettings.sidebarThreadSortOrder:",
-      appSettings.sidebarThreadSortOrder,
-    );
-    rawUpdateSettings(patch);
-    // Check the settings again after a tick
-    setTimeout(() => {
-      console.log(
-        "[SIDEBAR DEBUG] after tick, appSettings.sidebarProjectSortOrder:",
-        appSettings.sidebarProjectSortOrder,
-      );
-    }, 100);
-  };
+  const { updateSettings } = useUpdateSettings();
   const { handleNewThread } = useHandleNewThread();
   const routeThreadId = useParams({
     strict: false,

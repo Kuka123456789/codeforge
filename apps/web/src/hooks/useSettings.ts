@@ -82,22 +82,13 @@ export function useSettings<T extends UnifiedSettings = UnifiedSettings>(
     ClientSettingsSchema,
   );
 
-  const merged = useMemo<UnifiedSettings>(() => {
-    const serverSettings = serverConfig?.settings ?? DEFAULT_SERVER_SETTINGS;
-    const result = {
-      ...serverSettings,
+  const merged = useMemo<UnifiedSettings>(
+    () => ({
+      ...(serverConfig?.settings ?? DEFAULT_SERVER_SETTINGS),
       ...clientSettings,
-    };
-    console.log(
-      "[useSettings DEBUG] merge - server sort:",
-      serverSettings.sidebarProjectSortOrder,
-      "/ merged sort:",
-      result.sidebarProjectSortOrder,
-      "/ clientSettings keys:",
-      Object.keys(clientSettings),
-    );
-    return result;
-  }, [serverConfig?.settings, clientSettings]);
+    }),
+    [serverConfig?.settings, clientSettings],
+  );
 
   return useMemo(() => (selector ? selector(merged) : (merged as T)), [merged, selector]);
 }
@@ -119,41 +110,18 @@ export function useUpdateSettings() {
   const updateSettings = useCallback(
     (patch: Partial<UnifiedSettings>) => {
       const { serverPatch, clientPatch } = splitPatch(patch);
-      console.log(
-        "[useUpdateSettings DEBUG] splitPatch result - serverPatch:",
-        JSON.stringify(serverPatch),
-        "clientPatch:",
-        JSON.stringify(clientPatch),
-      );
 
       if (Object.keys(serverPatch).length > 0) {
         // Optimistic update of the React Query cache
         queryClient.setQueryData<ServerConfig>(serverQueryKeys.config(), (old) => {
-          if (!old) {
-            console.log("[useUpdateSettings DEBUG] no old data in cache, skipping optimistic update");
-            return old;
-          }
-          const newSettings = deepMerge(old.settings, serverPatch);
-          console.log(
-            "[useUpdateSettings DEBUG] optimistic update - old sort:",
-            old.settings.sidebarProjectSortOrder,
-            "/ new sort:",
-            newSettings.sidebarProjectSortOrder,
-          );
+          if (!old) return old;
           return {
             ...old,
-            settings: newSettings,
+            settings: deepMerge(old.settings, serverPatch),
           };
         });
         // Fire-and-forget RPC — push will reconcile on success
-        void ensureNativeApi()
-          .server.updateSettings(serverPatch)
-          .then(() =>
-            console.log("[useUpdateSettings DEBUG] server.updateSettings RPC resolved OK"),
-          )
-          .catch((err: unknown) =>
-            console.error("[useUpdateSettings DEBUG] server.updateSettings RPC FAILED:", err),
-          );
+        void ensureNativeApi().server.updateSettings(serverPatch);
       }
 
       if (Object.keys(clientPatch).length > 0) {
