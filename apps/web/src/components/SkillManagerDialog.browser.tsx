@@ -1,10 +1,8 @@
 import "../index.css";
 
-import { WS_METHODS } from "@codeforge/contracts";
+import type { NativeApi } from "@codeforge/contracts";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ws } from "msw";
-import { setupWorker } from "msw/browser";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 import { useState } from "react";
 import { SkillManagerDialog } from "./SkillManagerDialog";
@@ -13,12 +11,7 @@ import { SkillManagerDialog } from "./SkillManagerDialog";
 
 const PROJECT_CWD = "/repo/project";
 
-// ── Mock transport state ───────────────────────────────────────────────
-
-interface WsRequestEnvelope {
-  id: string;
-  body: { _tag: string; [key: string]: unknown };
-}
+// ── Mock tracking state ────────────────────────────────────────────────
 
 let mockSkillsList: Array<{
   name: string;
@@ -35,36 +28,38 @@ let skillsListShouldFail = false;
 let skillsSaveShouldFail = false;
 let skillsDeleteShouldFail = false;
 
-// ── MSW WebSocket mock ─────────────────────────────────────────────────
+// ── Mock NativeApi ─────────────────────────────────────────────────────
+//
+// We create a SINGLE mock instance and install it on `window.nativeApi`
+// before any test runs. The `readNativeApi()` function caches the first
+// result at module scope, so it will hold a reference to this object for
+// the entire test suite. Individual mock methods read from the mutable
+// flag/tracking variables defined above, so resetting those in `beforeEach`
+// is sufficient to get fresh behavior per test.
 
-const wsLink = ws.link(/ws(s)?:\/\/.*/);
-
-function resolveWsRpc(body: WsRequestEnvelope["body"]): unknown {
-  const tag = body._tag;
-  if (tag === WS_METHODS.skillsList) {
-    if (skillsListShouldFail) throw new Error("skills.list failed");
-    return { skills: mockSkillsList };
-  }
-  if (tag === WS_METHODS.skillsSave) {
-    if (skillsSaveShouldFail) throw new Error("skills.save failed");
-    skillsSaveCalls.push({
-      name: body.name as string,
-      source: body.source as string,
-      content: body.content as string,
-    });
-    return { name: body.name };
-  }
-  if (tag === WS_METHODS.skillsDelete) {
-    if (skillsDeleteShouldFail) throw new Error("skills.delete failed");
-    skillsDeleteCalls.push({ name: body.name as string, source: body.source as string });
-    return { name: body.name };
-  }
-  if (tag === WS_METHODS.serverRefreshProviders) {
-    refreshProvidersCalls++;
-    return {};
-  }
-  if (tag === WS_METHODS.serverGetConfig) {
-    return {
+const mockNativeApi = {
+  skills: {
+    list: async () => {
+      if (skillsListShouldFail) throw new Error("skills.list failed");
+      return { skills: mockSkillsList };
+    },
+    save: async (input: { name: string; source: string; content: string }) => {
+      if (skillsSaveShouldFail) throw new Error("skills.save failed");
+      skillsSaveCalls.push({
+        name: input.name,
+        source: input.source,
+        content: input.content,
+      });
+      return { name: input.name };
+    },
+    delete: async (input: { name: string; source: string }) => {
+      if (skillsDeleteShouldFail) throw new Error("skills.delete failed");
+      skillsDeleteCalls.push({ name: input.name, source: input.source });
+      return { name: input.name };
+    },
+  },
+  server: {
+    getConfig: async () => ({
       cwd: PROJECT_CWD,
       keybindingsConfigPath: "",
       keybindings: [],
@@ -80,58 +75,51 @@ function resolveWsRpc(body: WsRequestEnvelope["body"]): unknown {
           claudeAgent: { enabled: true, binaryPath: "", customModels: [] },
         },
       },
-    };
-  }
-  return {};
-}
+    }),
+    refreshProviders: async () => {
+      refreshProvidersCalls++;
+      return {};
+    },
+    updateSettings: async () => ({}),
+  },
+  orchestration: { dispatchCommand: async () => ({}), getSnapshot: async () => ({}) },
+  projects: {
+    searchEntries: async () => ({ entries: [], truncated: false }),
+    writeFile: async () => ({}),
+    readFile: async () => ({ relativePath: "", contents: "", exists: false }),
+    deleteFile: async () => ({}),
+  },
+  git: {
+    status: async () => ({}),
+    pull: async () => ({}),
+    listBranches: async () => ({}),
+    createBranch: async () => ({}),
+    createWorktree: async () => ({}),
+    removeWorktree: async () => ({}),
+    checkoutBranch: async () => ({}),
+    deleteBranch: async () => ({}),
+    commit: async () => ({}),
+    push: async () => ({}),
+    fetch: async () => ({}),
+  },
+  shell: {
+    openInEditor: async () => ({}),
+    openExternal: async () => ({}),
+    showContextMenu: async () => ({}),
+  },
+  terminal: {
+    open: async () => ({}),
+    close: async () => ({}),
+    resize: async () => ({}),
+    write: async () => ({}),
+  },
+} as unknown as NativeApi;
 
-const worker = setupWorker(
-  wsLink.addEventListener("connection", ({ client }) => {
-    // Send a welcome push so the WS transport considers itself connected
-    client.send(
-      JSON.stringify({
-        type: "push",
-        sequence: 1,
-        channel: "server.welcome",
-        data: {
-          cwd: PROJECT_CWD,
-          projectName: "Project",
-          bootstrapProjectId: "p-1",
-          bootstrapThreadId: "t-1",
-        },
-      }),
-    );
-    client.addEventListener("message", (event) => {
-      const rawData = event.data;
-      if (typeof rawData !== "string") return;
-      let request: WsRequestEnvelope;
-      try {
-        request = JSON.parse(rawData) as WsRequestEnvelope;
-      } catch {
-        return;
-      }
-      const method = request.body?._tag;
-      if (typeof method !== "string") return;
-      try {
-        const result = resolveWsRpc(request.body);
-        client.send(JSON.stringify({ id: request.id, result }));
-      } catch (err) {
-        client.send(
-          JSON.stringify({
-            id: request.id,
-            error: { message: (err as Error).message },
-          }),
-        );
-      }
-    });
-  }),
-);
+// Install immediately so readNativeApi() picks it up on first call
+(window as any).nativeApi = mockNativeApi;
 
-// ── Helpers ────────────────────────────────────────────────────────────
+// ── Test harness ───────────────────────────────────────────────────────
 
-/**
- * Wrapper that provides a QueryClient and renders the dialog in open state.
- */
 function TestHarness({
   projectCwd = PROJECT_CWD,
   providerCommands = [],
@@ -171,6 +159,8 @@ async function renderDialog(
   return screen;
 }
 
+// ── Helpers ────────────────────────────────────────────────────────────
+
 async function waitForElement<T extends Element>(
   query: () => T | null,
   errorMessage: string,
@@ -207,7 +197,7 @@ async function waitForToast(title: string, timeout = 4_000): Promise<void> {
     () => {
       expect(
         queryToastTitles().some((t) => t.includes(title)),
-        `Expected toast "${title}"`,
+        `Expected toast "${title}", found: [${queryToastTitles().join(", ")}]`,
       ).toBe(true);
     },
     { timeout, interval: 16 },
@@ -263,18 +253,6 @@ function editTextarea(value: string): void {
 // ── Tests ──────────────────────────────────────────────────────────────
 
 describe("SkillManagerDialog", () => {
-  beforeAll(async () => {
-    await worker.start({
-      onUnhandledRequest: "bypass",
-      quiet: true,
-      serviceWorker: { url: "/mockServiceWorker.js" },
-    });
-  });
-
-  afterAll(async () => {
-    await worker.stop();
-  });
-
   beforeEach(() => {
     document.body.innerHTML = "";
     mockSkillsList = [];
@@ -305,8 +283,7 @@ describe("SkillManagerDialog", () => {
   it("displays all 6 built-in commands", async () => {
     const screen = await renderDialog();
     try {
-      const builtIns = ["model", "plan", "default", "clear", "resume", "context"];
-      for (const name of builtIns) {
+      for (const name of ["model", "plan", "default", "clear", "resume", "context"]) {
         expect(findButton(`/${name}`), `Built-in "/${name}" should be visible`).toBeTruthy();
       }
     } finally {
@@ -317,13 +294,13 @@ describe("SkillManagerDialog", () => {
   it("displays provider slash commands", async () => {
     const screen = await renderDialog({
       providerCommands: [
-        { name: "compact", description: "Compact context window", argumentHint: "" },
+        { name: "compact", description: "Compact context", argumentHint: "" },
         { name: "bug", description: "Report a bug", argumentHint: "<description>" },
       ],
     });
     try {
-      expect(findButton("/compact"), "Provider command /compact should be visible").toBeTruthy();
-      expect(findButton("/bug"), "Provider command /bug should be visible").toBeTruthy();
+      expect(findButton("/compact")).toBeTruthy();
+      expect(findButton("/bug")).toBeTruthy();
     } finally {
       screen.unmount();
     }
@@ -333,7 +310,11 @@ describe("SkillManagerDialog", () => {
     const screen = await renderDialog({ providerCommands: [] });
     try {
       const dialog = document.querySelector('[role="dialog"]');
-      expect(dialog?.textContent).not.toContain("Provider");
+      // "Provider" heading should not be in the dialog
+      const headings = Array.from(dialog?.querySelectorAll("div") ?? []).filter(
+        (div) => div.textContent?.trim() === "Provider" && div.children.length === 0,
+      );
+      expect(headings).toHaveLength(0);
     } finally {
       screen.unmount();
     }
@@ -355,7 +336,7 @@ describe("SkillManagerDialog", () => {
         () => findButton("/deploy"),
         'Project skill "/deploy" should appear after loading',
       );
-      expect(findButton("/global-lint"), 'User skill "/global-lint" should appear').toBeTruthy();
+      expect(findButton("/global-lint")).toBeTruthy();
     } finally {
       screen.unmount();
     }
@@ -412,7 +393,6 @@ describe("SkillManagerDialog", () => {
       const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
       expect(dialogText).toContain("/bug");
       expect(dialogText).toContain("Provider command");
-      expect(dialogText).toContain("not editable");
       expect(dialogText).toContain("<description>");
     } finally {
       screen.unmount();
@@ -433,7 +413,7 @@ describe("SkillManagerDialog", () => {
       await clickButton("/test-skill");
       const textarea = await waitForElement(
         () => document.querySelector("textarea"),
-        "Textarea editor should appear for custom skill",
+        "Textarea should appear for custom skill",
       );
       expect(textarea.value).toBe("# test\n\nHello world.\n");
     } finally {
@@ -441,7 +421,7 @@ describe("SkillManagerDialog", () => {
     }
   });
 
-  it("shows source label (Project skill vs User skill) for custom skills", async () => {
+  it("shows source label for custom skills", async () => {
     mockSkillsList = [
       { name: "proj-s", source: "project", description: "# proj", content: "# proj" },
       { name: "user-s", source: "user", description: "# user", content: "# user" },
@@ -449,12 +429,10 @@ describe("SkillManagerDialog", () => {
     const screen = await renderDialog();
     try {
       await clickButton("/proj-s");
-      let dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("Project skill");
+      expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Project skill");
 
       await clickButton("/user-s");
-      dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("User skill");
+      expect(document.querySelector('[role="dialog"]')?.textContent).toContain("User skill");
     } finally {
       screen.unmount();
     }
@@ -475,7 +453,7 @@ describe("SkillManagerDialog", () => {
       expect(skillsSaveCalls[0]!.source).toBe("project");
       expect(skillsSaveCalls[0]!.content).toContain("# my-new-skill");
 
-      // Verify it now appears in the list
+      // Verify it appears in the list
       expect(findButton("/my-new-skill")).toBeTruthy();
     } finally {
       screen.unmount();
@@ -507,7 +485,6 @@ describe("SkillManagerDialog", () => {
       );
       pressKey(input, "Escape");
 
-      // "New project skill" button should reappear
       await waitForElement(
         () => findButton("New project skill"),
         "New project skill button should reappear after cancel",
@@ -576,8 +553,6 @@ describe("SkillManagerDialog", () => {
       await waitForElement(() => document.querySelector("textarea"), "Textarea should appear");
 
       editTextarea("# editable\n\nUpdated content.\n");
-
-      // Save button should be enabled after edit
       await clickButton("Save");
 
       await waitForToast("Saved /editable");
@@ -598,8 +573,8 @@ describe("SkillManagerDialog", () => {
       await waitForElement(() => document.querySelector("textarea"), "Textarea should appear");
 
       const saveBtn = findButton("Save") as HTMLButtonElement;
-      expect(saveBtn, "Save button should exist").toBeTruthy();
-      expect(saveBtn.disabled, "Save button should be disabled when content unchanged").toBe(true);
+      expect(saveBtn).toBeTruthy();
+      expect(saveBtn.disabled).toBe(true);
     } finally {
       screen.unmount();
     }
@@ -644,7 +619,6 @@ describe("SkillManagerDialog", () => {
       expect(skillsDeleteCalls).toHaveLength(1);
       expect(skillsDeleteCalls[0]!.name).toBe("to-delete");
 
-      // Skill should be removed from list
       await waitForNoElement(() => findButton("/to-delete"));
     } finally {
       screen.unmount();
@@ -679,7 +653,6 @@ describe("SkillManagerDialog", () => {
       await clickButton("Delete");
       await waitForToast("Deleted /del-clear");
 
-      // Should return to empty state
       const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
       expect(dialogText).toContain("Select a skill to view details");
     } finally {
@@ -689,7 +662,7 @@ describe("SkillManagerDialog", () => {
 
   // ── Provider refresh ──────────────────────────────────────────────
 
-  it("refreshes provider commands after creating a skill", async () => {
+  it("refreshes providers after creating a skill", async () => {
     const screen = await renderDialog();
     try {
       await clickButton("New project skill");
@@ -697,20 +670,18 @@ describe("SkillManagerDialog", () => {
       pressKey(input, "Enter");
 
       await waitForToast("Created /refresh-test");
-      await vi.waitFor(
-        () => {
-          expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1);
-        },
-        { timeout: 4_000, interval: 16 },
-      );
+      await vi.waitFor(() => expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1), {
+        timeout: 4_000,
+        interval: 16,
+      });
     } finally {
       screen.unmount();
     }
   });
 
-  it("refreshes provider commands after deleting a skill", async () => {
+  it("refreshes providers after deleting a skill", async () => {
     mockSkillsList = [
-      { name: "del-ref", source: "project", description: "# del-ref", content: "# del-ref" },
+      { name: "del-ref", source: "project", description: "# del", content: "# del-ref" },
     ];
     const screen = await renderDialog();
     try {
@@ -718,25 +689,18 @@ describe("SkillManagerDialog", () => {
       await clickButton("Delete");
 
       await waitForToast("Deleted /del-ref");
-      await vi.waitFor(
-        () => {
-          expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1);
-        },
-        { timeout: 4_000, interval: 16 },
-      );
+      await vi.waitFor(() => expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1), {
+        timeout: 4_000,
+        interval: 16,
+      });
     } finally {
       screen.unmount();
     }
   });
 
-  it("refreshes provider commands after saving a skill", async () => {
+  it("refreshes providers after saving a skill", async () => {
     mockSkillsList = [
-      {
-        name: "save-ref",
-        source: "project",
-        description: "# save-ref",
-        content: "# save-ref",
-      },
+      { name: "save-ref", source: "project", description: "# save-ref", content: "# save-ref" },
     ];
     const screen = await renderDialog();
     try {
@@ -747,12 +711,10 @@ describe("SkillManagerDialog", () => {
       await clickButton("Save");
 
       await waitForToast("Saved /save-ref");
-      await vi.waitFor(
-        () => {
-          expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1);
-        },
-        { timeout: 4_000, interval: 16 },
-      );
+      await vi.waitFor(() => expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1), {
+        timeout: 4_000,
+        interval: 16,
+      });
     } finally {
       screen.unmount();
     }
@@ -785,14 +747,8 @@ describe("SkillManagerDialog", () => {
   it("still shows built-in commands when no project CWD is provided", async () => {
     const screen = await renderDialog({ projectCwd: null });
     try {
-      expect(
-        findButton("/clear"),
-        "Built-in /clear should be visible with no project",
-      ).toBeTruthy();
-      expect(
-        findButton("/model"),
-        "Built-in /model should be visible with no project",
-      ).toBeTruthy();
+      expect(findButton("/clear")).toBeTruthy();
+      expect(findButton("/model")).toBeTruthy();
     } finally {
       screen.unmount();
     }

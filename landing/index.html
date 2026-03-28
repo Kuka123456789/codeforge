@@ -261,8 +261,8 @@
 
       /* Sidebar */
       .demo-sidebar {
-        width: 196px;
-        min-width: 196px;
+        width: 224px;
+        min-width: 224px;
         background: #0e0e11;
         border-right: 1px solid var(--border);
         padding: 12px 0;
@@ -1528,36 +1528,6 @@
             <!-- Sidebar footer: Skills + Settings (labeled, like real app) -->
             <div class="demo-sb-footer">
               <div class="demo-sb-footer-btn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                Skills
-              </div>
-              <div class="demo-sb-footer-btn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
-                Settings
-              </div>
-            </div>
-          </aside>
-
-          <!-- Chat -->
-          <div class="demo-chat">
-            <div class="demo-chat-messages">
-            <div class="demo-msg demo-anim" style="animation-delay: 0.8s">
-              <div class="demo-msg-who">You</div>
-              <div class="demo-msg-text" style="color: var(--text)">
-                Add JWT authentication middleware to the Express server. It should validate tokens
-                on all /api routes and attach the decoded user to req.user.
-              </div>
-            </div>
-
-            <div class="demo-msg demo-anim" style="animation-delay: 1.6s">
-              <div class="demo-msg-who">
-                <span class="demo-provider-pip"></span> Claude
-                <span class="demo-model-badge">Sonnet</span>
-              </div>
-              <div
-                class="demo-msg-text demo-msg-text--think demo-anim-fade"
-                style="animation-delay: 2s"
-              >
                 <svg
                   width="12"
                   height="12"
@@ -1567,42 +1537,97 @@
                   stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  style="animation: demo-spin 3s linear infinite"
                 >
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 6v6l4 2" />
+                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
                 </svg>
-                Analyzing project structure and existing middleware...
+                Skills
               </div>
-              <div class="demo-msg-text demo-anim" style="animation-delay: 3s">
-                I'll create the auth middleware and wire it into your Express app. Here's the
-                implementation:
+              <div class="demo-sb-footer-btn">
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path
+                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
+                  />
+                </svg>
+                Settings
+              </div>
+            </div>
+          </aside>
+
+          <!-- Chat -->
+          <div class="demo-chat">
+            <div class="demo-chat-messages">
+              <div class="demo-msg demo-anim" style="animation-delay: 0.8s">
+                <div class="demo-msg-who">You</div>
+                <div class="demo-msg-text" style="color: var(--text)">
+                  Add JWT authentication middleware to the Express server. It should validate tokens
+                  on all /api routes and attach the decoded user to req.user.
+                </div>
               </div>
 
-              <!-- Code block -->
-              <div class="demo-code-wrap demo-anim" style="animation-delay: 3.6s">
-                <div class="demo-code-head">
-                  <span style="display: flex; align-items: center; gap: 5px"
-                    ><svg
-                      width="11"
-                      height="11"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    >
-                      <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                      <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-                    </svg>
-                    src/middleware/auth.ts</span
-                  >
-                  <span class="demo-code-added">+42 lines</span>
+              <div class="demo-msg demo-anim" style="animation-delay: 1.6s">
+                <div class="demo-msg-who">
+                  <span class="demo-provider-pip"></span> Claude
+                  <span class="demo-model-badge">Sonnet</span>
                 </div>
-                <pre
-                  class="demo-code-body"
-                ><code><em>import</em> <i>&#123;</i> <b>Request</b>, <b>Response</b>, <b>NextFunction</b> <i>&#125;</i> <em>from</em> <s>"express"</s>;
+                <div
+                  class="demo-msg-text demo-msg-text--think demo-anim-fade"
+                  style="animation-delay: 2s"
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    style="animation: demo-spin 3s linear infinite"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 6v6l4 2" />
+                  </svg>
+                  Analyzing project structure and existing middleware...
+                </div>
+                <div class="demo-msg-text demo-anim" style="animation-delay: 3s">
+                  I'll create the auth middleware and wire it into your Express app. Here's the
+                  implementation:
+                </div>
+
+                <!-- Code block -->
+                <div class="demo-code-wrap demo-anim" style="animation-delay: 3.6s">
+                  <div class="demo-code-head">
+                    <span style="display: flex; align-items: center; gap: 5px"
+                      ><svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                      </svg>
+                      src/middleware/auth.ts</span
+                    >
+                    <span class="demo-code-added">+42 lines</span>
+                  </div>
+                  <pre
+                    class="demo-code-body"
+                  ><code><em>import</em> <i>&#123;</i> <b>Request</b>, <b>Response</b>, <b>NextFunction</b> <i>&#125;</i> <em>from</em> <s>"express"</s>;
 <em>import</em> jwt <em>from</em> <s>"jsonwebtoken"</s>;
 
 <em>interface</em> <u>AuthPayload</u> <i>&#123;</i>
@@ -1632,29 +1657,30 @@
     res.status(<span class="hl-n">403</span>).json(<i>&#123;</i> error: <s>"Invalid token"</s> <i>&#125;</i>);
   <i>&#125;</i>
 <i>&#125;</i>;</code></pre>
-              </div>
+                </div>
 
-              <!-- Tool result -->
-              <div class="demo-tool demo-anim" style="animation-delay: 4.6s">
-                <svg
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
-                  />
-                  <path d="m9 12 2 2 4-4" />
-                </svg>
-                <span>Created <strong>src/middleware/auth.ts</strong></span>
+                <!-- Tool result -->
+                <div class="demo-tool demo-anim" style="animation-delay: 4.6s">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path
+                      d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                    />
+                    <path d="m9 12 2 2 4-4" />
+                  </svg>
+                  <span>Created <strong>src/middleware/auth.ts</strong></span>
+                </div>
               </div>
             </div>
-            </div><!-- end demo-chat-messages -->
+            <!-- end demo-chat-messages -->
 
             <!-- Composer -->
             <div class="demo-composer demo-anim" style="animation-delay: 0.6s">
