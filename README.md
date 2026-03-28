@@ -41,7 +41,7 @@ Download from the [Releases page](https://github.com/Kuka123456789/codeforge/rel
 ### CLI
 
 ```bash
-npx codeforge
+npx codeforge-chat
 ```
 
 This starts the server and opens the UI in your browser.
