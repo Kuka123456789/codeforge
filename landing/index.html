@@ -689,74 +689,121 @@
         color: #fff;
       }
 
-      /* Diff panel */
-      .demo-diff {
-        width: 210px;
-        min-width: 210px;
+      /* Pins panel (right sidebar) */
+      .demo-pins {
+        width: 220px;
+        min-width: 220px;
         background: #0e0e11;
         border-left: 1px solid var(--border);
-        padding: 12px 0;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
       }
-      .demo-diff-head {
+      .demo-pins-head {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 12px 9px;
+        padding: 10px 12px;
         border-bottom: 1px solid var(--border);
-        margin-bottom: 7px;
-        font-size: 0.68rem;
+        flex-shrink: 0;
       }
-      .demo-diff-file {
+      .demo-pins-head-left {
         display: flex;
         align-items: center;
         gap: 6px;
-        padding: 5px 12px;
-        font-size: 0.66rem;
-        color: var(--text-secondary);
-        background: rgba(255, 255, 255, 0.03);
-        margin-bottom: 7px;
       }
-      .demo-diff-lines {
-        padding: 0 4px;
-      }
-      .demo-dl {
-        display: flex;
-        align-items: baseline;
-        font-family: "SF Mono", "Fira Code", ui-monospace, monospace;
+      .demo-pins-badge {
         font-size: 0.56rem;
-        line-height: 1.7;
-        padding: 0 8px;
-        white-space: nowrap;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.1);
+        padding: 1px 6px;
+        border-radius: 4px;
+      }
+      .demo-pins-count {
+        font-size: 0.58rem;
+        color: var(--text-muted);
+        opacity: 0.6;
+      }
+      .demo-pins-close {
+        color: var(--text-muted);
+        opacity: 0.5;
+        cursor: pointer;
+      }
+      .demo-pins-list {
+        flex: 1;
         overflow: hidden;
-        background: rgba(34, 197, 94, 0.06);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .demo-pin-card {
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.02);
+        overflow: hidden;
+      }
+      .demo-pin-card-header {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 7px 10px 4px;
+      }
+      .demo-pin-role {
+        font-size: 0.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        padding: 1px 5px;
+        border-radius: 3px;
+      }
+      .demo-pin-role--assistant {
+        color: #60a5fa;
+        background: rgba(96, 165, 250, 0.1);
+      }
+      .demo-pin-role--you {
+        color: #a1a1aa;
+        background: rgba(161, 161, 170, 0.1);
+      }
+      .demo-pin-role--selection {
+        color: #f59e0b;
+        background: rgba(245, 158, 11, 0.1);
+      }
+      .demo-pin-card-body {
+        padding: 2px 10px 6px;
+        font-size: 0.6rem;
+        line-height: 1.55;
+        color: var(--text-secondary);
+        max-height: 80px;
+        overflow: hidden;
+        position: relative;
+      }
+      .demo-pin-card-body code {
+        font-size: 0.55rem;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 1px 4px;
+        border-radius: 3px;
         color: #d4d4d8;
       }
-      .demo-dl em {
-        font-style: normal;
-        color: #c084fc;
+      .demo-pin-card-fade {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 18px;
+        background: linear-gradient(to top, #0e0e11, transparent);
+        pointer-events: none;
       }
-      .demo-dl s {
-        font-style: normal;
-        text-decoration: none;
-        color: #86efac;
-      }
-      .demo-dl u {
-        font-style: normal;
-        text-decoration: none;
-        color: #67e8f9;
-      }
-      .demo-dl--blank {
-        background: transparent;
-        color: transparent;
-      }
-      .demo-ln {
-        width: 20px;
-        min-width: 20px;
-        text-align: right;
-        color: rgba(255, 255, 255, 0.15);
-        margin-right: 8px;
-        user-select: none;
+      .demo-pin-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 3px 10px 6px;
+        font-size: 0.52rem;
+        color: var(--text-muted);
+        opacity: 0.5;
       }
 
       /* Staggered entrance animations */
@@ -813,7 +860,7 @@
       }
 
       @media (max-width: 900px) {
-        .demo-diff {
+        .demo-pins {
           display: none;
         }
       }
@@ -1881,48 +1928,46 @@
             </div>
           </div>
 
-          <!-- Diff panel -->
-          <div class="demo-diff demo-anim-slide" style="animation-delay: 5s">
-            <div class="demo-diff-head">
-              <span style="font-weight: 600; color: var(--text)">Changes</span
-              ><span style="font-size: 0.6rem; color: var(--text-muted)">1 file</span>
+          <!-- Pins panel -->
+          <div class="demo-pins demo-anim-slide" style="animation-delay: 5s">
+            <div class="demo-pins-head">
+              <div class="demo-pins-head-left">
+                <span class="demo-pins-badge">Pins</span>
+                <span class="demo-pins-count">2 pinned</span>
+              </div>
+              <span class="demo-pins-close">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="3" width="3" height="18" rx="1"/><path d="m2 21 4-4"/><path d="M14 4h2a2 2 0 0 1 2 2v2"/><path d="M2 14v2a2 2 0 0 0 2 2h2"/></svg>
+              </span>
             </div>
-            <div class="demo-diff-file">
-              <svg
-                width="11"
-                height="11"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
-                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
-              </svg>
-              <span>auth.ts</span>
-              <span style="margin-left: auto; font-size: 0.6rem; color: #22c55e">+42</span>
-            </div>
-            <div class="demo-diff-lines">
-              <div class="demo-dl">
-                <span class="demo-ln">1</span><em>import</em> &#123; Request &#125; <em>from</em>
-                <s>"express"</s>;
+            <div class="demo-pins-list">
+              <!-- Pin 1: Assistant message -->
+              <div class="demo-pin-card">
+                <div class="demo-pin-card-header">
+                  <span class="demo-pin-role demo-pin-role--assistant">Assistant</span>
+                </div>
+                <div class="demo-pin-card-body">
+                  The middleware validates JWT tokens on all <code>/api</code> routes and attaches the decoded payload to <code>req.user</code>. Make sure to set <code>JWT_SECRET</code> in your environment.
+                  <div class="demo-pin-card-fade"></div>
+                </div>
+                <div class="demo-pin-card-footer">
+                  <span>Show more</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                </div>
               </div>
-              <div class="demo-dl">
-                <span class="demo-ln">2</span><em>import</em> jwt <em>from</em>
-                <s>"jsonwebtoken"</s>;
+              <!-- Pin 2: User selection -->
+              <div class="demo-pin-card">
+                <div class="demo-pin-card-header">
+                  <span class="demo-pin-role demo-pin-role--you">You</span>
+                  <span class="demo-pin-role demo-pin-role--selection">Selection</span>
+                </div>
+                <div class="demo-pin-card-body">
+                  validate tokens on all /api routes and attach the decoded user to req.user
+                </div>
+                <div class="demo-pin-card-footer">
+                  <span>Show more</span>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                </div>
               </div>
-              <div class="demo-dl demo-dl--blank"><span class="demo-ln">3</span></div>
-              <div class="demo-dl">
-                <span class="demo-ln">4</span><em>interface</em> <u>AuthPayload</u> &#123;
-              </div>
-              <div class="demo-dl"><span class="demo-ln">5</span> userId: <u>string</u>;</div>
-              <div class="demo-dl"><span class="demo-ln">6</span> email: <u>string</u>;</div>
-              <div class="demo-dl">
-                <span class="demo-ln">7</span> role: <s>"admin"</s> | <s>"user"</s>;
-              </div>
-              <div class="demo-dl"><span class="demo-ln">8</span>&#125;</div>
             </div>
           </div>
         </div>
