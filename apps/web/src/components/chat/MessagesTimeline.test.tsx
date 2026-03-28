@@ -89,7 +89,7 @@ describe("MessagesTimeline", () => {
         resolvedTheme="light"
         timestampFormat="locale"
         workspaceRoot={undefined}
-        scrollToRowIndex={null}
+        scrollToEntryId={null}
         onScrollToRowComplete={() => {}}
         pinnedMessageIds={new Set()}
         onPinMessage={() => {}}
@@ -138,7 +138,7 @@ describe("MessagesTimeline", () => {
         resolvedTheme="light"
         timestampFormat="locale"
         workspaceRoot={undefined}
-        scrollToRowIndex={null}
+        scrollToEntryId={null}
         onScrollToRowComplete={() => {}}
         pinnedMessageIds={new Set()}
         onPinMessage={() => {}}

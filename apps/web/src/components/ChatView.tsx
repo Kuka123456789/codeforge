@@ -328,7 +328,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const [showPinnedPrompt, setShowPinnedPrompt] = useState(false);
   const [pinnedPromptDismissed, setPinnedPromptDismissed] = useState(false);
-  const [scrollToRowIndex, setScrollToRowIndex] = useState<number | null>(null);
+  const [scrollToEntryId, setScrollToEntryId] = useState<string | null>(null);
   const [isDragOverComposer, setIsDragOverComposer] = useState(false);
   const [expandedImage, setExpandedImage] = useState<ExpandedImagePreview | null>(null);
   const [optimisticUserMessages, setOptimisticUserMessages] = useState<ChatMessage[]>([]);
@@ -1789,11 +1789,11 @@ export default function ChatView({ threadId }: ChatViewProps) {
 
   const handleScrollToPinSourceMessage = useCallback(
     (messageId: MessageId) => {
-      const rowIndex = timelineEntries.findIndex(
-        (entry) => entry.kind === "message" && entry.message.id === messageId,
+      const entry = timelineEntries.find(
+        (e) => e.kind === "message" && e.message.id === messageId,
       );
-      if (rowIndex >= 0) {
-        setScrollToRowIndex(rowIndex);
+      if (entry) {
+        setScrollToEntryId(entry.id);
       }
     },
     [timelineEntries],
@@ -2052,10 +2052,10 @@ export default function ChatView({ threadId }: ChatViewProps) {
   }, []);
   const handleScrollToPinnedMessage = useCallback(() => {
     if (pinnedEntry === null) return;
-    setScrollToRowIndex(pinnedEntry.index);
+    setScrollToEntryId(pinnedEntry.entry.id);
   }, [pinnedEntry]);
   const handleScrollToRowComplete = useCallback(() => {
-    setScrollToRowIndex(null);
+    setScrollToEntryId(null);
   }, []);
   const handleDismissPinnedPrompt = useCallback(() => {
     setPinnedPromptDismissed(true);
@@ -4005,7 +4005,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
                 resolvedTheme={resolvedTheme}
                 timestampFormat={timestampFormat}
                 workspaceRoot={activeProject?.cwd ?? undefined}
-                scrollToRowIndex={scrollToRowIndex}
+                scrollToEntryId={scrollToEntryId}
                 onScrollToRowComplete={handleScrollToRowComplete}
                 pinnedMessageIds={pinnedMessageIds}
                 onPinMessage={handlePinMessage}

@@ -84,7 +84,7 @@ interface MessagesTimelineProps {
   resolvedTheme: "light" | "dark";
   timestampFormat: TimestampFormat;
   workspaceRoot: string | undefined;
-  scrollToRowIndex: number | null;
+  scrollToEntryId: string | null;
   onScrollToRowComplete: () => void;
   pinnedMessageIds: Set<MessageId>;
   onPinMessage: (messageId: MessageId, messageRole: "user" | "assistant", text: string) => void;
@@ -112,7 +112,7 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   resolvedTheme,
   timestampFormat,
   workspaceRoot,
-  scrollToRowIndex,
+  scrollToEntryId,
   onScrollToRowComplete,
   pinnedMessageIds,
   onPinMessage,
@@ -315,10 +315,13 @@ export const MessagesTimeline = memo(function MessagesTimeline({
   }, []);
 
   useEffect(() => {
-    if (scrollToRowIndex === null) return;
-    rowVirtualizer.scrollToIndex(scrollToRowIndex, { align: "start", behavior: "smooth" });
+    if (scrollToEntryId === null) return;
+    const rowIndex = rows.findIndex((row) => row.id === scrollToEntryId);
+    if (rowIndex >= 0) {
+      rowVirtualizer.scrollToIndex(rowIndex, { align: "start", behavior: "smooth" });
+    }
     onScrollToRowComplete();
-  }, [scrollToRowIndex, rowVirtualizer, onScrollToRowComplete]);
+  }, [scrollToEntryId, rows, rowVirtualizer, onScrollToRowComplete]);
 
   const virtualRows = rowVirtualizer.getVirtualItems();
   const nonVirtualizedRows = rows.slice(virtualizedRowCount);
