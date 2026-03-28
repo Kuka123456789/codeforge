@@ -42,6 +42,7 @@ import { buildExpandedImagePreview, ExpandedImagePreview } from "./ExpandedImage
 import { ProposedPlanCard } from "./ProposedPlanCard";
 import { ChangedFilesTree } from "./ChangedFilesTree";
 import { DiffStatLabel, hasNonZeroStat } from "./DiffStatLabel";
+import { InlineFileChangeDiff } from "./InlineFileChangeDiff";
 import { MessageCopyButton } from "./MessageCopyButton";
 import { computeMessageDurationStart, normalizeCompactToolLabel } from "./MessagesTimeline.logic";
 import { TerminalContextInlineChip } from "./TerminalContextInlineChip";
@@ -920,10 +921,37 @@ const SimpleWorkEntryRow = memo(function SimpleWorkEntryRow(props: {
   const { workEntry } = props;
   const iconConfig = workToneIcon(workEntry.tone);
   const EntryIcon = workEntryIcon(workEntry);
+  const hasChangedFiles = (workEntry.changedFiles?.length ?? 0) > 0;
+
+  // Render inline diff for file changes that have tool input data
+  const hasInlineDiff =
+    workEntry.toolName &&
+    workEntry.toolInput &&
+    (workEntry.itemType === "file_change" || workEntry.requestKind === "file-change");
+
+  if (hasInlineDiff) {
+    return (
+      <div className="rounded-lg px-1 py-1">
+        <div className="flex items-start gap-2">
+          <span
+            className={cn(
+              "mt-0.5 flex size-5 shrink-0 items-center justify-center",
+              iconConfig.className,
+            )}
+          >
+            <EntryIcon className="size-3" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <InlineFileChangeDiff toolName={workEntry.toolName!} toolInput={workEntry.toolInput!} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const heading = toolWorkEntryHeading(workEntry);
   const preview = workEntryPreview(workEntry);
   const displayText = preview ? `${heading} - ${preview}` : heading;
-  const hasChangedFiles = (workEntry.changedFiles?.length ?? 0) > 0;
   const previewIsChangedFiles = hasChangedFiles && !workEntry.command && !workEntry.detail;
 
   return (

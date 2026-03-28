@@ -43,6 +43,8 @@ export interface WorkLogEntry {
   toolTitle?: string;
   itemType?: ToolLifecycleItemType;
   requestKind?: PendingApproval["requestKind"];
+  toolName?: string;
+  toolInput?: Record<string, unknown>;
 }
 
 interface DerivedWorkLogEntry extends WorkLogEntry {
@@ -522,6 +524,14 @@ function toDerivedWorkLogEntry(activity: OrchestrationThreadActivity): DerivedWo
   if (requestKind) {
     entry.requestKind = requestKind;
   }
+  const toolName = extractToolName(payload);
+  const toolInput = extractToolInput(payload);
+  if (toolName) {
+    entry.toolName = toolName;
+  }
+  if (toolInput) {
+    entry.toolInput = toolInput;
+  }
   const collapseKey = deriveToolLifecycleCollapseKey(entry);
   if (collapseKey) {
     entry.collapseKey = collapseKey;
@@ -571,6 +581,8 @@ function mergeDerivedWorkLogEntries(
   const itemType = next.itemType ?? previous.itemType;
   const requestKind = next.requestKind ?? previous.requestKind;
   const collapseKey = next.collapseKey ?? previous.collapseKey;
+  const toolName = next.toolName ?? previous.toolName;
+  const toolInput = next.toolInput ?? previous.toolInput;
   return {
     ...previous,
     ...next,
@@ -581,6 +593,8 @@ function mergeDerivedWorkLogEntries(
     ...(itemType ? { itemType } : {}),
     ...(requestKind ? { requestKind } : {}),
     ...(collapseKey ? { collapseKey } : {}),
+    ...(toolName ? { toolName } : {}),
+    ...(toolInput ? { toolInput } : {}),
   };
 }
 
@@ -666,6 +680,20 @@ function extractToolCommand(payload: Record<string, unknown> | null): string | n
 
 function extractToolTitle(payload: Record<string, unknown> | null): string | null {
   return asTrimmedString(payload?.title);
+}
+
+function extractToolName(payload: Record<string, unknown> | null): string | undefined {
+  const data = asRecord(payload?.data);
+  const name = asTrimmedString(data?.toolName);
+  return name ?? undefined;
+}
+
+function extractToolInput(
+  payload: Record<string, unknown> | null,
+): Record<string, unknown> | undefined {
+  const data = asRecord(payload?.data);
+  const input = asRecord(data?.input);
+  return input ?? undefined;
 }
 
 function stripTrailingExitCode(value: string): {
