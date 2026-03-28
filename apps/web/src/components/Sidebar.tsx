@@ -594,7 +594,28 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const isOnSettings = useLocation({ select: (loc) => loc.pathname === "/settings" });
   const appSettings = useSettings();
-  const { updateSettings } = useUpdateSettings();
+  const { updateSettings: rawUpdateSettings } = useUpdateSettings();
+
+  // Debug wrapper to trace settings updates
+  const updateSettings = (patch: Parameters<typeof rawUpdateSettings>[0]) => {
+    console.log("[SIDEBAR DEBUG] updateSettings called with:", JSON.stringify(patch));
+    console.log(
+      "[SIDEBAR DEBUG] current appSettings.sidebarProjectSortOrder:",
+      appSettings.sidebarProjectSortOrder,
+    );
+    console.log(
+      "[SIDEBAR DEBUG] current appSettings.sidebarThreadSortOrder:",
+      appSettings.sidebarThreadSortOrder,
+    );
+    rawUpdateSettings(patch);
+    // Check the settings again after a tick
+    setTimeout(() => {
+      console.log(
+        "[SIDEBAR DEBUG] after tick, appSettings.sidebarProjectSortOrder:",
+        appSettings.sidebarProjectSortOrder,
+      );
+    }, 100);
+  };
   const { handleNewThread } = useHandleNewThread();
   const routeThreadId = useParams({
     strict: false,
@@ -1497,11 +1518,7 @@ export default function Sidebar() {
     const activeThreadId = routeThreadId ?? undefined;
     const isThreadListExpanded =
       isManualThreadSorting || expandedThreadListsByProject.has(project.id);
-    const pinnedCollapsedThread =
-      !project.expanded && activeThreadId
-        ? (projectThreads.find((thread) => thread.id === activeThreadId) ?? null)
-        : null;
-    const shouldShowThreadPanel = project.expanded || pinnedCollapsedThread !== null;
+    const shouldShowThreadPanel = project.expanded;
     const { hasHiddenThreads, visibleThreads } = getVisibleThreadsForProject({
       threads: projectThreads,
       activeThreadId,
@@ -1509,7 +1526,7 @@ export default function Sidebar() {
       previewLimit: THREAD_PREVIEW_LIMIT,
     });
     const orderedProjectThreadIds = projectThreads.map((thread) => thread.id);
-    const renderedThreads = pinnedCollapsedThread ? [pinnedCollapsedThread] : visibleThreads;
+    const renderedThreads = visibleThreads;
     const renderThreadRow = (thread: (typeof projectThreads)[number]) => {
       const isActive = routeThreadId === thread.id;
       const isSelected = selectedThreadIds.has(thread.id);

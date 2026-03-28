@@ -62,9 +62,7 @@ let fixture: TestFixture;
 const wsRequests: WsRequestEnvelope["body"][] = [];
 const wsLink = ws.link(/ws(s)?:\/\/.*/);
 
-function createServerConfig(
-  overrides?: Partial<ServerConfig["settings"]>,
-): ServerConfig {
+function createServerConfig(overrides?: Partial<ServerConfig["settings"]>): ServerConfig {
   return {
     cwd: "/repo/project-a",
     keybindingsConfigPath: "/repo/.codeforge-keybindings.json",
@@ -395,9 +393,7 @@ async function mountApp(opts?: {
   host.style.overflow = "hidden";
   document.body.append(host);
 
-  const router = getRouter(
-    createMemoryHistory({ initialEntries: [`/${THREAD_A1}`] }),
-  );
+  const router = getRouter(createMemoryHistory({ initialEntries: [`/${THREAD_A1}`] }));
 
   const screen = await render(<RouterProvider router={router} />, {
     container: host,
@@ -407,10 +403,7 @@ async function mountApp(opts?: {
 
   // Wait for sidebar projects to render
   await waitForElement(
-    () =>
-      document.querySelector<HTMLElement>(
-        '[data-slot="sidebar-menu-button"]',
-      ),
+    () => document.querySelector<HTMLElement>('[data-slot="sidebar-menu-button"]'),
     "Unable to find sidebar project buttons",
   );
 
@@ -511,15 +504,10 @@ describe("Sidebar sorting and drag-and-drop", () => {
     const mounted = await mountApp();
     try {
       // Find the "Projects" header area
-      const projectsHeader = await waitForElement(
-        () => {
-          const spans = document.querySelectorAll<HTMLElement>("span");
-          return (
-            Array.from(spans).find((el) => el.textContent?.trim() === "Projects") ?? null
-          );
-        },
-        "Unable to find Projects header",
-      );
+      const projectsHeader = await waitForElement(() => {
+        const spans = document.querySelectorAll<HTMLElement>("span");
+        return Array.from(spans).find((el) => el.textContent?.trim() === "Projects") ?? null;
+      }, "Unable to find Projects header");
 
       // The sort button is in the same flex container as the "Projects" label.
       // It's a button containing an SVG icon. Get the parent container and find buttons.
@@ -529,10 +517,12 @@ describe("Sidebar sorting and drag-and-drop", () => {
       const buttons = headerContainer!.querySelectorAll<HTMLElement>("button");
       // The sort button should be the first button in the header (search, sort, add)
       // Find the one that is a menu trigger (has aria-haspopup or similar)
-      const sortButton = Array.from(buttons).find(
-        (btn) => btn.getAttribute("aria-haspopup") === "menu" ||
-                 btn.getAttribute("aria-expanded") !== null,
-      ) ?? buttons[1]; // fallback: sort is the second button (after search)
+      const sortButton =
+        Array.from(buttons).find(
+          (btn) =>
+            btn.getAttribute("aria-haspopup") === "menu" ||
+            btn.getAttribute("aria-expanded") !== null,
+        ) ?? buttons[1]; // fallback: sort is the second button (after search)
 
       expect(sortButton, "Unable to find sort button").toBeTruthy();
       sortButton!.click();
@@ -563,8 +553,8 @@ describe("Sidebar sorting and drag-and-drop", () => {
           const projectButtons = document.querySelectorAll<HTMLElement>(
             '[data-slot="sidebar-menu-button"]',
           );
-          const hasGrabCursor = Array.from(projectButtons).some(
-            (btn) => btn.className.includes("cursor-grab"),
+          const hasGrabCursor = Array.from(projectButtons).some((btn) =>
+            btn.className.includes("cursor-grab"),
           );
           expect(hasGrabCursor, "Expected at least one project button with cursor-grab").toBe(true);
         },
@@ -633,7 +623,7 @@ describe("Sidebar sorting and drag-and-drop", () => {
       // Projects start expanded by default. Wait for thread items.
       await vi.waitFor(
         () => {
-          const threadItems = document.querySelectorAll('[data-thread-item]');
+          const threadItems = document.querySelectorAll("[data-thread-item]");
           expect(threadItems.length, "Expected thread items to render").toBeGreaterThanOrEqual(2);
         },
         { timeout: 8_000, interval: 50 },
@@ -642,6 +632,142 @@ describe("Sidebar sorting and drag-and-drop", () => {
       // Verify threads are rendered (in manual mode, order is preserved as-is)
       const threadNames = getThreadNames("Alpha Project");
       expect(threadNames.length).toBeGreaterThanOrEqual(2);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it("persists sort order selection when reopening the menu", async () => {
+    const mounted = await mountApp();
+    try {
+      // Open the sort menu
+      const findSortButton = () => {
+        const spans = document.querySelectorAll<HTMLElement>("span");
+        const projectsHeader = Array.from(spans).find(
+          (el) => el.textContent?.trim() === "Projects",
+        );
+        if (!projectsHeader) return null;
+        const headerContainer = projectsHeader.closest("div.flex");
+        if (!headerContainer) return null;
+        const buttons = headerContainer.querySelectorAll<HTMLElement>("button");
+        return (
+          Array.from(buttons).find(
+            (btn) =>
+              btn.getAttribute("aria-haspopup") === "menu" ||
+              btn.getAttribute("aria-expanded") !== null,
+          ) ??
+          buttons[1] ??
+          null
+        );
+      };
+
+      const sortButton = await waitForElement(findSortButton, "Unable to find sort button");
+      sortButton.click();
+      await waitForLayout();
+
+      // Find and click "Manual" for project sorting
+      const findManualRadio = (groupLabel: string) => {
+        const groups = document.querySelectorAll('[role="group"]');
+        for (const group of groups) {
+          const label = group.querySelector("div.font-medium");
+          if (label?.textContent?.includes(groupLabel)) {
+            const radios = group.querySelectorAll<HTMLElement>('[role="menuitemradio"]');
+            return Array.from(radios).find((r) => r.textContent?.trim() === "Manual") ?? null;
+          }
+        }
+        return null;
+      };
+
+      const manualProjectRadio = await waitForElement(
+        () => findManualRadio("Sort projects"),
+        "Unable to find Manual option for projects",
+      );
+
+      // Check that "Last user message" is currently selected (default)
+      const findCheckedRadio = (groupLabel: string) => {
+        const groups = document.querySelectorAll('[role="group"]');
+        for (const group of groups) {
+          const label = group.querySelector("div.font-medium");
+          if (label?.textContent?.includes(groupLabel)) {
+            const radios = group.querySelectorAll<HTMLElement>('[role="menuitemradio"]');
+            return (
+              Array.from(radios).find(
+                (r) =>
+                  r.getAttribute("aria-checked") === "true" ||
+                  r.getAttribute("data-checked") !== null,
+              ) ?? null
+            );
+          }
+        }
+        return null;
+      };
+
+      const initialChecked = findCheckedRadio("Sort projects");
+      // Log what we find for debugging
+      console.log("[TEST] Initial checked radio text:", initialChecked?.textContent?.trim());
+      console.log(
+        "[TEST] Initial checked aria-checked:",
+        initialChecked?.getAttribute("aria-checked"),
+      );
+
+      // Click Manual
+      manualProjectRadio.click();
+      await waitForLayout();
+
+      // Wait a moment for the settings to propagate
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      // Close the menu by pressing Escape
+      document.dispatchEvent(
+        new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }),
+      );
+      await waitForLayout();
+
+      // Wait for menu to close
+      await vi.waitFor(
+        () => {
+          const menuItems = document.querySelectorAll('[role="menuitemradio"]');
+          expect(menuItems.length, "Menu should be closed").toBe(0);
+        },
+        { timeout: 4_000, interval: 50 },
+      );
+
+      // Reopen the sort menu
+      const sortButton2 = await waitForElement(
+        findSortButton,
+        "Unable to find sort button (2nd time)",
+      );
+      sortButton2.click();
+      await waitForLayout();
+
+      // Check that Manual is now selected
+      await vi.waitFor(
+        () => {
+          const checked = findCheckedRadio("Sort projects");
+          console.log("[TEST] After reopen - checked text:", checked?.textContent?.trim());
+          console.log("[TEST] After reopen - aria-checked:", checked?.getAttribute("aria-checked"));
+
+          // Also dump all radio states for debugging
+          const groups = document.querySelectorAll('[role="group"]');
+          for (const group of groups) {
+            const label = group.querySelector("div.font-medium");
+            if (label?.textContent?.includes("Sort projects")) {
+              const radios = group.querySelectorAll<HTMLElement>('[role="menuitemradio"]');
+              for (const radio of radios) {
+                console.log(
+                  `[TEST] Radio "${radio.textContent?.trim()}" - aria-checked: ${radio.getAttribute("aria-checked")}, data-checked: ${radio.getAttribute("data-checked")}`,
+                );
+              }
+            }
+          }
+
+          expect(
+            checked?.textContent?.trim(),
+            "Expected Manual to be selected after reopening menu",
+          ).toBe("Manual");
+        },
+        { timeout: 4_000, interval: 50 },
+      );
     } finally {
       await mounted.cleanup();
     }
@@ -661,7 +787,10 @@ describe("Sidebar sorting and drag-and-drop", () => {
         document.querySelectorAll<HTMLElement>('[data-slot="sidebar-menu-button"]'),
       ).filter((btn) => btn.className.includes("cursor-grab"));
 
-      expect(projectButtons.length, "Expected project buttons with cursor-grab").toBeGreaterThanOrEqual(2);
+      expect(
+        projectButtons.length,
+        "Expected project buttons with cursor-grab",
+      ).toBeGreaterThanOrEqual(2);
 
       const firstProjectBtn = projectButtons[0]!;
       const secondProjectBtn = projectButtons[1]!;

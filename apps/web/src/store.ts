@@ -85,12 +85,13 @@ let legacyKeysCleanedUp = false;
 function persistState(state: AppState): void {
   if (typeof window === "undefined") return;
   try {
+    const expandedCwds = state.projects
+      .filter((project) => project.expanded)
+      .map((project) => project.cwd);
     window.localStorage.setItem(
       PERSISTED_STATE_KEY,
       JSON.stringify({
-        expandedProjectCwds: state.projects
-          .filter((project) => project.expanded)
-          .map((project) => project.cwd),
+        expandedProjectCwds: expandedCwds,
         projectOrderCwds: state.projects.map((project) => project.cwd),
         threadOrderByProject: Object.fromEntries(
           state.threads.reduce((acc, thread) => {
@@ -102,6 +103,13 @@ function persistState(state: AppState): void {
         ),
       }),
     );
+    // Keep the in-memory set in sync so that mapProjectsFromReadModel fallback
+    // lookups (when a project is absent from previous state) use up-to-date
+    // expanded preferences instead of the stale values from app startup.
+    persistedExpandedProjectCwds.clear();
+    for (const cwd of expandedCwds) {
+      persistedExpandedProjectCwds.add(cwd);
+    }
     if (!legacyKeysCleanedUp) {
       legacyKeysCleanedUp = true;
       for (const legacyKey of LEGACY_PERSISTED_STATE_KEYS) {

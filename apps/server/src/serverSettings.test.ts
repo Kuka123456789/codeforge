@@ -179,4 +179,32 @@ it.layer(NodeServices.layer)("server settings", (it) => {
       });
     }).pipe(Effect.provide(makeServerSettingsLayer())),
   );
+
+  it.effect("persists sidebar sort order and reads it back", () =>
+    Effect.gen(function* () {
+      const serverSettings = yield* ServerSettingsService;
+      const serverConfig = yield* ServerConfig;
+      const fileSystem = yield* FileSystem.FileSystem;
+
+      // Update sort order to manual
+      const next = yield* serverSettings.updateSettings({
+        sidebarProjectSortOrder: "manual",
+        sidebarThreadSortOrder: "created_at",
+      });
+
+      assert.equal(next.sidebarProjectSortOrder, "manual");
+      assert.equal(next.sidebarThreadSortOrder, "created_at");
+
+      // Verify it's written to disk
+      const raw = yield* fileSystem.readFileString(serverConfig.settingsPath);
+      const parsed = JSON.parse(raw);
+      assert.equal(parsed.sidebarProjectSortOrder, "manual");
+      assert.equal(parsed.sidebarThreadSortOrder, "created_at");
+
+      // Verify it reads back correctly
+      const readBack = yield* serverSettings.getSettings;
+      assert.equal(readBack.sidebarProjectSortOrder, "manual");
+      assert.equal(readBack.sidebarThreadSortOrder, "created_at");
+    }).pipe(Effect.provide(makeServerSettingsLayer())),
+  );
 });
