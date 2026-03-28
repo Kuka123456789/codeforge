@@ -1,15 +1,23 @@
 import { ThreadId } from "@codeforge/contracts";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { selectThreadTerminalState, useTerminalStateStore } from "./terminalStateStore";
+// Stub localStorage before importing the store so zustand's persist middleware
+// can bind to it at module-load time.
+const localStorageMap = new Map<string, string>();
+vi.stubGlobal("localStorage", {
+  getItem: (key: string) => localStorageMap.get(key) ?? null,
+  setItem: (key: string, value: string) => localStorageMap.set(key, value),
+  removeItem: (key: string) => localStorageMap.delete(key),
+  clear: () => localStorageMap.clear(),
+});
+
+const { selectThreadTerminalState, useTerminalStateStore } = await import("./terminalStateStore");
 
 const THREAD_ID = ThreadId.makeUnsafe("thread-1");
 
 describe("terminalStateStore actions", () => {
   beforeEach(() => {
-    if (typeof localStorage !== "undefined") {
-      localStorage.clear();
-    }
+    localStorageMap.clear();
     useTerminalStateStore.setState({ terminalStateByThreadId: {} });
   });
 
