@@ -1789,9 +1789,7 @@ export default function ChatView({ threadId }: ChatViewProps) {
 
   const handleScrollToPinSourceMessage = useCallback(
     (messageId: MessageId) => {
-      const entry = timelineEntries.find(
-        (e) => e.kind === "message" && e.message.id === messageId,
-      );
+      const entry = timelineEntries.find((e) => e.kind === "message" && e.message.id === messageId);
       if (entry) {
         setScrollToEntryId(entry.id);
       }
