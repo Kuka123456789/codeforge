@@ -2283,7 +2283,7 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
     <section class="compare-section">
       <div class="section-header">
         <p class="section-label">Comparison</p>
-        <h2>How CodeForge stacks up</h2>
+        <h2>How CodeForge compares</h2>
       </div>
       <table class="compare-table">
         <thead>
@@ -2291,43 +2291,52 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
             <th></th>
             <th class="hl">CodeForge</th>
             <th>T3 Code</th>
-            <th>Aider</th>
+            <th>Claude Code CLI</th>
             <th>Cursor</th>
-            <th>Copilot</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Self-hosted web UI</td>
+            <td>Multi-project workspace</td>
             <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">One at a time</span></td>
+            <td><span class="partial">Per window</span></td>
+          </tr>
+          <tr>
+            <td>Drag-and-drop reordering</td>
+            <td class="hl"><span class="yes">Projects &amp; threads</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+          </tr>
+          <tr>
+            <td>Thread archive &amp; search</td>
+            <td class="hl"><span class="yes">Full</span></td>
+            <td><span class="partial">Basic</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="partial">Basic</span></td>
+          </tr>
+          <tr>
+            <td>Multi-select &amp; batch ops</td>
+            <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+          </tr>
+          <tr>
+            <td>Pin messages</td>
+            <td class="hl"><span class="yes">Yes</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+            <td><span class="no">No</span></td>
+          </tr>
+          <tr>
+            <td>Browser-based</td>
+            <td class="hl"><span class="yes">Any device</span></td>
             <td><span class="yes">Yes</span></td>
-            <td><span class="no">Terminal only</span></td>
+            <td><span class="no">Terminal</span></td>
             <td><span class="no">Desktop app</span></td>
-            <td><span class="no">IDE plugin</span></td>
-          </tr>
-          <tr>
-            <td>Slash commands</td>
-            <td class="hl"><span class="yes">All providers</span></td>
-            <td><span class="partial">Limited</span></td>
-            <td><span class="yes">Built-in</span></td>
-            <td><span class="partial">Partial</span></td>
-            <td><span class="no">No</span></td>
-          </tr>
-          <tr>
-            <td>Skills management</td>
-            <td class="hl"><span class="yes">Yes</span></td>
-            <td><span class="no">No</span></td>
-            <td><span class="no">No</span></td>
-            <td><span class="partial">Rules files</span></td>
-            <td><span class="no">No</span></td>
-          </tr>
-          <tr>
-            <td>Multi-provider</td>
-            <td class="hl"><span class="yes">Yes</span></td>
-            <td><span class="yes">Yes</span></td>
-            <td><span class="yes">Yes</span></td>
-            <td><span class="yes">Yes</span></td>
-            <td><span class="no">No</span></td>
           </tr>
           <tr>
             <td>Open source</td>
@@ -2335,14 +2344,12 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
             <td><span class="yes">Yes</span></td>
             <td><span class="yes">Yes</span></td>
             <td><span class="no">No</span></td>
-            <td><span class="no">No</span></td>
           </tr>
           <tr>
             <td>No per-seat license</td>
             <td class="hl"><span class="yes">Yes</span></td>
             <td><span class="yes">Yes</span></td>
             <td><span class="yes">Yes</span></td>
-            <td><span class="no">No</span></td>
             <td><span class="no">No</span></td>
           </tr>
         </tbody>
@@ -2353,10 +2360,10 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
     <section class="features-section" id="features">
       <div class="section-header">
         <p class="section-label">Features</p>
-        <h2>Everything you need to run coding agents your way</h2>
+        <h2>What the CLI doesn't give you</h2>
         <p>
-          No cloud dependency. No per-seat pricing. A clean interface between you and the models you
-          choose.
+          Claude Code and Codex are powerful in the terminal. CodeForge adds the workspace layer on
+          top — project organization, visual history, and the management tools you need as usage grows.
         </p>
       </div>
       <div class="features-grid">
@@ -2421,10 +2428,10 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
           </div>
-          <h3>Conversation Management</h3>
+          <h3>Project &amp; Thread Management</h3>
           <p>
-            Search across all chats, archive old ones, rename inline, and browse prompt history.
-            Your conversations stay organized as they grow.
+            All your projects in one sidebar. Drag-and-drop to reorder, archive threads you're done
+            with, multi-select for batch ops, and pin important messages. No more terminal tab chaos.
           </p>
         </div>
         <div class="feature">
