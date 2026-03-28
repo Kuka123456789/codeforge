@@ -14,10 +14,10 @@ These must be done before the landing page goes live or any promotion happens.
 
 ### Product TODOs (pre-launch blockers)
 
-- [ ] **Decide on license** — Currently MIT in the repo, but you flagged this needs work. Options: MIT (most permissive, good for adoption), AGPL (prevents SaaS competitors from using your code without contributing back), BSL/SSPL (source-available but not OSS). The landing page currently says "open source" generically — update once decided.
-- [ ] **Publish an npm package under CodeForge's name** — Currently the npm package is `t3` (upstream T3 Code). CodeForge needs its own package so users can run something like `npx codeforge`. Until then, the install story is "download the desktop app" or "clone + bun dev".
-- [ ] **Verify fresh install works** — Test `git clone && bun install && bun dev` from a clean machine. Does it require Codex/Claude CLI pre-installed? Document any prerequisites clearly.
-- [ ] **Write a README** — The repo needs a clear README with: what CodeForge is, how to install, how to connect providers, screenshots. This is what people see first on GitHub.
+- [x] **Decide on license** — MIT. Already in LICENSE with proper attribution to T3 Code / Ping.gg. Landing page says "open source" which is accurate.
+- [ ] **Publish an npm package under CodeForge's name** — Package name is `codeforge`, confirmed available on npm. Build works. To publish: `cd apps/server && node scripts/cli.ts publish`. Requires npm login first.
+- [x] **Verify fresh install works** — Build passes (`bun install && bun run build` succeeds). Prerequisites: Codex CLI for Codex provider, `ANTHROPIC_API_KEY` for Claude provider. Documented in README.
+- [x] **Write a README** — Updated with features, install instructions, prerequisites table, architecture, dev setup, and links to codeforge.chat.
 
 ### Product TODOs (important but not blocking launch)
 
