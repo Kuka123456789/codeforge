@@ -6,11 +6,11 @@ These must be done before the landing page goes live or any promotion happens.
 
 ### Landing Page TODOs
 
-- [ ] **Replace screenshot placeholder** — Take an actual screenshot of CodeForge or record a short demo video (60s max). This is the single highest-impact item.
-- [ ] **Wire up email signup** — The form currently logs to console. Options: Formspree (free tier), Google Forms, or a simple serverless function. Pick one and connect it.
-- [ ] **Replace GitHub URLs** — All links currently point to `YOUR_USERNAME/codeforge`. Update with the real repo URL (or remove GitHub links if keeping the repo private for now).
-- [ ] **Replace contact email** — Footer links to `hello@codeforge.dev`. Set up a real email or change to your actual address.
-- [ ] **Deploy the landing page** — Host on Vercel, Netlify, or GitHub Pages. Get a custom domain if possible.
+- [x] **Replace screenshot placeholder** — Replaced with a mockup of the CodeForge UI.
+- [x] **Wire up email signup** — Connected to FormSubmit.co, emails go to daniel.odesser@gmail.com. Redirects back to codeforge.chat#signup-thanks on success.
+- [x] **Replace GitHub URLs** — All links now point to `https://github.com/Kuka123456789/codeforge`.
+- [x] **Replace contact email** — Footer now links to `daniel.odesser@gmail.com`.
+- [ ] **Deploy the landing page** — Plan: host on Vercel at `codeforge.chat`.
 
 ### Product TODOs (pre-launch blockers)
 
