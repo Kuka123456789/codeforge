@@ -7,16 +7,16 @@
       "outputs": ["dist-electron/**"],
     },
     "dev": {
-      "dependsOn": ["codeforge#build"],
+      "dependsOn": ["codeforge-chat#build"],
       "persistent": true,
     },
     "start": {
-      "dependsOn": ["build", "@codeforge/web#build", "codeforge#build"],
+      "dependsOn": ["build", "@codeforge/web#build", "codeforge-chat#build"],
       "cache": false,
       "persistent": true,
     },
     "smoke-test": {
-      "dependsOn": ["build", "@codeforge/web#build", "codeforge#build"],
+      "dependsOn": ["build", "@codeforge/web#build", "codeforge-chat#build"],
       "cache": false,
       "outputs": [],
     },
