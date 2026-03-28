@@ -852,7 +852,9 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
           description: string;
           content: string;
         }> = [];
+        const seenNames = new Set<string>();
 
+        /** Scan a directory of subdirectories each containing SKILL.md (SDK/Codex format). */
         const scanSkillsDir = (dir: string, source: "project" | "user") =>
           Effect.gen(function* () {
             const entries = yield* fileSystem
@@ -865,60 +867,118 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
                 .pipe(Effect.catch(() => Effect.succeed(null)));
               if (content === null) continue;
               const firstLine = content.split("\n").find((l: string) => l.trim().length > 0) ?? "";
-              skills.push({ name: entry, source, description: firstLine, content });
+              const key = `${source}:${entry}`;
+              if (!seenNames.has(key)) {
+                seenNames.add(key);
+                skills.push({ name: entry, source, description: firstLine, content });
+              }
             }
           });
 
+        /** Scan a directory of flat .md files (Claude Code CLI format: .claude/commands/). */
+        const scanCommandsDir = (dir: string, source: "project" | "user") =>
+          Effect.gen(function* () {
+            const entries = yield* fileSystem
+              .readDirectory(dir)
+              .pipe(Effect.catch(() => Effect.succeed([] as Array<string>)));
+            for (const entry of entries) {
+              if (!entry.endsWith(".md")) continue;
+              const name = entry.slice(0, -3); // strip .md
+              if (!name) continue;
+              const filePath = path.join(dir, entry);
+              const content = yield* fileSystem
+                .readFileString(filePath)
+                .pipe(Effect.catch(() => Effect.succeed(null)));
+              if (content === null) continue;
+              const firstLine = content.split("\n").find((l: string) => l.trim().length > 0) ?? "";
+              const key = `${source}:${name}`;
+              if (!seenNames.has(key)) {
+                seenNames.add(key);
+                skills.push({ name, source, description: firstLine, content });
+              }
+            }
+          });
+
+        // Scan project-level skills (both formats)
         yield* scanSkillsDir(path.join(body.cwd, ".claude", "skills"), "project");
+        yield* scanCommandsDir(path.join(body.cwd, ".claude", "commands"), "project");
+
+        // Scan user-level skills (both formats)
         yield* scanSkillsDir(path.join(yield* expandHomePath("~/.claude/skills"), ""), "user").pipe(
           Effect.catch(() => Effect.void),
         );
+        yield* scanCommandsDir(
+          path.join(yield* expandHomePath("~/.claude/commands"), ""),
+          "user",
+        ).pipe(Effect.catch(() => Effect.void));
 
         return { skills };
       }
 
       case WS_METHODS.skillsSave: {
         const body = stripRequestTag(request.body);
-        const baseDir =
-          body.source === "user"
-            ? yield* expandHomePath("~/.claude/skills")
-            : path.join(body.cwd, ".claude", "skills");
-        const skillDir = path.join(baseDir, body.name);
-        const skillPath = path.join(skillDir, "SKILL.md");
-        yield* fileSystem.makeDirectory(skillDir, { recursive: true }).pipe(
-          Effect.mapError(
-            (cause) =>
-              new RouteRequestError({
-                message: `Failed to prepare skill directory: ${String(cause)}`,
-              }),
-          ),
-        );
-        yield* fileSystem.writeFileString(skillPath, body.content).pipe(
-          Effect.mapError(
-            (cause) =>
-              new RouteRequestError({
-                message: `Failed to write skill file: ${String(cause)}`,
-              }),
-          ),
-        );
+        const homeBase = body.source === "user" ? yield* expandHomePath("~/.claude") : null;
+        const projectBase = path.join(body.cwd, ".claude");
+        const base = homeBase ?? projectBase;
+
+        // Check if the skill already exists in one of the two formats so we
+        // update in-place rather than creating a duplicate in the other format.
+        const existingSkillDir = path.join(base, "skills", body.name, "SKILL.md");
+        const existingCommandFile = path.join(base, "commands", `${body.name}.md`);
+
+        const skillDirExists = yield* fileSystem
+          .readFileString(existingSkillDir)
+          .pipe(Effect.catch(() => Effect.succeed(null)));
+
+        if (skillDirExists !== null) {
+          // Update existing SKILL.md format
+          yield* fileSystem.writeFileString(existingSkillDir, body.content).pipe(
+            Effect.mapError(
+              (cause) =>
+                new RouteRequestError({
+                  message: `Failed to write skill file: ${String(cause)}`,
+                }),
+            ),
+          );
+        } else {
+          // Write as flat .md (Claude Code CLI format) — default for new skills
+          const commandsDir = path.join(base, "commands");
+          yield* fileSystem.makeDirectory(commandsDir, { recursive: true }).pipe(
+            Effect.mapError(
+              (cause) =>
+                new RouteRequestError({
+                  message: `Failed to prepare commands directory: ${String(cause)}`,
+                }),
+            ),
+          );
+          yield* fileSystem.writeFileString(existingCommandFile, body.content).pipe(
+            Effect.mapError(
+              (cause) =>
+                new RouteRequestError({
+                  message: `Failed to write command file: ${String(cause)}`,
+                }),
+            ),
+          );
+        }
         return { name: body.name };
       }
 
       case WS_METHODS.skillsDelete: {
         const body = stripRequestTag(request.body);
-        const baseDir =
-          body.source === "user"
-            ? yield* expandHomePath("~/.claude/skills")
-            : path.join(body.cwd, ".claude", "skills");
-        const skillDir = path.join(baseDir, body.name);
-        yield* fileSystem.remove(skillDir, { recursive: true }).pipe(
-          Effect.mapError(
-            (cause) =>
-              new RouteRequestError({
-                message: `Failed to delete skill: ${String(cause)}`,
-              }),
-          ),
-        );
+        const homeBase = body.source === "user" ? yield* expandHomePath("~/.claude") : null;
+        const projectBase = path.join(body.cwd, ".claude");
+        const base = homeBase ?? projectBase;
+
+        // Try deleting from both formats — one will succeed, the other will
+        // silently fail if the path doesn't exist.
+        const skillDir = path.join(base, "skills", body.name);
+        const commandFile = path.join(base, "commands", `${body.name}.md`);
+
+        yield* fileSystem
+          .remove(skillDir, { recursive: true })
+          .pipe(Effect.catch(() => Effect.void));
+        yield* fileSystem.remove(commandFile).pipe(Effect.catch(() => Effect.void));
+
         return { name: body.name };
       }
 

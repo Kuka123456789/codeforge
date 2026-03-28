@@ -900,10 +900,18 @@
         height: 12px;
         flex-shrink: 0;
       }
-      .demo-sm-icon--amber { color: #f59e0b; }
-      .demo-sm-icon--blue { color: #60a5fa; }
-      .demo-sm-icon--green { color: #22c55e; }
-      .demo-sm-icon--purple { color: #a78bfa; }
+      .demo-sm-icon--amber {
+        color: #f59e0b;
+      }
+      .demo-sm-icon--blue {
+        color: #60a5fa;
+      }
+      .demo-sm-icon--green {
+        color: #22c55e;
+      }
+      .demo-sm-icon--purple {
+        color: #a78bfa;
+      }
       .demo-sm-add {
         display: flex;
         align-items: center;
@@ -914,7 +922,9 @@
         opacity: 0.5;
         cursor: pointer;
       }
-      .demo-sm-add:hover { opacity: 0.8; }
+      .demo-sm-add:hover {
+        opacity: 0.8;
+      }
       .demo-sm-right {
         flex: 1;
         display: flex;
@@ -1605,7 +1615,12 @@
       </p>
       <div class="cta-group">
         <a href="#get-started" class="btn btn-primary">Get Started</a>
-        <a href="https://github.com/Kuka123456789/codeforge" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://github.com/Kuka123456789/codeforge"
+          class="btn btn-ghost"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"
@@ -2110,7 +2125,21 @@
                 <span class="demo-pins-count">2 pinned</span>
               </div>
               <span class="demo-pins-close">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="3" width="3" height="18" rx="1"/><path d="m2 21 4-4"/><path d="M14 4h2a2 2 0 0 1 2 2v2"/><path d="M2 14v2a2 2 0 0 0 2 2h2"/></svg>
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <rect x="18" y="3" width="3" height="18" rx="1" />
+                  <path d="m2 21 4-4" />
+                  <path d="M14 4h2a2 2 0 0 1 2 2v2" />
+                  <path d="M2 14v2a2 2 0 0 0 2 2h2" />
+                </svg>
               </span>
             </div>
             <div class="demo-pins-list">
@@ -2120,12 +2149,27 @@
                   <span class="demo-pin-role demo-pin-role--assistant">Assistant</span>
                 </div>
                 <div class="demo-pin-card-body">
-                  The middleware validates JWT tokens on all <code>/api</code> routes and attaches the decoded payload to <code>req.user</code>. Make sure to set <code>JWT_SECRET</code> in your environment.
+                  The middleware validates JWT tokens on all <code>/api</code> routes and attaches
+                  the decoded payload to <code>req.user</code>. Make sure to set
+                  <code>JWT_SECRET</code> in your environment.
                   <div class="demo-pin-card-fade"></div>
                 </div>
                 <div class="demo-pin-card-footer">
                   <span>Show more</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M15 3h6v6" />
+                    <path d="M10 14 21 3" />
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  </svg>
                 </div>
               </div>
               <!-- Pin 2: User selection -->
@@ -2139,7 +2183,20 @@
                 </div>
                 <div class="demo-pin-card-footer">
                   <span>Show more</span>
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+                  <svg
+                    width="10"
+                    height="10"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M15 3h6v6" />
+                    <path d="M10 14 21 3" />
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -2196,7 +2253,8 @@
       <p class="demo-skills-label">Skill Manager</p>
       <h2 class="demo-skills-title">Reusable skills for every project</h2>
       <p class="demo-skills-subtitle">
-        Organize slash commands and custom skills. Project-scoped or global — invoke them from any thread.
+        Organize slash commands and custom skills. Project-scoped or global — invoke them from any
+        thread.
       </p>
       <div class="demo-sm">
         <div class="demo-sm-titlebar">Skill Manager</div>
@@ -2205,43 +2263,140 @@
           <div class="demo-sm-left">
             <div class="demo-sm-group-title">Built-in</div>
             <div class="demo-sm-row">
-              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--amber"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
               /model
             </div>
             <div class="demo-sm-row">
-              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--amber"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
               /plan
             </div>
             <div class="demo-sm-row">
-              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--amber"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
               /clear
             </div>
             <div class="demo-sm-row">
-              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--amber"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
+              </svg>
               /context
             </div>
 
             <div class="demo-sm-group-title">Project Skills</div>
             <div class="demo-sm-row demo-sm-row--active">
-              <svg class="demo-sm-icon demo-sm-icon--green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--green"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="4 17 10 11 4 5" />
+                <line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
               /review-pr
             </div>
             <div class="demo-sm-row">
-              <svg class="demo-sm-icon demo-sm-icon--green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--green"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="4 17 10 11 4 5" />
+                <line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
               /deploy
             </div>
             <div class="demo-sm-add">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
               New project skill
             </div>
 
             <div class="demo-sm-group-title">User Skills</div>
             <div class="demo-sm-row">
-              <svg class="demo-sm-icon demo-sm-icon--purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              <svg
+                class="demo-sm-icon demo-sm-icon--purple"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polyline points="4 17 10 11 4 5" />
+                <line x1="12" y1="19" x2="20" y2="19" />
+              </svg>
               /commit-msg
             </div>
             <div class="demo-sm-add">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
               New user skill
             </div>
           </div>
@@ -2252,26 +2407,38 @@
               <span class="demo-sm-detail-name">/review-pr</span>
               <span class="demo-sm-detail-source">Project skill</span>
             </div>
-            <div class="demo-sm-editor"><em># PR Review Skill</em>
+            <div class="demo-sm-editor">
+              <em># PR Review Skill</em>
 
-Review the current git diff against the base branch.
+              Review the current git diff against the base branch.
 
-<em>## Instructions</em>
-1. Run `git diff main...HEAD` to see all changes
-2. Check for:
-   - Breaking API changes
-   - Missing error handling
-   - Test coverage gaps
-   - Security concerns (hardcoded secrets, SQL injection)
-3. Summarize findings as a checklist
-4. Suggest specific improvements with code examples
+              <em>## Instructions</em>
+              1. Run `git diff main...HEAD` to see all changes 2. Check for: - Breaking API changes
+              - Missing error handling - Test coverage gaps - Security concerns (hardcoded secrets,
+              SQL injection) 3. Summarize findings as a checklist 4. Suggest specific improvements
+              with code examples
 
-<em>## Output format</em>
-Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
+              <em>## Output format</em>
+              Use markdown with ✅ for passing checks and ⚠️ for issues.
+            </div>
             <div class="demo-sm-detail-footer">
               <span class="demo-sm-btn demo-sm-btn--delete">
-                <span style="display:flex;align-items:center;gap:4px">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span style="display: flex; align-items: center; gap: 4px">
+                  <svg
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="3 6 5 6 21 6" />
+                    <path
+                      d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    />
+                  </svg>
                   Delete
                 </span>
               </span>
@@ -2366,7 +2533,8 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
         <h2>What the CLI doesn't give you</h2>
         <p>
           Claude Code and Codex are powerful in the terminal. CodeForge adds the workspace layer on
-          top — project organization, visual history, and the management tools you need as usage grows.
+          top — project organization, visual history, and the management tools you need as usage
+          grows.
         </p>
       </div>
       <div class="features-grid">
@@ -2434,7 +2602,8 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
           <h3>Project &amp; Thread Management</h3>
           <p>
             All your projects in one sidebar. Drag-and-drop to reorder, archive threads you're done
-            with, multi-select for batch ops, and pin important messages. No more terminal tab chaos.
+            with, multi-select for batch ops, and pin important messages. No more terminal tab
+            chaos.
           </p>
         </div>
         <div class="feature">
@@ -2546,7 +2715,12 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
         <p>
           Inspect every line. Audit the data flow. Contribute features. The code is the product.
         </p>
-        <a href="https://github.com/Kuka123456789/codeforge" class="btn btn-ghost" target="_blank" rel="noopener noreferrer">
+        <a
+          href="https://github.com/Kuka123456789/codeforge"
+          class="btn btn-ghost"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"
@@ -2620,8 +2794,9 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
         </div>
         <div class="faq-a">
           <p>
-            Run <code>npx codeforge-chat</code>, download the desktop app, or clone the repo. It starts the
-            server and opens the UI in your browser. Available for macOS, Linux, and Windows.
+            Run <code>npx codeforge-chat</code>, download the desktop app, or clone the repo. It
+            starts the server and opens the UI in your browser. Available for macOS, Linux, and
+            Windows.
           </p>
         </div>
       </div>
@@ -2708,9 +2883,19 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
       <div class="quickstart-code">
         <pre><code>npx codeforge-chat</code></pre>
       </div>
-      <div class="cta-group" style="margin-top: 1.5rem;">
-        <a href="https://github.com/Kuka123456789/codeforge" class="btn btn-primary" target="_blank" rel="noopener noreferrer">View on GitHub</a>
-        <a href="https://github.com/Kuka123456789/codeforge/blob/main/README.md" class="btn btn-ghost">Read the docs</a>
+      <div class="cta-group" style="margin-top: 1.5rem">
+        <a
+          href="https://github.com/Kuka123456789/codeforge"
+          class="btn btn-primary"
+          target="_blank"
+          rel="noopener noreferrer"
+          >View on GitHub</a
+        >
+        <a
+          href="https://github.com/Kuka123456789/codeforge/blob/main/README.md"
+          class="btn btn-ghost"
+          >Read the docs</a
+        >
       </div>
       <p class="signup-note">Open source &middot; MIT License &middot; No account required</p>
     </section>
@@ -2734,7 +2919,6 @@ Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
           }
         });
       });
-
     </script>
   </body>
 </html>
