@@ -26,12 +26,6 @@ export const DEFAULT_SIDEBAR_THREAD_SORT_ORDER: SidebarThreadSortOrder = "update
 export const ClientSettingsSchema = Schema.Struct({
   confirmThreadDelete: Schema.Boolean.pipe(Schema.withDecodingDefault(() => true)),
   diffWordWrap: Schema.Boolean.pipe(Schema.withDecodingDefault(() => false)),
-  sidebarProjectSortOrder: SidebarProjectSortOrder.pipe(
-    Schema.withDecodingDefault(() => DEFAULT_SIDEBAR_PROJECT_SORT_ORDER),
-  ),
-  sidebarThreadSortOrder: SidebarThreadSortOrder.pipe(
-    Schema.withDecodingDefault(() => DEFAULT_SIDEBAR_THREAD_SORT_ORDER),
-  ),
   timestampFormat: TimestampFormat.pipe(Schema.withDecodingDefault(() => DEFAULT_TIMESTAMP_FORMAT)),
 });
 export type ClientSettings = typeof ClientSettingsSchema.Type;
@@ -80,6 +74,14 @@ export const ServerSettings = Schema.Struct({
       provider: "codex" as const,
       model: DEFAULT_GIT_TEXT_GENERATION_MODEL_BY_PROVIDER.codex,
     })),
+  ),
+
+  // Sidebar sort preferences (persisted server-side for reliable cross-restart retention)
+  sidebarProjectSortOrder: SidebarProjectSortOrder.pipe(
+    Schema.withDecodingDefault(() => DEFAULT_SIDEBAR_PROJECT_SORT_ORDER),
+  ),
+  sidebarThreadSortOrder: SidebarThreadSortOrder.pipe(
+    Schema.withDecodingDefault(() => DEFAULT_SIDEBAR_THREAD_SORT_ORDER),
   ),
 
   // Provider specific settings
@@ -143,6 +145,8 @@ export const ServerSettingsPatch = Schema.Struct({
   enableAssistantStreaming: Schema.optionalKey(Schema.Boolean),
   defaultThreadEnvMode: Schema.optionalKey(ThreadEnvMode),
   textGenerationModelSelection: Schema.optionalKey(ModelSelectionPatch),
+  sidebarProjectSortOrder: Schema.optionalKey(SidebarProjectSortOrder),
+  sidebarThreadSortOrder: Schema.optionalKey(SidebarThreadSortOrder),
   providers: Schema.optionalKey(
     Schema.Struct({
       codex: Schema.optionalKey(CodexSettingsPatch),

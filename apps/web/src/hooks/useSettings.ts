@@ -23,6 +23,8 @@ import {
   type ClientSettings,
   ClientSettingsSchema,
   DEFAULT_CLIENT_SETTINGS,
+  DEFAULT_SIDEBAR_PROJECT_SORT_ORDER,
+  DEFAULT_SIDEBAR_THREAD_SORT_ORDER,
   DEFAULT_UNIFIED_SETTINGS,
   SidebarProjectSortOrder,
   SidebarThreadSortOrder,
@@ -194,6 +196,14 @@ export function buildLegacyServerSettingsMigrationPatch(legacySettings: Record<s
     );
   }
 
+  if (Schema.is(SidebarProjectSortOrder)(legacySettings.sidebarProjectSortOrder)) {
+    patch.sidebarProjectSortOrder = legacySettings.sidebarProjectSortOrder;
+  }
+
+  if (Schema.is(SidebarThreadSortOrder)(legacySettings.sidebarThreadSortOrder)) {
+    patch.sidebarThreadSortOrder = legacySettings.sidebarThreadSortOrder;
+  }
+
   return patch;
 }
 
@@ -210,14 +220,6 @@ export function buildLegacyClientSettingsMigrationPatch(
     patch.diffWordWrap = legacySettings.diffWordWrap;
   }
 
-  if (Schema.is(SidebarProjectSortOrder)(legacySettings.sidebarProjectSortOrder)) {
-    patch.sidebarProjectSortOrder = legacySettings.sidebarProjectSortOrder;
-  }
-
-  if (Schema.is(SidebarThreadSortOrder)(legacySettings.sidebarThreadSortOrder)) {
-    patch.sidebarThreadSortOrder = legacySettings.sidebarThreadSortOrder;
-  }
-
   if (Schema.is(TimestampFormat)(legacySettings.timestampFormat)) {
     patch.timestampFormat = legacySettings.timestampFormat;
   }
@@ -229,10 +231,55 @@ export function buildLegacyClientSettingsMigrationPatch(
  * Call once on app startup.
  * If the legacy localStorage key exists, migrate its values to the new server
  * and client storage formats, then remove the legacy key so this only runs once.
+ *
+ * Also migrates sort preferences from client settings to server settings (one-shot).
  */
 export function migrateLocalSettingsToServer(): void {
   if (typeof window === "undefined") return;
 
+  migrateLegacyAppSettings();
+  migrateSortPreferencesToServer();
+}
+
+const SORT_MIGRATION_KEY = "codeforge:sort-migrated-to-server";
+
+/**
+ * One-shot migration: move sidebar sort preferences from client-only localStorage
+ * to server-authoritative settings.json, so they persist reliably across restarts.
+ */
+function migrateSortPreferencesToServer(): void {
+  if (localStorage.getItem(SORT_MIGRATION_KEY)) return;
+
+  try {
+    const raw = localStorage.getItem(CLIENT_SETTINGS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      const serverPatch: DeepMutable<ServerSettingsPatch> = {};
+
+      if (Schema.is(SidebarProjectSortOrder)(parsed.sidebarProjectSortOrder)) {
+        if (parsed.sidebarProjectSortOrder !== DEFAULT_SIDEBAR_PROJECT_SORT_ORDER) {
+          serverPatch.sidebarProjectSortOrder = parsed.sidebarProjectSortOrder;
+        }
+      }
+
+      if (Schema.is(SidebarThreadSortOrder)(parsed.sidebarThreadSortOrder)) {
+        if (parsed.sidebarThreadSortOrder !== DEFAULT_SIDEBAR_THREAD_SORT_ORDER) {
+          serverPatch.sidebarThreadSortOrder = parsed.sidebarThreadSortOrder;
+        }
+      }
+
+      if (Object.keys(serverPatch).length > 0) {
+        void ensureNativeApi().server.updateSettings(serverPatch);
+      }
+    }
+  } catch (error) {
+    console.error("[MIGRATION] Error migrating sort preferences to server:", error);
+  } finally {
+    localStorage.setItem(SORT_MIGRATION_KEY, "1");
+  }
+}
+
+function migrateLegacyAppSettings(): void {
   const raw = localStorage.getItem(OLD_SETTINGS_KEY);
   if (!raw) return;
 
