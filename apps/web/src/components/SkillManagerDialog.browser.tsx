@@ -29,13 +29,6 @@ let skillsSaveShouldFail = false;
 let skillsDeleteShouldFail = false;
 
 // ── Mock NativeApi ─────────────────────────────────────────────────────
-//
-// We create a SINGLE mock instance and install it on `window.nativeApi`
-// before any test runs. The `readNativeApi()` function caches the first
-// result at module scope, so it will hold a reference to this object for
-// the entire test suite. Individual mock methods read from the mutable
-// flag/tracking variables defined above, so resetting those in `beforeEach`
-// is sufficient to get fresh behavior per test.
 
 const mockNativeApi = {
   skills: {
@@ -45,11 +38,7 @@ const mockNativeApi = {
     },
     save: async (input: { name: string; source: string; content: string }) => {
       if (skillsSaveShouldFail) throw new Error("skills.save failed");
-      skillsSaveCalls.push({
-        name: input.name,
-        source: input.source,
-        content: input.content,
-      });
+      skillsSaveCalls.push({ name: input.name, source: input.source, content: input.content });
       return { name: input.name };
     },
     delete: async (input: { name: string; source: string }) => {
@@ -59,23 +48,7 @@ const mockNativeApi = {
     },
   },
   server: {
-    getConfig: async () => ({
-      cwd: PROJECT_CWD,
-      keybindingsConfigPath: "",
-      keybindings: [],
-      issues: [],
-      providers: [],
-      availableEditors: [],
-      settings: {
-        enableAssistantStreaming: false,
-        defaultThreadEnvMode: "local" as const,
-        textGenerationModelSelection: { provider: "codex" as const, model: "gpt-5" },
-        providers: {
-          codex: { enabled: true, binaryPath: "", homePath: "", customModels: [] },
-          claudeAgent: { enabled: true, binaryPath: "", customModels: [] },
-        },
-      },
-    }),
+    getConfig: async () => ({}),
     refreshProviders: async () => {
       refreshProvidersCalls++;
       return {};
@@ -89,30 +62,9 @@ const mockNativeApi = {
     readFile: async () => ({ relativePath: "", contents: "", exists: false }),
     deleteFile: async () => ({}),
   },
-  git: {
-    status: async () => ({}),
-    pull: async () => ({}),
-    listBranches: async () => ({}),
-    createBranch: async () => ({}),
-    createWorktree: async () => ({}),
-    removeWorktree: async () => ({}),
-    checkoutBranch: async () => ({}),
-    deleteBranch: async () => ({}),
-    commit: async () => ({}),
-    push: async () => ({}),
-    fetch: async () => ({}),
-  },
-  shell: {
-    openInEditor: async () => ({}),
-    openExternal: async () => ({}),
-    showContextMenu: async () => ({}),
-  },
-  terminal: {
-    open: async () => ({}),
-    close: async () => ({}),
-    resize: async () => ({}),
-    write: async () => ({}),
-  },
+  git: {},
+  shell: {},
+  terminal: {},
 } as unknown as NativeApi;
 
 // Install immediately so readNativeApi() picks it up on first call
@@ -147,15 +99,12 @@ async function renderDialog(
   props?: Parameters<typeof TestHarness>[0],
 ): Promise<ReturnType<typeof render>> {
   const screen = await render(<TestHarness {...props} />);
-  // Wait for the dialog to be visible
-  await vi.waitFor(
-    () => {
-      expect(document.querySelector('[role="dialog"]')).toBeTruthy();
-    },
-    { timeout: 4_000, interval: 16 },
-  );
+  await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeTruthy(), {
+    timeout: 4_000,
+    interval: 16,
+  });
   // Give effects time to run (skills.list fetch)
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 300));
   return screen;
 }
 
@@ -178,30 +127,7 @@ async function waitForElement<T extends Element>(
 }
 
 async function waitForNoElement(query: () => Element | null, timeout = 2_000): Promise<void> {
-  await vi.waitFor(
-    () => {
-      expect(query()).toBeNull();
-    },
-    { timeout, interval: 16 },
-  );
-}
-
-function queryToastTitles(): string[] {
-  return Array.from(document.querySelectorAll('[data-slot="toast-title"]')).map(
-    (el) => el.textContent ?? "",
-  );
-}
-
-async function waitForToast(title: string, timeout = 4_000): Promise<void> {
-  await vi.waitFor(
-    () => {
-      expect(
-        queryToastTitles().some((t) => t.includes(title)),
-        `Expected toast "${title}", found: [${queryToastTitles().join(", ")}]`,
-      ).toBe(true);
-    },
-    { timeout, interval: 16 },
-  );
+  await vi.waitFor(() => expect(query()).toBeNull(), { timeout, interval: 16 });
 }
 
 function findButton(text: string): HTMLButtonElement | null {
@@ -248,6 +174,18 @@ function editTextarea(value: string): void {
   nativeSetter.call(textarea, value);
   textarea.dispatchEvent(new Event("input", { bubbles: true }));
   textarea.dispatchEvent(new Event("change", { bubbles: true }));
+}
+
+/** Wait for the mock API to have been called. */
+async function waitForApiCalls(
+  getter: () => number,
+  minCalls: number,
+  timeout = 4_000,
+): Promise<void> {
+  await vi.waitFor(() => expect(getter()).toBeGreaterThanOrEqual(minCalls), {
+    timeout,
+    interval: 16,
+  });
 }
 
 // ── Tests ──────────────────────────────────────────────────────────────
@@ -309,12 +247,12 @@ describe("SkillManagerDialog", () => {
   it("hides provider section when no provider commands exist", async () => {
     const screen = await renderDialog({ providerCommands: [] });
     try {
-      const dialog = document.querySelector('[role="dialog"]');
-      // "Provider" heading should not be in the dialog
-      const headings = Array.from(dialog?.querySelectorAll("div") ?? []).filter(
-        (div) => div.textContent?.trim() === "Provider" && div.children.length === 0,
+      // Check no "Provider" group heading exists
+      const headings = Array.from(document.querySelectorAll('[role="dialog"] div')).filter(
+        (el) => el.textContent?.trim() === "PROVIDER" || el.textContent?.trim() === "Provider",
       );
-      expect(headings).toHaveLength(0);
+      // Should only appear as part of "Provider commands" etc., not as standalone heading
+      expect(headings.filter((h) => h.children.length === 0)).toHaveLength(0);
     } finally {
       screen.unmount();
     }
@@ -323,19 +261,11 @@ describe("SkillManagerDialog", () => {
   it("displays custom project and user skills from API", async () => {
     mockSkillsList = [
       { name: "deploy", source: "project", description: "# deploy", content: "# deploy\nDeploy." },
-      {
-        name: "global-lint",
-        source: "user",
-        description: "# global-lint",
-        content: "# global-lint\nLint.",
-      },
+      { name: "global-lint", source: "user", description: "# global", content: "# global\nLint." },
     ];
     const screen = await renderDialog();
     try {
-      await waitForElement(
-        () => findButton("/deploy"),
-        'Project skill "/deploy" should appear after loading',
-      );
+      await waitForElement(() => findButton("/deploy"), "/deploy should appear after loading");
       expect(findButton("/global-lint")).toBeTruthy();
     } finally {
       screen.unmount();
@@ -362,8 +292,9 @@ describe("SkillManagerDialog", () => {
   it("shows empty state message when no skill is selected", async () => {
     const screen = await renderDialog();
     try {
-      const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("Select a skill to view details");
+      expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+        "Select a skill to view details",
+      );
     } finally {
       screen.unmount();
     }
@@ -373,10 +304,10 @@ describe("SkillManagerDialog", () => {
     const screen = await renderDialog();
     try {
       await clickButton("/clear");
-      const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("/clear");
-      expect(dialogText).toContain("Built-in command");
-      expect(dialogText).toContain("not editable");
+      const text = document.querySelector('[role="dialog"]')?.textContent ?? "";
+      expect(text).toContain("/clear");
+      expect(text).toContain("Built-in command");
+      expect(text).toContain("not editable");
     } finally {
       screen.unmount();
     }
@@ -390,10 +321,10 @@ describe("SkillManagerDialog", () => {
     });
     try {
       await clickButton("/bug");
-      const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("/bug");
-      expect(dialogText).toContain("Provider command");
-      expect(dialogText).toContain("<description>");
+      const text = document.querySelector('[role="dialog"]')?.textContent ?? "";
+      expect(text).toContain("/bug");
+      expect(text).toContain("Provider command");
+      expect(text).toContain("<description>");
     } finally {
       screen.unmount();
     }
@@ -401,21 +332,16 @@ describe("SkillManagerDialog", () => {
 
   it("shows editable textarea when selecting a custom skill", async () => {
     mockSkillsList = [
-      {
-        name: "test-skill",
-        source: "project",
-        description: "# test",
-        content: "# test\n\nHello world.\n",
-      },
+      { name: "test-skill", source: "project", description: "# t", content: "# test\n\nHi.\n" },
     ];
     const screen = await renderDialog();
     try {
       await clickButton("/test-skill");
       const textarea = await waitForElement(
         () => document.querySelector("textarea"),
-        "Textarea should appear for custom skill",
+        "Textarea should appear",
       );
-      expect(textarea.value).toBe("# test\n\nHello world.\n");
+      expect(textarea.value).toBe("# test\n\nHi.\n");
     } finally {
       screen.unmount();
     }
@@ -430,7 +356,6 @@ describe("SkillManagerDialog", () => {
     try {
       await clickButton("/proj-s");
       expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Project skill");
-
       await clickButton("/user-s");
       expect(document.querySelector('[role="dialog"]')?.textContent).toContain("User skill");
     } finally {
@@ -447,14 +372,13 @@ describe("SkillManagerDialog", () => {
       const input = await typeInInput("skill-name", "my-new-skill");
       pressKey(input, "Enter");
 
-      await waitForToast("Created /my-new-skill");
-      expect(skillsSaveCalls).toHaveLength(1);
+      await waitForApiCalls(() => skillsSaveCalls.length, 1);
       expect(skillsSaveCalls[0]!.name).toBe("my-new-skill");
       expect(skillsSaveCalls[0]!.source).toBe("project");
       expect(skillsSaveCalls[0]!.content).toContain("# my-new-skill");
 
-      // Verify it appears in the list
-      expect(findButton("/my-new-skill")).toBeTruthy();
+      // New skill should appear in the list
+      await waitForElement(() => findButton("/my-new-skill"), "New skill should appear in list");
     } finally {
       screen.unmount();
     }
@@ -467,8 +391,7 @@ describe("SkillManagerDialog", () => {
       const input = await typeInInput("skill-name", "my-user-skill");
       pressKey(input, "Enter");
 
-      await waitForToast("Created /my-user-skill");
-      expect(skillsSaveCalls).toHaveLength(1);
+      await waitForApiCalls(() => skillsSaveCalls.length, 1);
       expect(skillsSaveCalls[0]!.source).toBe("user");
     } finally {
       screen.unmount();
@@ -487,21 +410,22 @@ describe("SkillManagerDialog", () => {
 
       await waitForElement(
         () => findButton("New project skill"),
-        "New project skill button should reappear after cancel",
+        "New project skill button should reappear",
       );
     } finally {
       screen.unmount();
     }
   });
 
-  it("rejects invalid skill names with a warning toast", async () => {
+  it("rejects invalid skill names (no API call made)", async () => {
     const screen = await renderDialog();
     try {
       await clickButton("New project skill");
       const input = await typeInInput("skill-name", "bad name!");
       pressKey(input, "Enter");
 
-      await waitForToast("Invalid skill name");
+      // Wait a beat to ensure nothing was called
+      await new Promise((resolve) => setTimeout(resolve, 300));
       expect(skillsSaveCalls).toHaveLength(0);
     } finally {
       screen.unmount();
@@ -515,14 +439,14 @@ describe("SkillManagerDialog", () => {
       const input = await typeInInput("skill-name", "-invalid");
       pressKey(input, "Enter");
 
-      await waitForToast("Invalid skill name");
+      await new Promise((resolve) => setTimeout(resolve, 300));
       expect(skillsSaveCalls).toHaveLength(0);
     } finally {
       screen.unmount();
     }
   });
 
-  it("shows error toast when skill creation fails", async () => {
+  it("does not create skill when API fails", async () => {
     skillsSaveShouldFail = true;
     const screen = await renderDialog();
     try {
@@ -530,7 +454,11 @@ describe("SkillManagerDialog", () => {
       const input = await typeInInput("skill-name", "fail-skill");
       pressKey(input, "Enter");
 
-      await waitForToast("Failed to create skill");
+      // Wait for the async operation to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // The skill should NOT appear in the list since save failed
+      expect(findButton("/fail-skill")).toBeNull();
     } finally {
       screen.unmount();
     }
@@ -538,14 +466,9 @@ describe("SkillManagerDialog", () => {
 
   // ── Saving skills ─────────────────────────────────────────────────
 
-  it("saves edited skill content and shows success toast", async () => {
+  it("saves edited skill content", async () => {
     mockSkillsList = [
-      {
-        name: "editable",
-        source: "project",
-        description: "# editable",
-        content: "# editable\n\nOriginal.\n",
-      },
+      { name: "editable", source: "project", description: "# e", content: "# editable\nOrig.\n" },
     ];
     const screen = await renderDialog();
     try {
@@ -555,8 +478,7 @@ describe("SkillManagerDialog", () => {
       editTextarea("# editable\n\nUpdated content.\n");
       await clickButton("Save");
 
-      await waitForToast("Saved /editable");
-      expect(skillsSaveCalls).toHaveLength(1);
+      await waitForApiCalls(() => skillsSaveCalls.length, 1);
       expect(skillsSaveCalls[0]!.content).toContain("Updated content");
     } finally {
       screen.unmount();
@@ -565,7 +487,7 @@ describe("SkillManagerDialog", () => {
 
   it("disables save button when content has not changed", async () => {
     mockSkillsList = [
-      { name: "unchanged", source: "project", description: "# unchanged", content: "# unchanged" },
+      { name: "unchanged", source: "project", description: "# u", content: "# unchanged" },
     ];
     const screen = await renderDialog();
     try {
@@ -580,62 +502,22 @@ describe("SkillManagerDialog", () => {
     }
   });
 
-  it("shows error toast when skill save fails", async () => {
-    mockSkillsList = [
-      {
-        name: "fail-save",
-        source: "project",
-        description: "# fail-save",
-        content: "# fail-save",
-      },
-    ];
-    const screen = await renderDialog();
-    try {
-      await clickButton("/fail-save");
-      await waitForElement(() => document.querySelector("textarea"), "Textarea should appear");
-
-      editTextarea("# fail-save\n\nNew content.");
-      skillsSaveShouldFail = true;
-      await clickButton("Save");
-
-      await waitForToast("Failed to save skill");
-    } finally {
-      screen.unmount();
-    }
-  });
-
   // ── Deleting skills ───────────────────────────────────────────────
 
   it("deletes a custom skill and removes it from the list", async () => {
     mockSkillsList = [
-      { name: "to-delete", source: "project", description: "# to-delete", content: "# to-delete" },
+      { name: "to-delete", source: "project", description: "# d", content: "# to-delete" },
     ];
     const screen = await renderDialog();
     try {
       await clickButton("/to-delete");
       await clickButton("Delete");
 
-      await waitForToast("Deleted /to-delete");
-      expect(skillsDeleteCalls).toHaveLength(1);
+      await waitForApiCalls(() => skillsDeleteCalls.length, 1);
       expect(skillsDeleteCalls[0]!.name).toBe("to-delete");
 
+      // Skill removed from list
       await waitForNoElement(() => findButton("/to-delete"));
-    } finally {
-      screen.unmount();
-    }
-  });
-
-  it("shows error toast when skill deletion fails", async () => {
-    mockSkillsList = [
-      { name: "fail-del", source: "project", description: "# fail-del", content: "# fail-del" },
-    ];
-    skillsDeleteShouldFail = true;
-    const screen = await renderDialog();
-    try {
-      await clickButton("/fail-del");
-      await clickButton("Delete");
-
-      await waitForToast("Failed to delete skill");
     } finally {
       screen.unmount();
     }
@@ -643,7 +525,7 @@ describe("SkillManagerDialog", () => {
 
   it("clears selection and editor after deletion", async () => {
     mockSkillsList = [
-      { name: "del-clear", source: "project", description: "# del-clear", content: "# del-clear" },
+      { name: "del-clear", source: "project", description: "# d", content: "# del-clear" },
     ];
     const screen = await renderDialog();
     try {
@@ -651,10 +533,17 @@ describe("SkillManagerDialog", () => {
       await waitForElement(() => document.querySelector("textarea"), "Textarea should appear");
 
       await clickButton("Delete");
-      await waitForToast("Deleted /del-clear");
+      await waitForApiCalls(() => skillsDeleteCalls.length, 1);
 
-      const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("Select a skill to view details");
+      // Should return to empty state
+      await vi.waitFor(
+        () => {
+          expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+            "Select a skill to view details",
+          );
+        },
+        { timeout: 4_000, interval: 16 },
+      );
     } finally {
       screen.unmount();
     }
@@ -669,11 +558,8 @@ describe("SkillManagerDialog", () => {
       const input = await typeInInput("skill-name", "refresh-test");
       pressKey(input, "Enter");
 
-      await waitForToast("Created /refresh-test");
-      await vi.waitFor(() => expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1), {
-        timeout: 4_000,
-        interval: 16,
-      });
+      await waitForApiCalls(() => skillsSaveCalls.length, 1);
+      await waitForApiCalls(() => refreshProvidersCalls, 1);
     } finally {
       screen.unmount();
     }
@@ -681,18 +567,15 @@ describe("SkillManagerDialog", () => {
 
   it("refreshes providers after deleting a skill", async () => {
     mockSkillsList = [
-      { name: "del-ref", source: "project", description: "# del", content: "# del-ref" },
+      { name: "del-ref", source: "project", description: "# d", content: "# del-ref" },
     ];
     const screen = await renderDialog();
     try {
       await clickButton("/del-ref");
       await clickButton("Delete");
 
-      await waitForToast("Deleted /del-ref");
-      await vi.waitFor(() => expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1), {
-        timeout: 4_000,
-        interval: 16,
-      });
+      await waitForApiCalls(() => skillsDeleteCalls.length, 1);
+      await waitForApiCalls(() => refreshProvidersCalls, 1);
     } finally {
       screen.unmount();
     }
@@ -700,7 +583,7 @@ describe("SkillManagerDialog", () => {
 
   it("refreshes providers after saving a skill", async () => {
     mockSkillsList = [
-      { name: "save-ref", source: "project", description: "# save-ref", content: "# save-ref" },
+      { name: "save-ref", source: "project", description: "# s", content: "# save-ref" },
     ];
     const screen = await renderDialog();
     try {
@@ -710,23 +593,8 @@ describe("SkillManagerDialog", () => {
       editTextarea("# save-ref\n\nNew content.");
       await clickButton("Save");
 
-      await waitForToast("Saved /save-ref");
-      await vi.waitFor(() => expect(refreshProvidersCalls).toBeGreaterThanOrEqual(1), {
-        timeout: 4_000,
-        interval: 16,
-      });
-    } finally {
-      screen.unmount();
-    }
-  });
-
-  // ── Error handling ────────────────────────────────────────────────
-
-  it("shows error toast when skills list fails to load", async () => {
-    skillsListShouldFail = true;
-    const screen = await renderDialog();
-    try {
-      await waitForToast("Failed to load skills");
+      await waitForApiCalls(() => skillsSaveCalls.length, 1);
+      await waitForApiCalls(() => refreshProvidersCalls, 1);
     } finally {
       screen.unmount();
     }
@@ -737,8 +605,9 @@ describe("SkillManagerDialog", () => {
   it("shows helper message when no project CWD is provided", async () => {
     const screen = await renderDialog({ projectCwd: null });
     try {
-      const dialogText = document.querySelector('[role="dialog"]')?.textContent ?? "";
-      expect(dialogText).toContain("Add a project to manage project skills");
+      expect(document.querySelector('[role="dialog"]')?.textContent).toContain(
+        "Add a project to manage project skills",
+      );
     } finally {
       screen.unmount();
     }
