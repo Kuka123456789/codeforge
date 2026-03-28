@@ -13,6 +13,13 @@
     "dist"
   ],
   "type": "module",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "build": "node scripts/cli.ts build",
+    "start": "node dist/index.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.77",
     "@effect/platform-node": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node@8881a9b",
