@@ -372,26 +372,24 @@
       }
       .demo-sb-footer {
         display: flex;
-        align-items: center;
-        gap: 2px;
-        padding: 8px 12px 4px;
+        flex-direction: column;
+        gap: 1px;
+        padding: 6px 8px 4px;
         border-top: 1px solid var(--border);
       }
       .demo-sb-footer-btn {
         display: flex;
         align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
+        gap: 6px;
+        padding: 5px 8px;
         border-radius: 6px;
-        color: var(--text-muted);
+        font-size: 0.65rem;
+        color: rgba(255, 255, 255, 0.38);
         cursor: pointer;
       }
       .demo-sb-footer-btn:hover {
         background: rgba(255, 255, 255, 0.05);
-      }
-      .demo-sb-footer-btn--skills {
-        color: #60a5fa;
+        color: var(--text);
       }
       .demo-status-dot {
         width: 6px;
@@ -423,9 +421,14 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        padding: 18px 22px 0;
+        padding: 0;
         overflow: hidden;
         min-width: 0;
+      }
+      .demo-chat-messages {
+        flex: 1;
+        overflow: hidden;
+        padding: 18px 22px 0;
       }
       .demo-msg {
         margin-bottom: 16px;
@@ -557,7 +560,8 @@
         border-radius: 12px;
         padding: 11px 13px 8px;
         background: rgba(255, 255, 255, 0.02);
-        margin-top: auto;
+        margin: 0 22px 14px;
+        flex-shrink: 0;
       }
       .demo-composer-input {
         display: block;
@@ -1521,44 +1525,22 @@
               </div>
             </div>
 
-            <!-- Sidebar footer: Skills + Settings -->
+            <!-- Sidebar footer: Skills + Settings (labeled, like real app) -->
             <div class="demo-sb-footer">
-              <div class="demo-sb-footer-btn demo-sb-footer-btn--skills" title="Skills">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" />
-                </svg>
+              <div class="demo-sb-footer-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Skills
               </div>
-              <div class="demo-sb-footer-btn" title="Settings">
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path
-                    d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"
-                  />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
+              <div class="demo-sb-footer-btn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
+                Settings
               </div>
             </div>
           </aside>
 
           <!-- Chat -->
           <div class="demo-chat">
+            <div class="demo-chat-messages">
             <div class="demo-msg demo-anim" style="animation-delay: 0.8s">
               <div class="demo-msg-who">You</div>
               <div class="demo-msg-text" style="color: var(--text)">
@@ -1672,6 +1654,7 @@
                 <span>Created <strong>src/middleware/auth.ts</strong></span>
               </div>
             </div>
+            </div><!-- end demo-chat-messages -->
 
             <!-- Composer -->
             <div class="demo-composer demo-anim" style="animation-delay: 0.6s">
