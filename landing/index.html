@@ -806,6 +806,188 @@
         opacity: 0.5;
       }
 
+      /* ── Skill Manager mockup ── */
+      .demo-skills-section {
+        max-width: 780px;
+        margin: 5rem auto 0;
+        padding: 0 2rem;
+      }
+      .demo-skills-label {
+        text-align: center;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 0.75rem;
+      }
+      .demo-skills-title {
+        text-align: center;
+        font-size: clamp(1.1rem, 2vw, 1.35rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
+        margin-bottom: 0.4rem;
+      }
+      .demo-skills-subtitle {
+        text-align: center;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.75rem;
+        max-width: 480px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .demo-sm {
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        background: #0c0c0f;
+        overflow: hidden;
+      }
+      .demo-sm-titlebar {
+        display: flex;
+        align-items: center;
+        padding: 11px 16px;
+        background: #111114;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .demo-sm-body {
+        display: flex;
+        height: 320px;
+        font-size: 0.75rem;
+        line-height: 1.5;
+      }
+      .demo-sm-left {
+        width: 190px;
+        min-width: 190px;
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        padding: 4px 0;
+      }
+      .demo-sm-group-title {
+        padding: 6px 12px 3px;
+        font-size: 0.55rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        opacity: 0.6;
+      }
+      .demo-sm-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 5px 12px;
+        font-size: 0.68rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .demo-sm-row:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .demo-sm-row--active {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+      }
+      .demo-sm-icon {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+      }
+      .demo-sm-icon--amber { color: #f59e0b; }
+      .demo-sm-icon--blue { color: #60a5fa; }
+      .demo-sm-icon--green { color: #22c55e; }
+      .demo-sm-icon--purple { color: #a78bfa; }
+      .demo-sm-add {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 12px;
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        opacity: 0.5;
+        cursor: pointer;
+      }
+      .demo-sm-add:hover { opacity: 0.8; }
+      .demo-sm-right {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      .demo-sm-detail-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.72rem;
+      }
+      .demo-sm-detail-name {
+        font-weight: 600;
+        color: var(--text);
+      }
+      .demo-sm-detail-source {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+      }
+      .demo-sm-editor {
+        flex: 1;
+        padding: 12px 16px;
+        font-family: "SF Mono", "Fira Code", ui-monospace, monospace;
+        font-size: 0.62rem;
+        line-height: 1.7;
+        color: #d4d4d8;
+        white-space: pre-wrap;
+        overflow: hidden;
+      }
+      .demo-sm-editor em {
+        font-style: normal;
+        color: var(--text-muted);
+      }
+      .demo-sm-detail-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 8px 16px;
+        border-top: 1px solid var(--border);
+      }
+      .demo-sm-btn {
+        font-size: 0.62rem;
+        padding: 4px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+      }
+      .demo-sm-btn--delete {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.15);
+      }
+      .demo-sm-btn--save {
+        color: #fff;
+        background: var(--primary);
+        border: none;
+      }
+      @media (max-width: 640px) {
+        .demo-sm-left {
+          width: 130px;
+          min-width: 130px;
+        }
+        .demo-sm-body {
+          height: 260px;
+        }
+      }
+      @media (max-width: 480px) {
+        .demo-sm-left {
+          display: none;
+        }
+      }
+
       /* Staggered entrance animations */
       .demo-anim {
         opacity: 0;
@@ -1968,6 +2150,97 @@
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skill Manager Mockup -->
+    <section class="demo-skills-section">
+      <p class="demo-skills-label">Skill Manager</p>
+      <h2 class="demo-skills-title">Reusable skills for every project</h2>
+      <p class="demo-skills-subtitle">
+        Organize slash commands and custom skills. Project-scoped or global — invoke them from any thread.
+      </p>
+      <div class="demo-sm">
+        <div class="demo-sm-titlebar">Skill Manager</div>
+        <div class="demo-sm-body">
+          <!-- Left panel: skill list -->
+          <div class="demo-sm-left">
+            <div class="demo-sm-group-title">Built-in</div>
+            <div class="demo-sm-row">
+              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              /model
+            </div>
+            <div class="demo-sm-row">
+              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              /plan
+            </div>
+            <div class="demo-sm-row">
+              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              /clear
+            </div>
+            <div class="demo-sm-row">
+              <svg class="demo-sm-icon demo-sm-icon--amber" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              /context
+            </div>
+
+            <div class="demo-sm-group-title">Project Skills</div>
+            <div class="demo-sm-row demo-sm-row--active">
+              <svg class="demo-sm-icon demo-sm-icon--green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              /review-pr
+            </div>
+            <div class="demo-sm-row">
+              <svg class="demo-sm-icon demo-sm-icon--green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              /deploy
+            </div>
+            <div class="demo-sm-add">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New project skill
+            </div>
+
+            <div class="demo-sm-group-title">User Skills</div>
+            <div class="demo-sm-row">
+              <svg class="demo-sm-icon demo-sm-icon--purple" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+              /commit-msg
+            </div>
+            <div class="demo-sm-add">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New user skill
+            </div>
+          </div>
+
+          <!-- Right panel: skill editor -->
+          <div class="demo-sm-right">
+            <div class="demo-sm-detail-head">
+              <span class="demo-sm-detail-name">/review-pr</span>
+              <span class="demo-sm-detail-source">Project skill</span>
+            </div>
+            <div class="demo-sm-editor"><em># PR Review Skill</em>
+
+Review the current git diff against the base branch.
+
+<em>## Instructions</em>
+1. Run `git diff main...HEAD` to see all changes
+2. Check for:
+   - Breaking API changes
+   - Missing error handling
+   - Test coverage gaps
+   - Security concerns (hardcoded secrets, SQL injection)
+3. Summarize findings as a checklist
+4. Suggest specific improvements with code examples
+
+<em>## Output format</em>
+Use markdown with ✅ for passing checks and ⚠️ for issues.</div>
+            <div class="demo-sm-detail-footer">
+              <span class="demo-sm-btn demo-sm-btn--delete">
+                <span style="display:flex;align-items:center;gap:4px">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  Delete
+                </span>
+              </span>
+              <span class="demo-sm-btn demo-sm-btn--save">Save</span>
             </div>
           </div>
         </div>
