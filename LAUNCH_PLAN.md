@@ -15,7 +15,7 @@ These must be done before the landing page goes live or any promotion happens.
 ### Product TODOs (pre-launch blockers)
 
 - [x] **Decide on license** — MIT. Already in LICENSE with proper attribution to T3 Code / Ping.gg. Landing page says "open source" which is accurate.
-- [ ] **Publish an npm package under CodeForge's name** — Package name is `codeforge`, confirmed available on npm. Build works. To publish: `cd apps/server && node scripts/cli.ts publish`. Requires npm login first.
+- [x] **Publish an npm package under CodeForge's name** — Published as `codeforge-chat` on npm (`npx codeforge-chat`). Name `codeforge` was blocked by npm's typosquatting protection (conflicts with `code-forge`).
 - [x] **Verify fresh install works** — Build passes (`bun install && bun run build` succeeds). Prerequisites: Codex CLI for Codex provider, `ANTHROPIC_API_KEY` for Claude provider. Documented in README.
 - [x] **Write a README** — Updated with features, install instructions, prerequisites table, architecture, dev setup, and links to codeforge.chat.
 
