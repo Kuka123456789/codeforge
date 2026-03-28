@@ -10,7 +10,7 @@ These must be done before the landing page goes live or any promotion happens.
 - [x] **Wire up email signup** — Connected to FormSubmit.co, emails go to daniel.odesser@gmail.com. Redirects back to codeforge.chat#signup-thanks on success.
 - [x] **Replace GitHub URLs** — All links now point to `https://github.com/Kuka123456789/codeforge`.
 - [x] **Replace contact email** — Footer now links to `daniel.odesser@gmail.com`.
-- [ ] **Deploy the landing page** — Plan: host on Vercel at `codeforge.chat`.
+- [x] **Deploy the landing page** — Live on Vercel at `codeforge.chat`.
 
 ### Product TODOs (pre-launch blockers)
 
@@ -30,9 +30,9 @@ These must be done before the landing page goes live or any promotion happens.
 
 ## Phase 1: Validate Demand (Week 1)
 
-- [ ] **Complete landing page TODOs above**
+- [x] **Complete landing page TODOs above**
 - [ ] **Record a demo** — 60-second screen recording: open CodeForge, start a session, ask Claude to write some code, show the result. Keep it real, don't over-produce.
-- [ ] **Deploy the landing page** — Live on a real URL.
+- [x] **Deploy the landing page** — Live at `codeforge.chat`.
 
 ## Phase 2: Get Eyes On It (Week 2-3)
 
