@@ -1365,20 +1365,22 @@ describe("WebSocket Server", () => {
       },
     } as unknown as ProviderRuntimeEvent);
 
-    const domainPush = await waitForPush(ws, ORCHESTRATION_WS_CHANNELS.domainEvent, (push) => {
-      const event = push.data as { type?: string; payload?: { messageId?: string; text?: string } };
-      return (
-        event.type === "thread.message-sent" && event.payload?.messageId === "assistant:item-1"
-      );
+    // With streaming fast path enabled, assistant text deltas are pushed
+    // via the streaming.textDelta sideband channel instead of the
+    // orchestration.domainEvent channel.
+    const deltaPush = await waitForPush(ws, WS_CHANNELS.streamingTextDelta, (push) => {
+      const delta = push.data as { messageId?: string };
+      return delta.messageId === "assistant:item-1";
     });
 
-    const domainEvent = domainPush.data as {
-      type: string;
-      payload: { messageId: string; text: string };
+    const deltaPayload = deltaPush.data as {
+      messageId: string;
+      delta: string;
+      threadId: string;
     };
-    expect(domainEvent.type).toBe("thread.message-sent");
-    expect(domainEvent.payload.messageId).toBe("assistant:item-1");
-    expect(domainEvent.payload.text).toBe("hello from runtime");
+    expect(deltaPayload.messageId).toBe("assistant:item-1");
+    expect(deltaPayload.delta).toBe("hello from runtime");
+    expect(deltaPayload.threadId).toBe("thread-1");
   });
 
   it("routes terminal RPC methods and broadcasts terminal events", async () => {

@@ -20,7 +20,7 @@ import {
   ThreadId,
   TurnId,
 } from "@codeforge/contracts";
-import { Effect, Exit, Layer, ManagedRuntime, PubSub, Scope, Stream } from "effect";
+import { Effect, Exit, Fiber, Layer, ManagedRuntime, PubSub, Scope, Stream } from "effect";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { OrchestrationEventStoreLive } from "../../persistence/Layers/OrchestrationEventStore.ts";
@@ -41,6 +41,7 @@ import { ProviderRuntimeIngestionService } from "../Services/ProviderRuntimeInge
 import { ServerConfig } from "../../config.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
 import { StreamingDeltaBusLive } from "./StreamingDeltaBus.ts";
+import { StreamingDeltaBusService } from "../Services/StreamingDeltaBus.ts";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 
 function makeTestServerSettingsLayer(overrides: Partial<ServerSettings> = {}) {
@@ -183,6 +184,7 @@ describe("ProviderRuntimeIngestion", () => {
     );
     runtime = ManagedRuntime.make(layer);
     const engine = await runtime.runPromise(Effect.service(OrchestrationEngineService));
+    const streamingDeltaBus = await runtime.runPromise(Effect.service(StreamingDeltaBusService));
     const ingestion = await runtime.runPromise(Effect.service(ProviderRuntimeIngestionService));
     scope = await Effect.runPromise(Scope.make("sequential"));
     await Effect.runPromise(ingestion.start.pipe(Scope.provide(scope)));
@@ -249,6 +251,7 @@ describe("ProviderRuntimeIngestion", () => {
 
     return {
       engine,
+      streamingDeltaBus,
       emit: provider.emit,
       setProviderSession: provider.setSession,
       drain,
@@ -1369,6 +1372,16 @@ describe("ProviderRuntimeIngestion", () => {
     const harness = await createHarness({ serverSettings: { enableAssistantStreaming: true } });
     const now = new Date().toISOString();
 
+    // Collect sideband deltas in the background.
+    const sidebandDeltas: { delta: string; messageId: string }[] = [];
+    const sidebandFiber = Effect.runFork(
+      Stream.runForEach(harness.streamingDeltaBus.stream, (d) =>
+        Effect.sync(() => {
+          sidebandDeltas.push(d);
+        }),
+      ),
+    );
+
     await Effect.runPromise(
       harness.engine.dispatch({
         type: "thread.turn.start",
@@ -1415,19 +1428,13 @@ describe("ProviderRuntimeIngestion", () => {
         delta: "hello live",
       },
     });
+    await harness.drain();
 
-    const liveThread = await waitForThread(harness.engine, (entry) =>
-      entry.messages.some(
-        (message: ProviderRuntimeTestMessage) =>
-          message.id === "assistant:item-streaming-mode" &&
-          message.streaming &&
-          message.text === "hello live",
-      ),
-    );
-    const liveMessage = liveThread.messages.find(
-      (entry: ProviderRuntimeTestMessage) => entry.id === "assistant:item-streaming-mode",
-    );
-    expect(liveMessage?.streaming).toBe(true);
+    // Streaming fast path: delta should appear on the sideband, not in the
+    // orchestration read model.
+    expect(sidebandDeltas.length).toBeGreaterThanOrEqual(1);
+    expect(sidebandDeltas[0]?.delta).toBe("hello live");
+    expect(sidebandDeltas[0]?.messageId).toBe("assistant:item-streaming-mode");
 
     harness.emit({
       type: "item.completed",
@@ -1455,6 +1462,8 @@ describe("ProviderRuntimeIngestion", () => {
     );
     expect(finalMessage?.text).toBe("hello live");
     expect(finalMessage?.streaming).toBe(false);
+
+    await Effect.runPromise(Fiber.interrupt(sidebandFiber));
   });
 
   it("spills oversized buffered deltas and still finalizes full assistant text", async () => {

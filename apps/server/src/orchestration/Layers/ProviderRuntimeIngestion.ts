@@ -1073,7 +1073,22 @@ const make = Effect.gen(function* () {
           // turn/message completion) and push the delta directly to clients
           // via the sideband, bypassing the full orchestration pipeline
           // (decider → event store → 10 projectors).
-          yield* appendBufferedAssistantText(assistantMessageId, assistantDelta);
+          //
+          // If the buffer exceeds the safety-valve threshold (24KB), it is
+          // invalidated and the spill chunk must go through orchestration so
+          // the data is persisted before the buffer is lost.
+          const spillChunk = yield* appendBufferedAssistantText(assistantMessageId, assistantDelta);
+          if (spillChunk.length > 0) {
+            yield* orchestrationEngine.dispatch({
+              type: "thread.message.assistant.delta",
+              commandId: providerCommandId(event, "assistant-delta-fast-spill"),
+              threadId: thread.id,
+              messageId: assistantMessageId,
+              delta: spillChunk,
+              ...(turnId ? { turnId } : {}),
+              createdAt: now,
+            });
+          }
           yield* streamingDeltaBus.publish({
             threadId: thread.id,
             messageId: assistantMessageId,
