@@ -16,6 +16,7 @@ import { OrchestrationProjectionPipelineLive } from "./orchestration/Layers/Proj
 import { OrchestrationProjectionSnapshotQueryLive } from "./orchestration/Layers/ProjectionSnapshotQuery";
 import { ProviderRuntimeIngestionLive } from "./orchestration/Layers/ProviderRuntimeIngestion";
 import { RuntimeReceiptBusLive } from "./orchestration/Layers/RuntimeReceiptBus";
+import { StreamingDeltaBusLive } from "./orchestration/Layers/StreamingDeltaBus";
 import { ProviderUnsupportedError } from "./provider/Errors";
 import { makeClaudeAdapterLive } from "./provider/Layers/ClaudeAdapter";
 import { makeCodexAdapterLive } from "./provider/Layers/CodexAdapter";
@@ -111,6 +112,7 @@ export function makeServerRuntimeServicesLayer() {
     checkpointStoreLayer,
     checkpointDiffQueryLayer,
     RuntimeReceiptBusLive,
+    StreamingDeltaBusLive,
     ThreadSearchIndexLive,
   );
   const runtimeIngestionLayer = ProviderRuntimeIngestionLive.pipe(

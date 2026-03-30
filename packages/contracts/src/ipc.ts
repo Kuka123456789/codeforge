@@ -65,6 +65,7 @@ import type {
 } from "./orchestration";
 import { EditorId } from "./editor";
 import { ServerSettings, ServerSettingsPatch } from "./settings";
+import type { StreamingTextDeltaPayload } from "./ws";
 
 export interface ContextMenuItem<T extends string = string> {
   id: T;
@@ -202,5 +203,6 @@ export interface NativeApi {
     ) => Promise<OrchestrationGetFullThreadDiffResult>;
     replayEvents: (fromSequenceExclusive: number) => Promise<OrchestrationEvent[]>;
     onDomainEvent: (callback: (event: OrchestrationEvent) => void) => () => void;
+    onStreamingTextDelta: (callback: (delta: StreamingTextDeltaPayload) => void) => () => void;
   };
 }

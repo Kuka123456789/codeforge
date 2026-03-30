@@ -27,6 +27,7 @@ import {
   type ProviderRuntimeIngestionShape,
 } from "../Services/ProviderRuntimeIngestion.ts";
 import { ServerSettingsService } from "../../serverSettings.ts";
+import { StreamingDeltaBusService } from "../Services/StreamingDeltaBus.ts";
 
 const providerTurnKey = (threadId: ThreadId, turnId: TurnId) => `${threadId}:${turnId}`;
 const providerCommandId = (event: ProviderRuntimeEvent, tag: string): CommandId =>
@@ -539,6 +540,7 @@ const make = Effect.gen(function* () {
   const providerService = yield* ProviderService;
   const projectionTurnRepository = yield* ProjectionTurnRepository;
   const serverSettingsService = yield* ServerSettingsService;
+  const streamingDeltaBus = yield* StreamingDeltaBusService;
 
   const turnMessageIdsByTurnKey = yield* Cache.make<string, Set<MessageId>>({
     capacity: TURN_MESSAGE_IDS_BY_TURN_CACHE_CAPACITY,
@@ -910,6 +912,12 @@ const make = Effect.gen(function* () {
     Effect.gen(function* () {
       const readModel = yield* orchestrationEngine.getReadModel();
       const thread = readModel.threads.find((entry) => entry.id === event.threadId);
+
+      // Resolve delivery mode once per event instead of deep in the delta branch.
+      const assistantDeliveryMode: AssistantDeliveryMode = yield* Effect.map(
+        serverSettingsService.getSettings,
+        (settings) => (settings.enableAssistantStreaming ? "streaming" : "buffered"),
+      );
       if (!thread) return;
 
       const now = event.createdAt;
@@ -1046,10 +1054,6 @@ const make = Effect.gen(function* () {
           yield* rememberAssistantMessageId(thread.id, turnId, assistantMessageId);
         }
 
-        const assistantDeliveryMode: AssistantDeliveryMode = yield* Effect.map(
-          serverSettingsService.getSettings,
-          (settings) => (settings.enableAssistantStreaming ? "streaming" : "buffered"),
-        );
         if (assistantDeliveryMode === "buffered") {
           const spillChunk = yield* appendBufferedAssistantText(assistantMessageId, assistantDelta);
           if (spillChunk.length > 0) {
@@ -1064,13 +1068,17 @@ const make = Effect.gen(function* () {
             });
           }
         } else {
-          yield* orchestrationEngine.dispatch({
-            type: "thread.message.assistant.delta",
-            commandId: providerCommandId(event, "assistant-delta"),
+          // ── Streaming fast path ──
+          // Buffer text for finalization (committed as a single event on
+          // turn/message completion) and push the delta directly to clients
+          // via the sideband, bypassing the full orchestration pipeline
+          // (decider → event store → 10 projectors).
+          yield* appendBufferedAssistantText(assistantMessageId, assistantDelta);
+          yield* streamingDeltaBus.publish({
             threadId: thread.id,
             messageId: assistantMessageId,
             delta: assistantDelta,
-            ...(turnId ? { turnId } : {}),
+            turnId: turnId ?? null,
             createdAt: now,
           });
         }

@@ -238,6 +238,8 @@ export function createWsNativeApi(): NativeApi {
         transport.subscribe(ORCHESTRATION_WS_CHANNELS.domainEvent, (message) =>
           callback(message.data),
         ),
+      onStreamingTextDelta: (callback) =>
+        transport.subscribe(WS_CHANNELS.streamingTextDelta, (message) => callback(message.data)),
     },
   };
 

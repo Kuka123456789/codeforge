@@ -404,6 +404,24 @@ label:has(> select#reasoning-effort) select {
   text-align: left;
 }
 
+/* Streaming cursor — blinking caret at end of in-progress text */
+@keyframes streaming-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.chat-markdown-streaming::after {
+  content: "\25AE";
+  animation: streaming-cursor-blink 0.8s step-end infinite;
+  margin-left: 1px;
+  color: var(--foreground);
+}
+
 /* Diffs theme bridge (match diff surfaces to app palette) */
 .diff-panel-viewport {
   background: color-mix(in srgb, var(--background) 94%, var(--card));

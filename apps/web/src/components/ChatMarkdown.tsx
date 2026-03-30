@@ -235,9 +235,55 @@ function SuspenseShikiCodeBlock({
   );
 }
 
+/** Minimum interval (ms) between ReactMarkdown re-parses while streaming. */
+const STREAMING_RENDER_THROTTLE_MS = 80;
+
+/**
+ * During streaming, throttle expensive ReactMarkdown re-renders by only
+ * updating the rendered text at most every STREAMING_RENDER_THROTTLE_MS.
+ * On completion (isStreaming=false) the final text is used immediately.
+ */
+function useStreamingThrottle(text: string, isStreaming: boolean): string {
+  const [renderedText, setRenderedText] = useState(text);
+  const latestTextRef = useRef(text);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  latestTextRef.current = text;
+
+  useEffect(() => {
+    if (!isStreaming) {
+      // Streaming finished — flush the final text immediately.
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setRenderedText(text);
+      return;
+    }
+
+    // While streaming, schedule a throttled update if not already pending.
+    if (timerRef.current === null) {
+      timerRef.current = setTimeout(() => {
+        timerRef.current = null;
+        setRenderedText(latestTextRef.current);
+      }, STREAMING_RENDER_THROTTLE_MS);
+    }
+
+    return () => {
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [text, isStreaming]);
+
+  return isStreaming ? renderedText : text;
+}
+
 function ChatMarkdown({ text, cwd, isStreaming = false }: ChatMarkdownProps) {
   const { resolvedTheme } = useTheme();
   const diffThemeName = resolveDiffThemeName(resolvedTheme);
+  const throttledText = useStreamingThrottle(text, isStreaming);
   const markdownComponents = useMemo<Components>(
     () => ({
       a({ node: _node, href, ...props }) {
@@ -269,6 +315,17 @@ function ChatMarkdown({ text, cwd, isStreaming = false }: ChatMarkdownProps) {
           return <pre {...props}>{children}</pre>;
         }
 
+        // Skip expensive Shiki highlighting while streaming — plain <pre>
+        // renders in <1ms vs 5-20ms for codeToHtml. Highlighting runs once
+        // on stream completion and gets cached.
+        if (isStreaming) {
+          return (
+            <MarkdownCodeBlock code={codeBlock.code}>
+              <pre {...props}>{children}</pre>
+            </MarkdownCodeBlock>
+          );
+        }
+
         return (
           <MarkdownCodeBlock code={codeBlock.code}>
             <CodeHighlightErrorBoundary fallback={<pre {...props}>{children}</pre>}>
@@ -277,7 +334,7 @@ function ChatMarkdown({ text, cwd, isStreaming = false }: ChatMarkdownProps) {
                   className={codeBlock.className}
                   code={codeBlock.code}
                   themeName={diffThemeName}
-                  isStreaming={isStreaming}
+                  isStreaming={false}
                 />
               </Suspense>
             </CodeHighlightErrorBoundary>
@@ -289,9 +346,11 @@ function ChatMarkdown({ text, cwd, isStreaming = false }: ChatMarkdownProps) {
   );
 
   return (
-    <div className="chat-markdown w-full min-w-0 text-sm leading-relaxed text-foreground/80">
+    <div
+      className={`chat-markdown w-full min-w-0 text-sm leading-relaxed text-foreground/80${isStreaming ? " chat-markdown-streaming" : ""}`}
+    >
       <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-        {text}
+        {throttledText}
       </ReactMarkdown>
     </div>
   );

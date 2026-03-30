@@ -205,7 +205,7 @@ function EventRouter() {
       },
       {
         wait: 100,
-        leading: false,
+        leading: true,
         trailing: true,
       },
     );
@@ -244,6 +244,20 @@ function EventRouter() {
       // All other events: throttled snapshot sync (existing behavior).
       domainEventFlushThrottler.maybeExecute();
     });
+    // ── Streaming fast path: text deltas bypassing orchestration ──
+    const unsubStreamingDelta = api.orchestration.onStreamingTextDelta((delta) => {
+      applyStreamingDelta({
+        threadId: delta.threadId,
+        messageId: delta.messageId,
+        role: "assistant",
+        text: delta.delta,
+        turnId: delta.turnId,
+        streaming: true,
+        createdAt: delta.createdAt,
+        updatedAt: delta.createdAt,
+      });
+    });
+
     const unsubTerminalEvent = api.terminal.onEvent((event) => {
       const hasRunningSubprocess = terminalRunningSubprocessFromEvent(event);
       if (hasRunningSubprocess === null) {
@@ -345,6 +359,7 @@ function EventRouter() {
       needsProviderInvalidation = false;
       domainEventFlushThrottler.cancel();
       unsubDomainEvent();
+      unsubStreamingDelta();
       unsubTerminalEvent();
       unsubWelcome();
       unsubServerConfigUpdated();

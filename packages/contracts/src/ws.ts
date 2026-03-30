@@ -1,5 +1,13 @@
 import { Schema, Struct } from "effect";
-import { NonNegativeInt, ProjectId, ThreadId, TrimmedNonEmptyString } from "./baseSchemas";
+import {
+  IsoDateTime,
+  MessageId,
+  NonNegativeInt,
+  ProjectId,
+  ThreadId,
+  TrimmedNonEmptyString,
+  TurnId,
+} from "./baseSchemas";
 
 import {
   ClientOrchestrationCommand,
@@ -107,6 +115,7 @@ export const WS_CHANNELS = {
   serverWelcome: "server.welcome",
   serverConfigUpdated: "server.configUpdated",
   serverProvidersUpdated: "server.providersUpdated",
+  streamingTextDelta: "streaming.textDelta",
 } as const;
 
 // -- Tagged Union of all request body schemas ─────────────────────────
@@ -206,12 +215,27 @@ export const WsWelcomePayload = Schema.Struct({
 });
 export type WsWelcomePayload = typeof WsWelcomePayload.Type;
 
+/**
+ * Lightweight streaming text delta pushed via the fast path (bypasses the
+ * full orchestration pipeline). The client applies it identically to a
+ * `thread.message-sent` domain event with `streaming: true`.
+ */
+export const StreamingTextDeltaPayload = Schema.Struct({
+  threadId: ThreadId,
+  messageId: MessageId,
+  delta: Schema.String,
+  turnId: Schema.NullOr(TurnId),
+  createdAt: IsoDateTime,
+});
+export type StreamingTextDeltaPayload = typeof StreamingTextDeltaPayload.Type;
+
 export interface WsPushPayloadByChannel {
   readonly [WS_CHANNELS.serverWelcome]: WsWelcomePayload;
   readonly [WS_CHANNELS.serverConfigUpdated]: typeof ServerConfigUpdatedPayload.Type;
   readonly [WS_CHANNELS.serverProvidersUpdated]: typeof ServerProviderUpdatedPayload.Type;
   readonly [WS_CHANNELS.gitActionProgress]: typeof GitActionProgressEvent.Type;
   readonly [WS_CHANNELS.terminalEvent]: typeof TerminalEvent.Type;
+  readonly [WS_CHANNELS.streamingTextDelta]: StreamingTextDeltaPayload;
   readonly [ORCHESTRATION_WS_CHANNELS.domainEvent]: OrchestrationEvent;
 }
 
@@ -243,6 +267,10 @@ export const WsPushGitActionProgress = makeWsPushSchema(
   GitActionProgressEvent,
 );
 export const WsPushTerminalEvent = makeWsPushSchema(WS_CHANNELS.terminalEvent, TerminalEvent);
+export const WsPushStreamingTextDelta = makeWsPushSchema(
+  WS_CHANNELS.streamingTextDelta,
+  StreamingTextDeltaPayload,
+);
 export const WsPushOrchestrationDomainEvent = makeWsPushSchema(
   ORCHESTRATION_WS_CHANNELS.domainEvent,
   OrchestrationEvent,
@@ -253,6 +281,7 @@ export const WsPushChannelSchema = Schema.Literals([
   WS_CHANNELS.serverWelcome,
   WS_CHANNELS.serverConfigUpdated,
   WS_CHANNELS.serverProvidersUpdated,
+  WS_CHANNELS.streamingTextDelta,
   WS_CHANNELS.terminalEvent,
   ORCHESTRATION_WS_CHANNELS.domainEvent,
 ]);
@@ -263,6 +292,7 @@ export const WsPush = Schema.Union([
   WsPushServerConfigUpdated,
   WsPushServerProvidersUpdated,
   WsPushGitActionProgress,
+  WsPushStreamingTextDelta,
   WsPushTerminalEvent,
   WsPushOrchestrationDomainEvent,
 ]);

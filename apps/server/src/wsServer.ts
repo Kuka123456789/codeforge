@@ -52,6 +52,7 @@ import { Keybindings } from "./keybindings";
 import { ServerSettingsService } from "./serverSettings";
 import { searchWorkspaceEntries } from "./workspaceEntries";
 import { OrchestrationEngineService } from "./orchestration/Services/OrchestrationEngine";
+import { StreamingDeltaBusService } from "./orchestration/Services/StreamingDeltaBus";
 import { ProjectionSnapshotQuery } from "./orchestration/Services/ProjectionSnapshotQuery";
 import { OrchestrationReactor } from "./orchestration/Services/OrchestrationReactor";
 import { ProviderService } from "./provider/Services/ProviderService";
@@ -212,6 +213,7 @@ export type ServerCoreRuntimeServices =
   | CheckpointDiffQuery
   | ThreadSearchIndex
   | OrchestrationReactor
+  | StreamingDeltaBusService
   | ProviderService
   | ProviderRegistry;
 
@@ -611,6 +613,7 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
   const listenOptions = host ? { host, port } : { port };
 
   const orchestrationEngine = yield* OrchestrationEngineService;
+  const streamingDeltaBus = yield* StreamingDeltaBusService;
   const projectionReadModelQuery = yield* ProjectionSnapshotQuery;
   const checkpointDiffQuery = yield* CheckpointDiffQuery;
   const threadSearchIndex = yield* ThreadSearchIndex;
@@ -622,6 +625,11 @@ export const createServer = Effect.fn(function* (): Effect.fn.Return<
 
   yield* Stream.runForEach(orchestrationEngine.streamDomainEvents, (event) =>
     pushBus.publishAll(ORCHESTRATION_WS_CHANNELS.domainEvent, event),
+  ).pipe(Effect.forkIn(subscriptionsScope));
+
+  // Streaming fast path: push text deltas directly without orchestration overhead.
+  yield* Stream.runForEach(streamingDeltaBus.stream, (delta) =>
+    pushBus.publishAll(WS_CHANNELS.streamingTextDelta, delta),
   ).pipe(Effect.forkIn(subscriptionsScope));
 
   yield* Stream.runForEach(keybindingsManager.streamChanges, (event) =>
